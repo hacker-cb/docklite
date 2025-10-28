@@ -2,9 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including SSH client for docker-compose operations)
 RUN apt-get update && apt-get install -y \
     gcc \
+    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
