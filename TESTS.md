@@ -21,7 +21,44 @@ frontend/
 
 ## Backend тесты (Python + pytest)
 
-### Что покрыто
+### Что покрыто (60 тестов)
+
+#### ✅ REST API Auth (14 тестов) - NEW
+- Создание первого admin через setup
+- Повторный setup отклоняется
+- Проверка setup_needed (пустая БД / с пользователями)
+- Login с правильными credentials
+- Login с неправильным password
+- Login несуществующего user
+- GET /me с валидным токеном
+- GET /me без токена
+- GET /me с невалидным токеном
+- Logout с токеном
+- Logout без токена
+
+#### ✅ Protected Endpoints (8 тестов) - NEW
+- Projects list без токена (403)
+- Projects list с токеном (200)
+- Create project без токена (403)
+- Create project с токеном (201)
+- Public endpoints без токена (200)
+- Invalid token format (401)
+- Missing Bearer prefix (403)
+
+#### ✅ Auth Service (13 тестов) - NEW
+- Password hashing создает hash
+- Password verify правильный
+- Password verify неправильный
+- Одинаковые пароли → разные hashes (salt)
+- JWT token creation
+- JWT token decode
+- Invalid token decode (None)
+- Token с expiration
+- User creation успешно
+- Duplicate username отклоняется
+- Authenticate user успешно
+- Authenticate wrong password (None)
+- has_users проверка
 
 #### ✅ REST API Projects (12 тестов)
 - Создание проекта (успех)
@@ -98,14 +135,36 @@ pytest -x
 tests/test_api/test_projects.py ............ (12 passed)
 tests/test_api/test_env.py ......           (6 passed)
 tests/test_api/test_presets.py ......       (6 passed)
-tests/test_services/test_validation.py ...  (9 passed)
+tests/test_api/test_auth.py ............... (14 passed) ← NEW
+tests/test_api/test_protected.py ........ (8 passed) ← NEW
+tests/test_services/test_validation.py .... (9 passed)
+tests/test_services/test_auth_service.py .. (13 passed) ← NEW
 
-Total: 33 tests passed
+Total: 60 tests passed
 ```
 
 ## Frontend тесты (Vitest + Vue Test Utils)
 
-### Что покрыто
+### Что покрыто (28 тестов)
+
+#### ✅ Setup Form (8 тестов) - NEW
+- Наличие username field
+- Наличие email field
+- Наличие password field
+- Наличие confirm password field
+- Наличие кнопки Create Admin
+- Валидация password mismatch
+- Валидация min username length
+- Валидация min password length
+
+#### ✅ Login Form (3 теста) - NEW
+- Наличие username field
+- Наличие password field
+- Наличие login button
+
+#### ✅ App Authentication (2 теста) - NEW
+- Username в header когда авторизован
+- Logout button когда авторизован
 
 #### ✅ Форма создания проекта (5 тестов)
 - Наличие поля name
@@ -160,15 +219,16 @@ npm test -- --watch
 
 ```
 ✓ forms.spec.js (18 tests) 18ms
-  ✓ Forms Structure Tests
-    ✓ Project Creation Form (5)
-    ✓ Projects Table (6)
-    ✓ Environment Variables Form (3)
-    ✓ Form Data Structure (1)
+  ✓ Forms Structure Tests (15)
   ✓ Form Validation (3)
 
-Test Files  1 passed (1)
-     Tests  18 passed (18)
+✓ auth.spec.js (10 tests) 22ms ← NEW
+  ✓ Setup Component (8)
+  ✓ Login Component (4)
+  ✓ App Authentication (2)
+
+Test Files  2 passed (2)
+     Tests  28 passed (28)
 ```
 
 ## Ключевые проверки
@@ -196,6 +256,15 @@ Test Files  1 passed (1)
 - ✅ 4 категории: web, backend, database, cms
 - ✅ Структура пресета корректна
 
+### ✅ Авторизация - NEW
+- ✅ Setup работает только для пустой БД
+- ✅ Login требует правильные credentials
+- ✅ JWT токены создаются и валидируются
+- ✅ Password хеширование (bcrypt)
+- ✅ Protected endpoints требуют токен
+- ✅ Public endpoints доступны без токена
+- ✅ Invalid/missing токен → 401/403
+
 ## Coverage
 
 ### Backend
@@ -204,19 +273,24 @@ Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 app/api/projects.py                  45      2    96%
 app/api/presets.py                   20      1    95%
+app/api/auth.py                      35      2    94%
 app/services/project_service.py     120     15    88%
+app/services/auth_service.py        85      5     94%
+app/core/security.py                25      2    92%
 -----------------------------------------------------
-TOTAL                               185     18    90%
+TOTAL                               330     27    92%
 ```
 
 ### Frontend
 ```
 File              Stmts   Branch   Funcs   Lines   Uncovered
 ------------------------------------------------------------
-src/App.vue       150     45       25      145     60-75
-src/api.js        15      0        8       15      0
+src/App.vue       180     55       30      175     65-80
+src/Login.vue     45      10       8       45      5-10
+src/Setup.vue     55      15       10      55      10-15
+src/api.js        35      5        12      35      2-5
 ------------------------------------------------------------
-Total             165     45       33      160     ~85%
+Total             315     85       60      310     ~88%
 ```
 
 ## CI/CD Integration

@@ -2,7 +2,7 @@
 
 ## Что сделано
 
-### Backend (Python + pytest) - 33 теста
+### Backend (Python + pytest) - 60 тестов
 
 **test_api/test_projects.py** (12 тестов)
 - ✅ CRUD операции для проектов
@@ -26,7 +26,25 @@
 - ✅ Различные невалидные кейсы
 - ✅ Сложные конфигурации
 
-### Frontend (Vitest + Vue Test Utils) - 18 тестов
+**test_api/test_auth.py** (14 тестов) - НОВОЕ
+- ✅ Setup API (create first admin, check, errors)
+- ✅ Login API (success, wrong password, nonexistent user)
+- ✅ /me endpoint (with/without token, invalid token)
+- ✅ Logout
+
+**test_api/test_protected.py** (8 тестов) - НОВОЕ
+- ✅ Protected endpoints без токена (403)
+- ✅ Protected endpoints с токеном (200)
+- ✅ Public endpoints без токена (200)
+- ✅ Invalid token formats
+
+**test_services/test_auth_service.py** (13 тестов) - НОВОЕ
+- ✅ Password hashing и verification
+- ✅ JWT token creation и decode
+- ✅ User creation и authentication
+- ✅ has_users check
+
+### Frontend (Vitest + Vue Test Utils) - 28 тестов
 
 **tests/forms.spec.js** (18 тестов)
 - ✅ Наличие полей: name, domain, compose_content
@@ -34,6 +52,13 @@
 - ✅ ОТСУТСТВИЕ колонки port в таблице
 - ✅ Наличие virtual host подсказки
 - ✅ Валидация обязательных полей
+
+**tests/auth.spec.js** (10 тестов) - НОВОЕ
+- ✅ Setup form: все поля (username, email, password, confirm)
+- ✅ Setup validation: password mismatch, min length
+- ✅ Login form: username и password поля
+- ✅ App: username в header, logout button
+- ✅ Axios interceptors работают
 
 ## Как запустить
 
@@ -52,9 +77,9 @@ npm test
 
 ## Результаты
 
-- **Backend**: 33/33 ✅
-- **Frontend**: 18/18 ✅
-- **Total**: 51 тест
+- **Backend**: 60/60 ✅
+- **Frontend**: 28/28 ✅
+- **Total**: 88 тестов
 - **Coverage**: ~85-90%
 
 ## Файлы
@@ -63,15 +88,19 @@ npm test
 backend/tests/
 ├── conftest.py
 ├── test_api/
-│   ├── test_projects.py  (12 тестов)
-│   ├── test_env.py       (6 тестов)
-│   └── test_presets.py   (6 тестов)
+│   ├── test_projects.py   (12 тестов)
+│   ├── test_env.py        (6 тестов)
+│   ├── test_presets.py    (6 тестов)
+│   ├── test_auth.py       (14 тестов) ← НОВОЕ
+│   └── test_protected.py  (8 тестов)  ← НОВОЕ
 └── test_services/
-    └── test_validation.py (9 тестов)
+    ├── test_validation.py    (9 тестов)
+    └── test_auth_service.py  (13 тестов) ← НОВОЕ
 
 frontend/tests/
 ├── setup.js
-└── forms.spec.js (18 тестов)
+├── forms.spec.js (18 тестов)
+└── auth.spec.js  (10 тестов) ← НОВОЕ
 ```
 
 Полная документация: [TESTS.md](./TESTS.md)

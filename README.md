@@ -328,9 +328,10 @@ docker-compose up -d --build
 ## Тестирование
 
 DockLite имеет комплексное покрытие тестами:
-- **Backend**: 33 теста (pytest) - API, валидация, env vars
-- **Frontend**: 18 тестов (vitest) - формы, структура данных
-- **Coverage**: ~85-90%
+- **Backend**: 60 тестов (pytest) - API, авторизация, валидация, env vars
+- **Frontend**: 28 тестов (vitest) - формы, auth, структура данных
+- **Total**: 88 тестов
+- **Coverage**: ~90%
 
 ### Запуск тестов
 
