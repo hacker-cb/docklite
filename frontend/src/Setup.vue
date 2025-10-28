@@ -12,7 +12,7 @@
         <p>Welcome! Let's create your admin account to get started.</p>
       </div>
 
-      <div class="setup-form">
+      <form class="setup-form" @submit.prevent="setup">
         <div class="form-group">
           <label for="username">Username *</label>
           <InputText 
@@ -20,6 +20,7 @@
             v-model="userData.username" 
             class="w-full"
             placeholder="admin"
+            autocomplete="username"
             @keyup.enter="focusNext('email')"
             autofocus
           />
@@ -34,6 +35,7 @@
             type="email"
             class="w-full"
             placeholder="admin@example.com (optional)"
+            autocomplete="email"
             @keyup.enter="focusNext('password')"
           />
         </div>
@@ -46,6 +48,7 @@
             type="password"
             class="w-full"
             placeholder="Enter password"
+            autocomplete="new-password"
             @keyup.enter="focusNext('confirmPassword')"
           />
           <small class="form-hint">Minimum 6 characters</small>
@@ -59,14 +62,15 @@
             type="password"
             class="w-full"
             placeholder="Confirm password"
+            autocomplete="new-password"
             @keyup.enter="setup"
           />
         </div>
 
         <Button 
+          type="submit"
           label="Create Admin Account" 
           icon="pi pi-check" 
-          @click="setup"
           :loading="loading"
           class="w-full setup-button"
         />
@@ -75,7 +79,7 @@
           <i class="pi pi-exclamation-circle"></i>
           {{ error }}
         </div>
-      </div>
+      </form>
 
       <div class="setup-footer">
         <i class="pi pi-shield"></i>

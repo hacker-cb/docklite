@@ -6,7 +6,7 @@
         <p>Web Server Management System</p>
       </div>
 
-      <div class="login-form">
+      <form class="login-form" @submit.prevent="login">
         <div class="form-group">
           <label for="username">Username</label>
           <InputText 
@@ -14,7 +14,7 @@
             v-model="credentials.username" 
             class="w-full"
             placeholder="Enter username"
-            @keyup.enter="login"
+            autocomplete="username"
             autofocus
           />
         </div>
@@ -27,14 +27,15 @@
             type="password"
             class="w-full"
             placeholder="Enter password"
+            autocomplete="current-password"
             @keyup.enter="login"
           />
         </div>
 
         <Button 
+          type="submit"
           label="Login" 
           icon="pi pi-sign-in" 
-          @click="login"
           :loading="loading"
           class="w-full login-button"
         />
@@ -43,7 +44,7 @@
           <i class="pi pi-exclamation-circle"></i>
           {{ error }}
         </div>
-      </div>
+      </form>
 
       <div class="login-footer">
         <p>Enter your DockLite credentials</p>
