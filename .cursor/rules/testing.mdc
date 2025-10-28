@@ -92,4 +92,21 @@ Must test:
 - ✅ Admin-only endpoints
 - ✅ Error cases (404, 400, 403, 401)
 
-After each phase, write and run tests for new functionality.
+## ⚠️ IMPORTANT: Always Run Tests After Changes
+
+**MANDATORY:** After ANY code changes (new features, refactoring, bug fixes), you MUST:
+
+1. **Backend:** Run all tests
+   ```bash
+   sg docker -c "docker-compose run --rm backend pytest -v"
+   ```
+   Expected: 150 tests passing
+
+2. **Frontend:** Run all tests
+   ```bash
+   cd frontend && npm test
+   ```
+
+3. **Fix any failing tests** before proceeding
+
+This ensures no regressions and maintains code quality.
