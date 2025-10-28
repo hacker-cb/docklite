@@ -44,16 +44,16 @@ description: Development phases and roadmap
 
 ## Upcoming Phases
 
-### 🔄 Phase 4: Enhanced Env & Validation
-- Advanced env vars editor
-- Improved compose validation
-- Secrets management
-
-### 🔄 Phase 5: Nginx & Virtual Hosts ⭐ CRITICAL
+### 🔄 Phase 4: Nginx & Virtual Hosts ⭐ CRITICAL
 - Nginx on ports 8080 (admin) and 80/443 (projects)
 - Auto-generate nginx configs for each project
 - Domain-based routing
 - Auto-reload nginx after changes
+
+### 🔄 Phase 5: Enhanced Env & Validation
+- Advanced env vars editor
+- Improved compose validation
+- Secrets management
 
 ### 🔄 Phase 6: SSL/HTTPS
 - Let's Encrypt integration (certbot)
