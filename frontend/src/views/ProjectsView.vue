@@ -105,7 +105,10 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { projectsApi, containersApi } from '../api'
+import { useProjects } from '../composables/useProjects'
+import { useContainers } from '../composables/useContainers'
+import { STATUS_SEVERITY, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants'
+import { showSuccess, showError } from '../utils/toast'
 import CreateProjectDialog from '../components/CreateProjectDialog.vue'
 import EnvVarsDialog from '../components/EnvVarsDialog.vue'
 import DeployInfoDialog from '../components/DeployInfoDialog.vue'
@@ -113,8 +116,13 @@ import DeployInfoDialog from '../components/DeployInfoDialog.vue'
 const toast = useToast()
 const confirm = useConfirm()
 
-const projects = ref([])
-const loading = ref(false)
+// Use composables
+const { projects, loading, loadProjects } = useProjects()
+const { 
+  startContainer: startContainerFn, 
+  stopContainer: stopContainerFn, 
+  restartContainer: restartContainerFn 
+} = useContainers()
 
 // Dialog state
 const showCreateDialog = ref(false)
@@ -123,23 +131,6 @@ const showDeployDialog = ref(false)
 const editingProject = ref(null)
 const envProjectId = ref(null)
 const deployProjectId = ref(null)
-
-const loadProjects = async () => {
-  loading.value = true
-  try {
-    const response = await projectsApi.getAll()
-    projects.value = response.data.projects
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load projects',
-      life: 3000
-    })
-  } finally {
-    loading.value = false
-  }
-}
 
 const editProject = (project) => {
   editingProject.value = project
@@ -166,98 +157,53 @@ const confirmDelete = (project) => {
     message: `Delete project "${project.name}"?`,
     header: 'Confirmation',
     icon: 'pi pi-exclamation-triangle',
-    accept: () => deleteProject(project.id)
+    accept: () => deleteProject(project)
   })
 }
 
-const deleteProject = async (id) => {
+const deleteProject = async (project) => {
   try {
-    await projectsApi.delete(id)
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Project deleted',
-      life: 3000
-    })
-    loadProjects()
+    const { deleteProject: deleteProjectFn } = useProjects()
+    await deleteProjectFn(project.id)
+    showSuccess(toast, SUCCESS_MESSAGES.PROJECT_DELETED)
+    await loadProjects()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to delete project',
-      life: 3000
-    })
+    showError(toast, error, ERROR_MESSAGES.DELETE_PROJECT_FAILED)
   }
 }
 
 const startContainer = async (project) => {
   try {
-    await containersApi.start(project.id)
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Container for "${project.name}" started`,
-      life: 3000
-    })
-    loadProjects()
+    await startContainerFn(project.id)
+    showSuccess(toast, `${SUCCESS_MESSAGES.CONTAINER_STARTED} for "${project.name}"`)
+    await loadProjects()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.detail || 'Failed to start container',
-      life: 3000
-    })
+    showError(toast, error, ERROR_MESSAGES.START_CONTAINER_FAILED)
   }
 }
 
 const stopContainer = async (project) => {
   try {
-    await containersApi.stop(project.id)
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Container for "${project.name}" stopped`,
-      life: 3000
-    })
-    loadProjects()
+    await stopContainerFn(project.id)
+    showSuccess(toast, `${SUCCESS_MESSAGES.CONTAINER_STOPPED} for "${project.name}"`)
+    await loadProjects()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.detail || 'Failed to stop container',
-      life: 3000
-    })
+    showError(toast, error, ERROR_MESSAGES.STOP_CONTAINER_FAILED)
   }
 }
 
 const restartContainer = async (project) => {
   try {
-    await containersApi.restart(project.id)
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Container for "${project.name}" restarted`,
-      life: 3000
-    })
-    loadProjects()
+    await restartContainerFn(project.id)
+    showSuccess(toast, `${SUCCESS_MESSAGES.CONTAINER_RESTARTED} for "${project.name}"`)
+    await loadProjects()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.detail || 'Failed to restart container',
-      life: 3000
-    })
+    showError(toast, error, ERROR_MESSAGES.RESTART_CONTAINER_FAILED)
   }
 }
 
 const getStatusSeverity = (status) => {
-  const map = {
-    'created': 'info',
-    'running': 'success',
-    'stopped': 'warning',
-    'error': 'danger'
-  }
-  return map[status] || 'info'
+  return STATUS_SEVERITY[status] || 'info'
 }
 
 onMounted(() => {

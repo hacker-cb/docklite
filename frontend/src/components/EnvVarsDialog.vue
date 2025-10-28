@@ -44,7 +44,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { projectsApi } from '../api'
+import { useProjects } from '../composables/useProjects'
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants'
+import { showSuccess, showError } from '../utils/toast'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -59,6 +61,9 @@ const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
+
+// Use composables
+const { getEnvVars, updateEnvVars } = useProjects()
 
 const localEnvVars = ref({})
 const newEnvKey = ref('')
@@ -82,22 +87,12 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await projectsApi.updateEnv(props.projectId, localEnvVars.value)
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Environment variables updated successfully',
-      life: 3000
-    })
+    await updateEnvVars(props.projectId, localEnvVars.value)
+    showSuccess(toast, SUCCESS_MESSAGES.ENV_VARS_UPDATED)
     emit('saved')
     handleClose()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update environment variables',
-      life: 3000
-    })
+    showError(toast, error, 'Failed to update environment variables')
   } finally {
     saving.value = false
   }
@@ -114,15 +109,10 @@ const loadEnvVars = async () => {
   if (!props.projectId) return
   
   try {
-    const response = await projectsApi.getEnv(props.projectId)
-    localEnvVars.value = response.data
+    const envVars = await getEnvVars(props.projectId)
+    localEnvVars.value = envVars
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load environment variables',
-      life: 3000
-    })
+    showError(toast, error, 'Failed to load environment variables')
   }
 }
 

@@ -5,6 +5,77 @@ description: Frontend Vue.js patterns and conventions
 
 # Frontend Vue.js Conventions
 
+## Architecture Overview
+
+DockLite frontend follows Vue 3 Composition API best practices:
+
+```
+src/
+├── components/     # Reusable UI components
+├── views/          # Route-level components
+├── composables/    # Reusable stateful logic
+├── config/         # Constants & configuration
+├── utils/          # Pure utility functions
+├── router.js       # Vue Router
+└── api.js          # Axios client
+```
+
+## Composables Pattern
+
+**Purpose:** Extract and reuse stateful logic
+
+**Naming:** Always use `use` prefix (e.g., `useProjects`, `useContainers`)
+
+**Example:**
+```javascript
+// composables/useProjects.js
+export function useProjects() {
+  const projects = ref([])
+  const loading = ref(false)
+  
+  const loadProjects = async () => { ... }
+  
+  return { projects, loading, loadProjects }
+}
+
+// In component
+const { projects, loading, loadProjects } = useProjects()
+```
+
+**Available Composables:**
+- `useProjects()` - Project CRUD operations
+- `useContainers()` - Container management
+- `usePresets()` - Preset selection logic
+
+## Constants & Configuration
+
+Location: [frontend/src/config/constants.js](mdc:frontend/src/config/constants.js)
+
+All magic values are extracted to constants:
+
+```javascript
+import { STATUS_SEVERITY, SUCCESS_MESSAGES } from '@/config/constants'
+
+const severity = STATUS_SEVERITY[project.status]
+showSuccess(toast, SUCCESS_MESSAGES.PROJECT_CREATED)
+```
+
+## Utils Pattern
+
+Location: [frontend/src/utils/](mdc:frontend/src/utils/)
+
+Pure utility functions for common operations:
+
+```javascript
+// formatters.js
+import { formatDate, formatError } from '@/utils/formatters'
+
+// toast.js
+import { showSuccess, showError } from '@/utils/toast'
+showSuccess(toast, 'Operation successful!')
+showError(toast, error)
+```
+
 ## Vue Router Structure
 
 Location: [frontend/src/router.js](mdc:frontend/src/router.js)

@@ -170,6 +170,8 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { usersApi } from '../api'
+import { formatDate } from '../utils/formatters'
+import { showSuccess, showError, showWarning } from '../utils/toast'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -378,11 +380,6 @@ const closePasswordDialog = () => {
   showPasswordDialog.value = false
   selectedUser.value = null
   newPassword.value = ''
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  return new Date(dateString).toLocaleString()
 }
 
 onMounted(() => {

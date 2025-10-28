@@ -127,7 +127,10 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { projectsApi, presetsApi } from '../api'
+import { useProjects } from '../composables/useProjects'
+import { usePresets } from '../composables/usePresets'
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants'
+import { showSuccess, showError, showWarning } from '../utils/toast'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -145,13 +148,23 @@ const visible = computed({
 
 const editingProject = computed(() => props.project)
 
-// Presets state
-const presets = ref([])
-const categories = ref([])
-const loadingPresets = ref(false)
-const selectedCategory = ref('all')
-const selectedPreset = ref(null)
-const presetDetails = ref(null)
+// Use composables
+const { createProject, updateProject } = useProjects()
+const { 
+  presets,
+  categories,
+  loading: loadingPresets,
+  selectedCategory,
+  selectedPreset,
+  presetDetails,
+  filteredPresets,
+  presetComposeContent,
+  loadPresets,
+  selectCategory,
+  selectPreset: selectPresetFn,
+  resetSelection
+} = usePresets()
+
 const saving = ref(false)
 
 // Form data
@@ -163,17 +176,6 @@ const formData = ref({
 })
 
 // Computed
-const filteredPresets = computed(() => {
-  if (selectedCategory.value === 'all') {
-    return presets.value
-  }
-  return presets.value.filter(p => p.category === selectedCategory.value)
-})
-
-const presetComposeContent = computed(() => {
-  return presetDetails.value?.compose_content || ''
-})
-
 const canSave = computed(() => {
   if (editingProject.value) {
     return formData.value.name && formData.value.domain && formData.value.compose_content
@@ -182,47 +184,14 @@ const canSave = computed(() => {
          (selectedPreset.value || formData.value.compose_content)
 })
 
-// Methods
-const loadPresets = async () => {
-  loadingPresets.value = true
-  try {
-    const [presetsRes, categoriesRes] = await Promise.all([
-      presetsApi.getAll(),
-      presetsApi.getCategories()
-    ])
-    presets.value = presetsRes.data
-    categories.value = categoriesRes.data
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load presets',
-      life: 3000
-    })
-  } finally {
-    loadingPresets.value = false
-  }
-}
-
-const selectCategory = (categoryId) => {
-  selectedCategory.value = categoryId
-}
-
+// Methods  
 const selectPreset = async (presetId) => {
   try {
-    const response = await presetsApi.getById(presetId)
-    presetDetails.value = response.data
-    selectedPreset.value = presets.value.find(p => p.id === presetId)
-    
+    const preset = await selectPresetFn(presetId)
     // Auto-fill env vars
-    formData.value.env_vars = presetDetails.value.default_env_vars || {}
+    formData.value.env_vars = preset.default_env_vars || {}
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load preset details',
-      life: 3000
-    })
+    showError(toast, error, ERROR_MESSAGES.LOAD_PRESETS_FAILED)
   }
 }
 
@@ -233,19 +202,13 @@ const resetForm = () => {
     compose_content: '',
     env_vars: {}
   }
-  selectedPreset.value = null
-  presetDetails.value = null
-  selectedCategory.value = 'all'
+  resetSelection()
 }
 
 const handleSave = async () => {
+  // Validation
   if (!formData.value.name || !formData.value.domain) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validation Error',
-      detail: 'Please fill all required fields',
-      life: 3000
-    })
+    showWarning(toast, ERROR_MESSAGES.VALIDATION_ERROR)
     return
   }
 
@@ -253,12 +216,7 @@ const handleSave = async () => {
   const composeContent = presetDetails.value?.compose_content || formData.value.compose_content
   
   if (!composeContent) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validation Error',
-      detail: 'Please select a preset or provide docker-compose content',
-      life: 3000
-    })
+    showWarning(toast, 'Please select a preset or provide docker-compose content')
     return
   }
 
@@ -270,32 +228,17 @@ const handleSave = async () => {
     }
     
     if (editingProject.value) {
-      await projectsApi.update(editingProject.value.id, projectData)
-      toast.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Project updated successfully',
-        life: 3000
-      })
+      await updateProject(editingProject.value.id, projectData)
+      showSuccess(toast, SUCCESS_MESSAGES.PROJECT_UPDATED)
     } else {
-      await projectsApi.create(projectData)
-      toast.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Project created successfully',
-        life: 3000
-      })
+      await createProject(projectData)
+      showSuccess(toast, SUCCESS_MESSAGES.PROJECT_CREATED)
     }
     
     emit('saved')
     handleClose()
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.detail || 'Failed to save project',
-      life: 5000
-    })
+    showError(toast, error, ERROR_MESSAGES.SAVE_PROJECT_FAILED)
   } finally {
     saving.value = false
   }
