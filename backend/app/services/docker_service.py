@@ -27,7 +27,7 @@ class DockerService:
         if project_dir:
             self.project_dir = project_dir
         else:
-            self.project_dir = Path(settings.PROJECTS_BASE_DIR) / str(project_id)
+            self.project_dir = Path(settings.PROJECTS_DIR) / str(project_id)
     
     async def _run_ssh_command(self, command: str) -> tuple[int, str, str]:
         """

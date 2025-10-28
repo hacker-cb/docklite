@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     # Projects
     PROJECTS_DIR: str = "/home/docklite/projects"
     DEPLOY_USER: str = "docklite"
+    DEPLOY_HOST: str = "localhost"
+    DEPLOY_PORT: int = 22
     
     # API
     API_HOST: str = "0.0.0.0"

@@ -74,11 +74,13 @@ class ProjectService:
         compose_file = project_path / "docker-compose.yml"
         compose_file.write_text(project_data.compose_content)
         
-        # Write .env file
+        # Write .env file (always create, even if empty)
+        env_file = project_path / ".env"
         if project_data.env_vars:
-            env_file = project_path / ".env"
             env_content = "\n".join([f"{k}={v}" for k, v in project_data.env_vars.items()])
             env_file.write_text(env_content)
+        else:
+            env_file.write_text("")  # Create empty .env file
         
         return new_project, None
     
