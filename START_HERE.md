@@ -36,6 +36,11 @@ sudo ./setup-docklite-user.sh
 
 http://artem.sokolov.me:5173
 
+**При первом открытии:**
+1. Увидите экран "Initial Setup"
+2. Создайте admin аккаунт (username, password)
+3. Автоматически войдете в систему
+
 ### Шаг 5: Создать первый проект
 
 1. Нажмите "New Project"

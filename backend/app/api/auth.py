@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import get_current_active_user
-from app.models.schemas import UserLogin, Token, UserResponse
+from app.models.schemas import UserLogin, Token, UserResponse, UserCreate
 from app.services.auth_service import AuthService
 from app.models.user import User
 
@@ -57,4 +57,42 @@ async def logout(
 ):
     """Logout (client should remove token)"""
     return {"message": "Successfully logged out"}
+
+
+@router.get("/setup/check")
+async def check_setup_needed(db: AsyncSession = Depends(get_db)):
+    """Check if initial setup is needed (no users exist)"""
+    auth_service = AuthService(db)
+    has_users = await auth_service.has_users()
+    
+    return {
+        "setup_needed": not has_users,
+        "has_users": has_users
+    }
+
+
+@router.post("/setup", response_model=Token)
+async def initial_setup(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Create first admin user (only works if no users exist)"""
+    auth_service = AuthService(db)
+    
+    # Create first admin
+    user, error = await auth_service.create_first_admin(user_data)
+    
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error
+        )
+    
+    # Auto-login: create access token
+    access_token = auth_service.create_access_token(data={"sub": user.username})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 

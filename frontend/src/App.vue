@@ -1,7 +1,10 @@
 <template>
   <div class="app">
+    <!-- Setup screen (first time) -->
+    <Setup v-if="needsSetup && !isAuthenticated" @setup-complete="handleLoginSuccess" />
+
     <!-- Login screen -->
-    <Login v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
+    <Login v-else-if="!isAuthenticated" @login-success="handleLoginSuccess" />
 
     <!-- Main app (authenticated) -->
     <div v-else>
@@ -317,6 +320,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { projectsApi, presetsApi, deploymentApi, authApi } from './api'
 import Login from './Login.vue'
+import Setup from './Setup.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -324,6 +328,7 @@ const confirm = useConfirm()
 // Auth state
 const isAuthenticated = ref(false)
 const currentUser = ref(null)
+const needsSetup = ref(false)
 
 // State
 const projects = ref([])
@@ -657,10 +662,20 @@ const getStatusSeverity = (status) => {
   return severityMap[status] || 'info'
 }
 
+const checkSetup = async () => {
+  try {
+    const response = await authApi.checkSetup()
+    needsSetup.value = response.data.setup_needed
+  } catch (error) {
+    console.error('Failed to check setup status:', error)
+  }
+}
+
 const checkAuth = async () => {
   const token = localStorage.getItem('token')
   if (!token) {
     isAuthenticated.value = false
+    await checkSetup()
     return
   }
 
@@ -668,18 +683,21 @@ const checkAuth = async () => {
     const response = await authApi.me()
     currentUser.value = response.data
     isAuthenticated.value = true
+    needsSetup.value = false
     loadProjects()
   } catch (error) {
     // Token invalid, clear it
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     isAuthenticated.value = false
+    await checkSetup()
   }
 }
 
 const handleLoginSuccess = (user) => {
   currentUser.value = user
   isAuthenticated.value = true
+  needsSetup.value = false
   loadProjects()
 }
 

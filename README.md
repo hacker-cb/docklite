@@ -110,17 +110,7 @@ cd /home/pavel/docklite
 docker-compose up -d --build
 ```
 
-5. **Создать первого пользователя**:
-
-```bash
-# Интерактивный режим
-docker exec -it docklite-backend python create_user.py
-
-# Или CLI режим
-docker exec -it docklite-backend python create_user.py admin mypassword admin@example.com --admin
-```
-
-6. **Проверить статус**:
+5. **Проверить статус**:
 
 ```bash
 docker-compose ps
@@ -136,13 +126,33 @@ docker-compose ps
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
-### Первый вход
+### Первый вход (Initial Setup)
 
-1. Откройте frontend
-2. Введите username и password созданного пользователя
-3. Нажмите "Login"
+При первом открытии UI вы увидите экран **"Initial Setup"**:
 
-**Default учетные данные**: создайте через CLI
+1. Откройте frontend (http://localhost:5173)
+2. Увидите форму "Create Admin Account"
+3. Заполните:
+   - **Username**: ваш логин (мин. 3 символа)
+   - **Email**: ваш email (опционально)
+   - **Password**: пароль (мин. 6 символов)
+   - **Confirm Password**: повторите пароль
+4. Нажмите "Create Admin Account"
+5. Автоматический вход в систему
+
+**Это нужно сделать только один раз!** При последующих визитах будет обычная форма входа.
+
+### Дополнительные пользователи
+
+Для создания дополнительных пользователей используйте CLI:
+
+```bash
+# Создать обычного пользователя
+docker exec -it docklite-backend python create_user.py username password email@example.com
+
+# Создать админа
+docker exec -it docklite-backend python create_user.py username password email@example.com --admin
+```
 
 ### Создание проекта
 

@@ -46,8 +46,8 @@
       </div>
 
       <div class="login-footer">
-        <p>Default credentials: <code>admin</code> / <code>admin</code></p>
-        <small>Create user: <code>docker exec -it docklite-backend python create_user.py</code></small>
+        <p>Enter your DockLite credentials</p>
+        <small>Forgot password? Contact your administrator</small>
       </div>
     </div>
   </div>

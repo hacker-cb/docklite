@@ -110,4 +110,28 @@ class AuthService:
             return None
         
         return user
+    
+    async def has_users(self) -> bool:
+        """Check if any users exist in the database"""
+        result = await self.db.execute(select(User).limit(1))
+        user = result.scalar_one_or_none()
+        return user is not None
+    
+    async def create_first_admin(self, user_data: UserCreate) -> tuple[Optional[User], Optional[str]]:
+        """Create first admin user (only works if no users exist)"""
+        # Check if users already exist
+        if await self.has_users():
+            return None, "Users already exist. Use regular login."
+        
+        # Create user with admin privileges
+        user, error = await self.create_user(user_data)
+        if error:
+            return None, error
+        
+        # Make first user admin
+        user.is_admin = 1
+        await self.db.commit()
+        await self.db.refresh(user)
+        
+        return user, None
 

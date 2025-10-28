@@ -43,7 +43,19 @@ cd /home/pavel/docklite
 
 Подождите несколько минут, пока Docker соберет образы и запустит контейнеры.
 
-## 4. Добавить SSH ключ (для деплоя)
+## 4. Открыть в браузере и создать admin
+
+- **Frontend**: http://localhost:5173 или http://YOUR_SERVER_IP:5173
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
+**При первом открытии** вы увидите экран "Initial Setup":
+1. Заполните форму создания admin аккаунта
+2. Username, Email (optional), Password
+3. Нажмите "Create Admin Account"
+4. Автоматически войдете в систему
+
+## 5. Добавить SSH ключ (для деплоя)
 
 ```bash
 # На вашем компьютере: скопировать публичный ключ
@@ -53,12 +65,6 @@ cat ~/.ssh/id_ed25519.pub
 sudo -u docklite nano /home/docklite/.ssh/authorized_keys
 # Вставить ключ и сохранить
 ```
-
-## 5. Открыть в браузере
-
-- **Frontend**: http://localhost:5173 или http://YOUR_SERVER_IP:5173
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
 
 ## 6. Создать первый проект
 

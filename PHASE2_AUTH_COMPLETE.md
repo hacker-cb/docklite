@@ -52,7 +52,12 @@
 - ✅ Создает таблицу users
 - ✅ Индексы на username и email
 
-#### 7. CLI Tool
+#### 7. Initial Setup (Auto-Setup)
+- ✅ API endpoint `/api/auth/setup/check` - проверка нужна ли настройка
+- ✅ API endpoint `/api/auth/setup` - создание первого admin (работает только если нет пользователей)
+- ✅ Автоматический вход после создания первого пользователя
+
+#### 8. CLI Tool (для дополнительных пользователей)
 - ✅ `backend/create_user.py` - создание пользователя
 - ✅ Интерактивный режим
 - ✅ CLI режим с аргументами
@@ -60,26 +65,33 @@
 
 ### Frontend (Vue.js + localStorage)
 
-#### 1. Login Component
+#### 1. Setup Component (первый запуск)
+- ✅ Форма создания admin (username, email, password, confirm)
+- ✅ Валидация полей
+- ✅ Обработка ошибок
+- ✅ Автоматический вход после создания
+- ✅ Красивый дизайн с информационным блоком
+
+#### 2. Login Component
 - ✅ Форма входа (username, password)
 - ✅ Обработка ошибок
 - ✅ Loading состояние
 - ✅ Красивый дизайн с градиентом
-- ✅ Подсказка о default credentials
 
-#### 2. Auth Integration
-- ✅ Проверка токена при загрузке
+#### 3. Auth Integration
+- ✅ Проверка setup/auth при загрузке
+- ✅ Условный рендеринг: Setup → Login → Main App
 - ✅ Автоматический login при наличии валидного токена
 - ✅ Interceptors для добавления токена в запросы
 - ✅ Автоматическая обработка 401 (редирект на login)
 
-#### 3. UI Updates
+#### 4. UI Updates
 - ✅ Header с информацией о пользователе
 - ✅ Кнопка Logout
-- ✅ Условный рендеринг (Login / Main App)
+- ✅ Условный рендеринг (Setup / Login / Main App)
 - ✅ LocalStorage для токена и user info
 
-#### 4. API Client
+#### 5. API Client
 - ✅ `authApi.login()` - вход
 - ✅ `authApi.me()` - текущий пользователь
 - ✅ `authApi.logout()` - выход
@@ -87,23 +99,25 @@
 
 ## 📊 Статистика
 
-### Новые файлы (7)
+### Новые файлы (8)
 - `backend/app/models/user.py` - модель
 - `backend/app/services/auth_service.py` - сервис
 - `backend/app/core/security.py` - dependencies
 - `backend/app/api/auth.py` - endpoints
 - `backend/alembic/versions/002_add_users.py` - миграция
 - `backend/create_user.py` - CLI tool
-- `frontend/src/Login.vue` - компонент
+- `frontend/src/Login.vue` - компонент входа
+- `frontend/src/Setup.vue` - компонент первичной настройки
 
-### Обновленные файлы (7)
+### Обновленные файлы (8)
 - `backend/app/models/schemas.py` - User схемы
 - `backend/app/main.py` - auth router
 - `backend/app/api/projects.py` - защищенные endpoints
 - `backend/app/api/deployment.py` - защищенные endpoints
 - `backend/requirements.txt` - email validation
-- `frontend/src/api.js` - auth interceptors
-- `frontend/src/App.vue` - auth UI
+- `frontend/src/api.js` - auth interceptors + setup API
+- `frontend/src/App.vue` - auth UI с Setup
+- `README.md`, `QUICKSTART.md` - обновлены инструкции
 
 ### Строки кода
 - **Backend**: +450 строк
@@ -131,27 +145,33 @@ ACCESS_TOKEN_EXPIRE_MINUTES=43200  # 30 days
 
 ## 🚀 Использование
 
-### 1. Создать первого пользователя
-
-**Интерактивный режим:**
-```bash
-docker exec -it docklite-backend python create_user.py
-```
-
-**CLI режим:**
-```bash
-# Обычный пользователь
-docker exec -it docklite-backend python create_user.py admin mypassword admin@example.com
-
-# Админ
-docker exec -it docklite-backend python create_user.py admin mypassword admin@example.com --admin
-```
-
-### 2. Войти в систему
+### 1. Первый запуск (Initial Setup)
 
 1. Открыть http://artem.sokolov.me:5173
-2. Ввести username и password
-3. Нажать "Login"
+2. Увидите экран "Initial Setup"
+3. Заполнить форму:
+   - Username (мин. 3 символа)
+   - Email (опционально)
+   - Password (мин. 6 символов)
+   - Confirm Password
+4. Нажать "Create Admin Account"
+5. Автоматически войдете в систему
+
+**Это делается ОДИН РАЗ при первом запуске!**
+
+### 2. Последующие входы
+
+1. Открыть http://artem.sokolov.me:5173
+2. Увидите форму "Login"
+3. Ввести username и password
+4. Нажать "Login"
+
+### 3. Создание дополнительных пользователей
+
+Через CLI (опционально):
+```bash
+docker exec -it docklite-backend python create_user.py username password email@example.com --admin
+```
 
 ### 3. Работа с системой
 

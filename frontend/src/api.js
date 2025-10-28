@@ -101,6 +101,16 @@ export const deploymentApi = {
 }
 
 export const authApi = {
+  // Check if setup is needed
+  checkSetup() {
+    return api.get('/auth/setup/check')
+  },
+  
+  // Initial setup (create first admin)
+  setup(userData) {
+    return api.post('/auth/setup', userData)
+  },
+  
   // Login
   login(credentials) {
     return api.post('/auth/login', credentials)
