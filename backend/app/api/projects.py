@@ -4,11 +4,26 @@ from typing import Dict
 from app.core.database import get_db
 from app.core.security import get_current_active_user
 from app.models.user import User
+from app.models.project import Project
 from app.models.schemas import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectListResponse
 from app.services.project_service import ProjectService
 import json
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
+
+def project_to_response(project: Project) -> dict:
+    """Convert Project model to response dict"""
+    return {
+        "id": project.id,
+        "name": project.name,
+        "domain": project.domain,
+        "compose_content": project.compose_content,
+        "env_vars": json.loads(project.env_vars or "{}"),
+        "status": project.status,
+        "created_at": project.created_at,
+        "updated_at": project.updated_at
+    }
 
 
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -24,9 +39,7 @@ async def create_project(
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     
-    # Parse env_vars back to dict
-    new_project.env_vars = json.loads(new_project.env_vars or "{}")
-    return new_project
+    return project_to_response(new_project)
 
 
 @router.get("", response_model=ProjectListResponse)
@@ -38,12 +51,8 @@ async def get_projects(
     service = ProjectService(db)
     projects = await service.get_all_projects()
     
-    # Parse env_vars for each project
-    for project in projects:
-        project.env_vars = json.loads(project.env_vars or "{}")
-    
     return {
-        "projects": projects,
+        "projects": [project_to_response(p) for p in projects],
         "total": len(projects)
     }
 
@@ -61,9 +70,7 @@ async def get_project(
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     
-    # Parse env_vars
-    project.env_vars = json.loads(project.env_vars or "{}")
-    return project
+    return project_to_response(project)
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
@@ -80,9 +87,7 @@ async def update_project(
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     
-    # Parse env_vars
-    updated_project.env_vars = json.loads(updated_project.env_vars or "{}")
-    return updated_project
+    return project_to_response(updated_project)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)

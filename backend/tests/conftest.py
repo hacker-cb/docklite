@@ -115,3 +115,31 @@ def compose_without_services():
 name: myapp
 """
 
+
+@pytest.fixture
+async def auth_token(client, db_session):
+    """Create a user and return auth token for tests"""
+    from app.models.user import User
+    from app.services.auth_service import AuthService
+    
+    # Create user directly in DB
+    auth_service = AuthService(db_session)
+    password_hash = auth_service.get_password_hash("testpass123")
+    
+    user = User(
+        username="testadmin",
+        email="test@example.com",
+        password_hash=password_hash,
+        is_active=1,
+        is_admin=1
+    )
+    
+    db_session.add(user)
+    await db_session.commit()
+    
+    # Create token
+    token = auth_service.create_access_token(data={"sub": user.username})
+    return token
+
+
+

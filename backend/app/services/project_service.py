@@ -78,6 +78,7 @@ class ProjectService:
         )
         
         self.db.add(new_project)
+        await self.db.flush()  # Flush to get ID before file operations
         await self.db.commit()
         await self.db.refresh(new_project)
         

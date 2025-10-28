@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -15,8 +15,4 @@ class Project(Base):
     status = Column(String(50), default="created")  # created, running, stopped, error
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    __table_args__ = (
-        Index('ix_projects_domain', 'domain', unique=True),
-    )
 
