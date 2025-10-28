@@ -1,13 +1,32 @@
 <template>
   <div class="app">
-    <header class="header">
-      <div class="header-content">
-        <h1><i class="pi pi-server"></i> DockLite</h1>
-        <p>Web Server Management System</p>
-      </div>
-    </header>
+    <!-- Login screen -->
+    <Login v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
 
-    <main class="main-content">
+    <!-- Main app (authenticated) -->
+    <div v-else>
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <h1><i class="pi pi-server"></i> DockLite</h1>
+            <p>Web Server Management System</p>
+          </div>
+          <div class="header-right">
+            <span class="user-info">
+              <i class="pi pi-user"></i>
+              {{ currentUser?.username }}
+            </span>
+            <Button 
+              label="Logout" 
+              icon="pi pi-sign-out" 
+              @click="handleLogout"
+              class="p-button-sm p-button-outlined"
+            />
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
       <div class="toolbar">
         <Button 
           label="New Project" 
@@ -35,8 +54,14 @@
             />
           </template>
         </Column>
-        <Column header="Actions" style="width: 200px">
+        <Column header="Actions" style="width: 250px">
           <template #body="slotProps">
+            <Button 
+              icon="pi pi-upload" 
+              class="p-button-rounded p-button-text p-button-info" 
+              @click="showDeployInfo(slotProps.data)"
+              v-tooltip="'Deploy Info'"
+            />
             <Button 
               icon="pi pi-pencil" 
               class="p-button-rounded p-button-text" 
@@ -59,6 +84,7 @@
         </Column>
       </DataTable>
     </main>
+    </div>
 
     <!-- Create/Edit Project Dialog with Presets -->
     <Dialog 
@@ -225,6 +251,61 @@
       </template>
     </Dialog>
 
+    <!-- Deployment Info Dialog -->
+    <Dialog 
+      v-model:visible="showDeployDialog" 
+      header="Deployment Instructions"
+      :modal="true"
+      :style="{ width: '700px' }"
+      :maximizable="true"
+    >
+      <div v-if="deployInfo">
+        <div class="deploy-info-section">
+          <h3>📋 Project Information</h3>
+          <p><strong>Project ID:</strong> {{ deployInfo.project_id }}</p>
+          <p><strong>Domain:</strong> {{ deployInfo.domain }}</p>
+          <p><strong>Server Path:</strong> <code>{{ deployInfo.project_path }}</code></p>
+        </div>
+
+        <div class="deploy-info-section">
+          <h3>🚀 Quick Deploy</h3>
+          <p><strong>1. Upload files:</strong></p>
+          <pre class="command-box">{{ deployInfo.instructions.upload_files }}</pre>
+          
+          <p><strong>2. Start containers:</strong></p>
+          <pre class="command-box">{{ deployInfo.instructions.start_containers }}</pre>
+        </div>
+
+        <div class="deploy-info-section">
+          <h3>📝 Deploy Script</h3>
+          <p>Create <code>deploy.sh</code> in your project:</p>
+          <pre class="command-box">{{ deployInfo.examples.deploy_script }}</pre>
+          <p><small>Make executable: <code>chmod +x deploy.sh</code></small></p>
+        </div>
+
+        <div class="deploy-info-section">
+          <h3>🔧 Useful Commands</h3>
+          <p><strong>View logs:</strong></p>
+          <pre class="command-box">{{ deployInfo.instructions.view_logs }}</pre>
+          
+          <p><strong>Restart:</strong></p>
+          <pre class="command-box">{{ deployInfo.instructions.restart }}</pre>
+          
+          <p><strong>Stop:</strong></p>
+          <pre class="command-box">{{ deployInfo.instructions.stop }}</pre>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button 
+          label="Close" 
+          icon="pi pi-times" 
+          @click="closeDeployDialog" 
+          class="p-button-text"
+        />
+      </template>
+    </Dialog>
+
     <Toast />
     <ConfirmDialog />
   </div>
@@ -234,10 +315,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { projectsApi, presetsApi } from './api'
+import { projectsApi, presetsApi, deploymentApi, authApi } from './api'
+import Login from './Login.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
+
+// Auth state
+const isAuthenticated = ref(false)
+const currentUser = ref(null)
 
 // State
 const projects = ref([])
@@ -245,8 +331,10 @@ const loading = ref(false)
 const saving = ref(false)
 const showCreateDialog = ref(false)
 const showEnvDialog = ref(false)
+const showDeployDialog = ref(false)
 const editingProject = ref(null)
 const currentProjectForEnv = ref(null)
+const deployInfo = ref(null)
 
 // Presets state
 const presets = ref([])
@@ -539,6 +627,26 @@ const closeEnvDialog = () => {
   newEnvValue.value = ''
 }
 
+const showDeployInfo = async (project) => {
+  try {
+    const response = await deploymentApi.getInfo(project.id)
+    deployInfo.value = response.data
+    showDeployDialog.value = true
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load deployment info',
+      life: 3000
+    })
+  }
+}
+
+const closeDeployDialog = () => {
+  showDeployDialog.value = false
+  deployInfo.value = null
+}
+
 const getStatusSeverity = (status) => {
   const severityMap = {
     'created': 'info',
@@ -549,8 +657,48 @@ const getStatusSeverity = (status) => {
   return severityMap[status] || 'info'
 }
 
-onMounted(() => {
+const checkAuth = async () => {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    isAuthenticated.value = false
+    return
+  }
+
+  try {
+    const response = await authApi.me()
+    currentUser.value = response.data
+    isAuthenticated.value = true
+    loadProjects()
+  } catch (error) {
+    // Token invalid, clear it
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    isAuthenticated.value = false
+  }
+}
+
+const handleLoginSuccess = (user) => {
+  currentUser.value = user
+  isAuthenticated.value = true
   loadProjects()
+}
+
+const handleLogout = async () => {
+  try {
+    await authApi.logout()
+  } catch (error) {
+    // Ignore errors on logout
+  } finally {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    isAuthenticated.value = false
+    currentUser.value = null
+    projects.value = []
+  }
+}
+
+onMounted(() => {
+  checkAuth()
 })
 </script>
 
@@ -563,11 +711,19 @@ onMounted(() => {
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.header-content h1 {
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-left h1 {
   margin: 0;
   font-size: 2rem;
   display: flex;
@@ -575,9 +731,25 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-.header-content p {
+.header-left p {
   margin: 0.5rem 0 0 0;
   opacity: 0.9;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-weight: 500;
 }
 
 .main-content {
@@ -766,5 +938,48 @@ onMounted(() => {
 
 .env-add-value {
   width: 100%;
+}
+
+/* Deployment Dialog */
+.deploy-info-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.deploy-info-section:last-child {
+  border-bottom: none;
+}
+
+.deploy-info-section h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.deploy-info-section p {
+  margin: 0.5rem 0;
+}
+
+.command-box {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0.5rem 0;
+}
+
+.deploy-info-section code {
+  background: #e9ecef;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
 }
 </style>

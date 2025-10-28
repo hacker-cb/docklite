@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200
     
     # Projects
-    PROJECTS_DIR: str = "/home/pavel/docklite-projects"
+    PROJECTS_DIR: str = "/home/docklite/projects"
+    DEPLOY_USER: str = "docklite"
     
     # API
     API_HOST: str = "0.0.0.0"

@@ -13,7 +13,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app.core.database import Base
-from app.models.project import Project  # Import all models
+from app.models.project import Project
+from app.models.user import User  # Import all models
 
 # this is the Alembic Config object
 config = context.config

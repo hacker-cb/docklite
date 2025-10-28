@@ -8,12 +8,13 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - /home/pavel/docklite-projects:/home/pavel/docklite-projects
+      - ${PROJECTS_DIR:-/home/docklite/projects}:${PROJECTS_DIR:-/home/docklite/projects}
       - /var/run/docker.sock:/var/run/docker.sock
       - docklite-data:/data
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////data/docklite.db
-      - PROJECTS_DIR=/home/pavel/docklite-projects
+      - PROJECTS_DIR=${PROJECTS_DIR:-/home/docklite/projects}
+      - DEPLOY_USER=${DEPLOY_USER:-docklite}
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
       - API_HOST=0.0.0.0
       - API_PORT=8000

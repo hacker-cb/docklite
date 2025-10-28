@@ -4,8 +4,10 @@ DockLite - это система управления веб-сервером с
 
 ## Возможности
 
+- ✅ **Авторизация (JWT)** - защищенный доступ с username/password
 - ✅ **Готовые пресеты** - 14 шаблонов для популярных стеков (Nginx, WordPress, PostgreSQL, и др.)
 - ✅ **CRUD проектов** - создание, редактирование, удаление проектов
+- ✅ **SSH Deployment** - загрузка файлов через rsync/scp/SFTP
 - ✅ **Управление .env переменными** - удобный интерфейс для настройки окружения
 - ✅ **Валидация docker-compose.yml** - проверка корректности конфигурации перед деплоем
 - ✅ **Веб-интерфейс** - современный UI на Vue.js 3 + PrimeVue
@@ -108,7 +110,17 @@ cd /home/pavel/docklite
 docker-compose up -d --build
 ```
 
-5. **Проверить статус**:
+5. **Создать первого пользователя**:
+
+```bash
+# Интерактивный режим
+docker exec -it docklite-backend python create_user.py
+
+# Или CLI режим
+docker exec -it docklite-backend python create_user.py admin mypassword admin@example.com --admin
+```
+
+6. **Проверить статус**:
 
 ```bash
 docker-compose ps
@@ -123,6 +135,14 @@ docker-compose ps
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
+
+### Первый вход
+
+1. Откройте frontend
+2. Введите username и password созданного пользователя
+3. Нажмите "Login"
+
+**Default учетные данные**: создайте через CLI
 
 ### Создание проекта
 
@@ -148,6 +168,30 @@ docker-compose ps
 5. Нажмите "Create"
 
 **Доступные пресеты**: 14 шаблонов (см. [PRESETS.md](./PRESETS.md))
+
+### Деплой проекта на сервер
+
+После создания проекта в UI, загрузите файлы приложения через SSH:
+
+```bash
+# 1. Загрузить файлы (например, Project ID = 5)
+rsync -avz ./your-app/ docklite@server:/home/docklite/projects/5/
+
+# 2. Запустить docker-compose
+ssh docklite@server "cd /home/docklite/projects/5 && docker-compose up -d"
+
+# 3. Проверить статус
+ssh docklite@server "cd /home/docklite/projects/5 && docker-compose ps"
+```
+
+**Первоначальная настройка сервера**:
+
+```bash
+cd /home/pavel/docklite
+sudo ./setup-docklite-user.sh
+```
+
+Подробная документация: [SSH_ACCESS.md](./SSH_ACCESS.md)
 
 ### Редактирование .env переменных
 

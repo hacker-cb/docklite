@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, Dict
 from datetime import datetime
 
@@ -34,4 +34,39 @@ class ProjectResponse(ProjectBase):
 class ProjectListResponse(BaseModel):
     projects: list[ProjectResponse]
     total: int
+
+
+# ========== User Schemas ==========
+
+class UserBase(BaseModel):
+    username: str = Field(..., min_length=3, max_length=255)
+    email: Optional[EmailStr] = None
+
+
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6)
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
 

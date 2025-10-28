@@ -22,7 +22,19 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-## 2. Запустить DockLite
+## 2. Настроить пользователя для деплоя
+
+```bash
+cd /home/pavel/docklite
+sudo ./setup-docklite-user.sh
+```
+
+Это создаст:
+- Пользователя `docklite`
+- Директорию `/home/docklite/projects/`
+- SSH конфигурацию
+
+## 3. Запустить DockLite
 
 ```bash
 cd /home/pavel/docklite
@@ -31,13 +43,24 @@ cd /home/pavel/docklite
 
 Подождите несколько минут, пока Docker соберет образы и запустит контейнеры.
 
-## 3. Открыть в браузере
+## 4. Добавить SSH ключ (для деплоя)
+
+```bash
+# На вашем компьютере: скопировать публичный ключ
+cat ~/.ssh/id_ed25519.pub
+
+# На сервере: добавить ключ
+sudo -u docklite nano /home/docklite/.ssh/authorized_keys
+# Вставить ключ и сохранить
+```
+
+## 5. Открыть в браузере
 
 - **Frontend**: http://localhost:5173 или http://YOUR_SERVER_IP:5173
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
-## 4. Создать первый проект
+## 6. Создать первый проект
 
 1. Нажмите "New Project"
 2. Заполните форму:
@@ -54,8 +77,21 @@ cd /home/pavel/docklite
          - "8080:80"
    ```
 3. Нажмите "Create"
+4. Запомните Project ID (например, 1)
 
-## 5. Просмотр логов
+## 7. Задеплоить файлы
+
+```bash
+# Загрузить ваши файлы (замените 1 на ваш Project ID)
+rsync -avz ./my-app/ docklite@your-server:/home/docklite/projects/1/
+
+# Запустить контейнеры
+ssh docklite@your-server "cd /home/docklite/projects/1 && docker-compose up -d"
+```
+
+Подробнее: [SSH_ACCESS.md](./SSH_ACCESS.md)
+
+## 8. Просмотр логов
 
 ```bash
 # Все логи

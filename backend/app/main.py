@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
-from app.api import projects, presets
+from app.api import projects, presets, deployment, auth
 from app.core.config import settings
 from app.core.database import engine, Base
 
@@ -23,8 +23,10 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api")  # Auth endpoints (public)
 app.include_router(projects.router, prefix="/api")
 app.include_router(presets.router, prefix="/api")
+app.include_router(deployment.router, prefix="/api")
 
 
 # Startup event

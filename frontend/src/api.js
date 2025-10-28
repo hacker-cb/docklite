@@ -7,6 +7,32 @@ const api = axios.create({
   }
 })
 
+// Add auth token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Handle 401 responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.reload()
+    }
+    return Promise.reject(error)
+  }
+)
+
 export const projectsApi = {
   // Get all projects
   getAll() {
@@ -59,6 +85,35 @@ export const presetsApi = {
   // Get preset by ID with full details
   getById(id) {
     return api.get(`/presets/${id}`)
+  }
+}
+
+export const deploymentApi = {
+  // Get deployment instructions for project
+  getInfo(projectId) {
+    return api.get(`/deployment/${projectId}/info`)
+  },
+  
+  // Get SSH setup instructions
+  getSshSetup() {
+    return api.get('/deployment/ssh-setup')
+  }
+}
+
+export const authApi = {
+  // Login
+  login(credentials) {
+    return api.post('/auth/login', credentials)
+  },
+  
+  // Get current user
+  me() {
+    return api.get('/auth/me')
+  },
+  
+  // Logout
+  logout() {
+    return api.post('/auth/logout')
   }
 }
 
