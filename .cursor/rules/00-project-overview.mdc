@@ -1,0 +1,102 @@
+---
+alwaysApply: true
+description: DockLite project structure and architecture overview
+---
+
+# DockLite Project Overview
+
+DockLite - система управления веб-сервером для деплоя множества проектов через docker-compose.
+
+## Project Structure
+
+```
+/home/pavel/docklite/          # Main DockLite system
+├── backend/                   # FastAPI backend
+│   ├── app/
+│   │   ├── api/              # API endpoints (auth, users, projects, presets, deployment)
+│   │   ├── core/             # Config, database, security
+│   │   ├── models/           # SQLAlchemy models & Pydantic schemas
+│   │   ├── services/         # Business logic
+│   │   └── presets/          # 14 docker-compose templates
+│   ├── tests/                # Pytest tests (78 tests)
+│   ├── alembic/              # Database migrations
+│   └── Dockerfile
+├── frontend/                  # Vue.js 3 + PrimeVue frontend
+│   ├── src/
+│   │   ├── views/            # Router views (ProjectsView, UsersView)
+│   │   ├── App.vue           # Main app with auth
+│   │   ├── Login.vue         # Login form
+│   │   ├── Setup.vue         # Initial setup form
+│   │   ├── router.js         # Vue Router config
+│   │   └── api.js            # Axios API client
+│   ├── tests/                # Vitest tests
+│   └── Dockerfile
+└── docker-compose.yml
+
+/home/docklite/projects/       # User deployed projects
+    ├── {project_id}/
+    │   ├── docker-compose.yml
+    │   └── .env
+```
+
+## Key Architecture Decisions
+
+### Port Field Removed
+- Projects do NOT have a port field
+- All projects will use virtual hosts (Nginx in Phase 5)
+- Access via domains, not ports
+
+### Deployment via SSH
+- User: `docklite` (configurable via DEPLOY_USER env)
+- Projects dir: `/home/docklite/projects/`
+- Users upload files via rsync/scp/SFTP
+
+### Multi-User with JWT
+- JWT authentication with bcrypt password hashing
+- Admin users can manage other users
+- Setup screen for first admin creation
+- User Management UI for admins
+
+## Tech Stack
+
+**Backend:**
+- FastAPI (async)
+- SQLAlchemy + Alembic (SQLite, migrateable to PostgreSQL)
+- JWT (python-jose) + bcrypt (passlib)
+- PyYAML for validation
+- Pytest (78 tests, 94% coverage)
+
+**Frontend:**
+- Vue.js 3 (Composition API)
+- Vue Router 4 (hash mode)
+- PrimeVue UI components
+- Axios for API calls
+- Vitest for testing
+
+## Current Phase Status
+
+✅ **Phase 1**: CRUD + Presets (14) + SSH Deployment
+✅ **Phase 2**: JWT Authorization + Auto-Setup
+✅ **Phase 2.5**: User Management
+🔄 **Phase 3**: Container Management (next)
+🔄 **Phases 4-9**: Planned
+
+## Important Files
+
+- [backend/app/main.py](mdc:backend/app/main.py) - FastAPI app entry point
+- [backend/app/core/config.py](mdc:backend/app/core/config.py) - Settings
+- [backend/app/models/project.py](mdc:backend/app/models/project.py) - Project model
+- [backend/app/models/user.py](mdc:backend/app/models/user.py) - User model
+- [frontend/src/App.vue](mdc:frontend/src/App.vue) - Main Vue app
+- [frontend/src/router.js](mdc:frontend/src/router.js) - Vue Router
+- [docker-compose.yml](mdc:docker-compose.yml) - DockLite orchestration
+- [README.md](mdc:README.md) - Main documentation
+
+## Testing
+
+Always run tests after changes:
+```bash
+sg docker -c "docker-compose run --rm backend pytest -v"
+```
+
+Expected: 78 tests passing

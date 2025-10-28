@@ -1,0 +1,84 @@
+---
+description: Development phases and roadmap
+---
+
+# DockLite Development Phases
+
+## Completed Phases
+
+### ✅ Phase 1: CRUD + Presets + SSH
+- Projects CRUD API
+- 14 docker-compose presets
+- Vue.js 3 + PrimeVue UI
+- SSH deployment infrastructure
+- 33 tests
+
+### ✅ Phase 2: Authorization
+- JWT authentication (python-jose + bcrypt)
+- User model with migrations
+- Login/Logout API
+- Auto-setup for first admin
+- Protected endpoints
+- +35 tests (total: 67)
+
+### ✅ Phase 2.5: User Management
+- User CRUD API (admin only)
+- Users table UI
+- Change password
+- Toggle active/admin
+- Self-modification protection
+- +11 tests (total: 78)
+
+## Upcoming Phases
+
+### 🔄 Phase 3: Container Management
+- Docker service for docker-compose control
+- API: start, stop, restart, status
+- Real container status from Docker API
+- UI buttons for lifecycle management
+
+### 🔄 Phase 4: Enhanced Env & Validation
+- Advanced env vars editor
+- Improved compose validation
+- Secrets management
+
+### 🔄 Phase 5: Nginx & Virtual Hosts ⭐ CRITICAL
+- Nginx on ports 8080 (admin) and 80/443 (projects)
+- Auto-generate nginx configs for each project
+- Domain-based routing
+- Auto-reload nginx after changes
+
+### 🔄 Phase 6: SSL/HTTPS
+- Let's Encrypt integration (certbot)
+- Automatic SSL certificates
+- Auto-renewal
+- HTTPS nginx configs
+
+### 🔄 Phase 7: Logs
+- View container logs in UI
+- WebSocket for real-time logs
+- Last N lines
+- Per-container filtering
+
+### 🔄 Phase 8: MCP Server
+- Model Context Protocol server
+- AI agents can deploy/manage projects
+- MCP tools: create_project, start_project, get_logs, etc.
+- Stdio transport
+
+### 🔄 Phase 9: Finalization
+- Error handling improvements
+- System logging
+- Production optimizations
+- Documentation polish
+
+## Future Improvements
+
+See [FUTURE_IMPROVEMENTS.md](mdc:FUTURE_IMPROVEMENTS.md) for 27+ ideas including:
+- Health checks
+- Audit logs
+- Project templates
+- Backup/restore
+- Monitoring
+- Webhooks
+- Multi-tenancy

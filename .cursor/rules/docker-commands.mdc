@@ -1,0 +1,106 @@
+---
+description: Docker commands and container management
+---
+
+# Docker Commands for DockLite
+
+## Common Commands
+
+### Start/Stop/Restart
+
+```bash
+cd /home/pavel/docklite
+
+# Start
+./start.sh
+# or
+sg docker -c "docker-compose up -d"
+
+# Stop
+./stop.sh
+# or
+sg docker -c "docker-compose down"
+
+# Rebuild
+./rebuild.sh
+# or
+sg docker -c "docker-compose down && docker-compose up -d --build"
+
+# Restart single service
+sg docker -c "docker-compose restart backend"
+sg docker -c "docker-compose restart frontend"
+```
+
+### Logs
+
+```bash
+# All logs
+sg docker -c "docker logs docklite-backend"
+sg docker -c "docker logs docklite-frontend"
+
+# Follow logs
+sg docker -c "docker logs -f docklite-backend"
+```
+
+### Execute Commands
+
+```bash
+# Enter container
+sg docker -c "docker exec -it docklite-backend sh"
+
+# Run command
+sg docker -c "docker exec docklite-backend python create_user.py"
+
+# Run migrations
+sg docker -c "docker exec docklite-backend alembic upgrade head"
+```
+
+### Tests
+
+```bash
+# Run backend tests
+sg docker -c "docker-compose run --rm backend pytest -v"
+
+# With coverage
+sg docker -c "docker-compose run --rm backend pytest --cov=app --cov-report=term"
+
+# Specific test
+sg docker -c "docker-compose run --rm backend pytest tests/test_api/test_auth.py -v"
+```
+
+## Important Notes
+
+**Use `sg docker -c "..."` wrapper** because:
+- User `pavel` is in `docker` group
+- But current shell doesn't have group activated
+- `sg docker -c` runs command in docker group context
+
+**Alternative:**
+```bash
+# Relogin to activate docker group
+exit
+ssh pavel@server
+
+# Then docker commands work directly
+docker ps
+docker-compose up -d
+```
+
+## Container Architecture
+
+- `docklite-backend` - FastAPI app (port 8000)
+- `docklite-frontend` - Nginx serving Vue.js build (port 5173)
+- Shared network: `docklite_docklite-network`
+- Volumes:
+  - `docklite-data` - SQLite database
+  - `/home/docklite/projects` - user projects
+  - `/var/run/docker.sock` - Docker socket (for Phase 3)
+
+## Database
+
+SQLite stored in Docker volume `docklite-data` at `/data/docklite.db`
+
+Access:
+```bash
+sg docker -c "docker exec -it docklite-backend sqlite3 /data/docklite.db"
+```

@@ -1,0 +1,95 @@
+---
+globs: backend/tests/**/*.py,frontend/tests/**/*.js
+description: Testing patterns and requirements
+---
+
+# Testing Guidelines
+
+## Backend Tests (pytest)
+
+Location: `backend/tests/`
+
+### Structure
+```
+tests/
+├── conftest.py           # Fixtures
+├── test_api/            # API integration tests
+│   ├── test_auth.py     # Auth endpoints
+│   ├── test_users.py    # User management
+│   ├── test_projects.py # Projects CRUD
+│   ├── test_env.py      # Environment variables
+│   ├── test_presets.py  # Presets
+│   └── test_protected.py # Auth protection
+└── test_services/       # Service unit tests
+    ├── test_auth_service.py
+    └── test_validation.py
+```
+
+### Required Fixtures
+
+From [backend/tests/conftest.py](mdc:backend/tests/conftest.py):
+
+- `client` - AsyncClient for API tests
+- `db_session` - Fresh DB session (in-memory SQLite)
+- `auth_token` - Valid JWT token for protected endpoints
+- `temp_projects_dir` - Temporary directory for file operations
+- `sample_project_data` - Valid project data
+- `sample_compose_content` - Valid docker-compose.yml
+
+### Auth Token Pattern
+
+ALL tests for protected endpoints must use `auth_token` fixture:
+
+```python
+async def test_protected_endpoint(client: AsyncClient, auth_token):
+    response = await client.get(
+        "/api/projects",
+        headers={"Authorization": f"Bearer {auth_token}"}
+    )
+    assert response.status_code == 200
+```
+
+### Running Tests
+
+```bash
+# All tests
+sg docker -c "docker-compose run --rm backend pytest -v"
+
+# With coverage
+sg docker -c "docker-compose run --rm backend pytest --cov=app"
+
+# Specific file
+sg docker -c "docker-compose run --rm backend pytest tests/test_api/test_auth.py -v"
+```
+
+Expected: **78 tests passing**
+
+## Frontend Tests (Vitest)
+
+Location: `frontend/tests/`
+
+### Setup
+
+- Use happy-dom environment
+- Mock API calls with vi.mock
+- Test forms structure, validation, auth flow
+
+### Running Tests
+
+```bash
+cd frontend
+npm install
+npm test
+```
+
+## Critical Test Coverage
+
+Must test:
+- ✅ Authentication (setup, login, logout, JWT)
+- ✅ Protected endpoints require auth
+- ✅ CRUD operations
+- ✅ Validation (compose, passwords, domains)
+- ✅ Admin-only endpoints
+- ✅ Error cases (404, 400, 403, 401)
+
+After each phase, write and run tests for new functionality.

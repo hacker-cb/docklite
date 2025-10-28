@@ -1,0 +1,122 @@
+---
+globs: frontend/src/**/*.vue,frontend/src/**/*.js
+description: Frontend Vue.js patterns and conventions
+---
+
+# Frontend Vue.js Conventions
+
+## Vue Router Structure
+
+Location: [frontend/src/router.js](mdc:frontend/src/router.js)
+
+- Uses `createWebHashHistory()` - URLs like `#/projects`, `#/users`
+- Lazy loading views: `component: () => import('./views/ProjectsView.vue')`
+- Navigation guard for admin routes
+
+## API Client Pattern
+
+Location: [frontend/src/api.js](mdc:frontend/src/api.js)
+
+### Axios Interceptors
+
+**Request interceptor** - adds JWT token:
+```javascript
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+```
+
+**Response interceptor** - handles 401:
+```javascript
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.reload()
+    }
+    return Promise.reject(error)
+  }
+)
+```
+
+### API Modules
+
+- `projectsApi` - CRUD проектов
+- `presetsApi` - готовые шаблоны
+- `deploymentApi` - deployment инструкции
+- `authApi` - login, logout, me, setup
+- `usersApi` - user management (admin only)
+
+## Form Patterns
+
+### Safari Password AutoFill
+
+Use NATIVE inputs for passwords:
+
+```vue
+<form @submit.prevent="handleSubmit" method="post">
+  <input 
+    id="password"
+    name="password"
+    v-model="password" 
+    type="password"
+    class="p-inputtext p-component w-full"
+    autocomplete="new-password"
+    passwordrules="minlength: 6;"
+  />
+  <button type="submit">Submit</button>
+</form>
+```
+
+**Required for Safari:**
+- `<form>` tag with method="post"
+- Native `<input>` for password
+- `name` attribute
+- `autocomplete="new-password"` (registration) or `autocomplete="current-password"` (login)
+- `type="submit"` button
+
+### Error Handling
+
+Convert FastAPI 422 validation errors to readable messages:
+
+```javascript
+catch (err) {
+  if (err.response?.status === 422 && err.response?.data?.detail) {
+    const details = err.response.data.detail
+    if (Array.isArray(details)) {
+      const fieldErrors = details.map(d => {
+        const field = d.loc?.[d.loc.length - 1] || 'field'
+        return `${field}: ${d.msg}`
+      }).join(', ')
+      error.value = fieldErrors
+    } else {
+      error.value = details
+    }
+  } else {
+    error.value = err.response?.data?.detail || 'Operation failed'
+  }
+}
+```
+
+## Authentication Flow
+
+1. Check if setup needed: `GET /api/auth/setup/check`
+2. If `setup_needed: true` → show Setup.vue
+3. If `setup_needed: false` → show Login.vue
+4. After login → save token to localStorage
+5. Call `GET /api/auth/me` to get user info
+6. Save user to localStorage
+7. All API requests auto-include token via interceptor
+
+## Component Communication
+
+- Use PrimeVue Toast for notifications
+- Use PrimeVue ConfirmDialog for confirmations
+- Use Vue Router for navigation between views
+- Store auth state in App.vue, pass via router
