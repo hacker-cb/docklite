@@ -271,6 +271,32 @@ git pull  # если используется git
 docker-compose up -d --build
 ```
 
+## Тестирование
+
+DockLite имеет комплексное покрытие тестами:
+- **Backend**: 33 теста (pytest) - API, валидация, env vars
+- **Frontend**: 18 тестов (vitest) - формы, структура данных
+- **Coverage**: ~85-90%
+
+### Запуск тестов
+
+```bash
+# Все тесты сразу
+./run-tests.sh
+
+# Только backend
+cd backend && pytest -v
+
+# Только frontend
+cd frontend && npm test
+
+# С покрытием
+cd backend && pytest --cov=app --cov-report=html
+cd frontend && npm run test:coverage
+```
+
+Подробная документация: [TESTS.md](./TESTS.md)
+
 ## Текущий статус (Фаза 1)
 
 ### ✅ Реализовано

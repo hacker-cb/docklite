@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -15,7 +18,11 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.1.4"
+    "vite": "^5.1.4",
+    "@vue/test-utils": "^2.4.4",
+    "vitest": "^1.2.2",
+    "happy-dom": "^13.3.8",
+    "@vitest/coverage-v8": "^1.2.2"
   }
 }
 
