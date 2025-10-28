@@ -33,14 +33,14 @@
       <!-- Navigation Tabs -->
       <div class="nav-tabs">
         <Button 
-          :label="currentView === 'projects' ? 'Projects' : 'Projects'"
+          label="Projects"
           icon="pi pi-server" 
           @click="currentView = 'projects'"
           :class="currentView === 'projects' ? 'p-button-primary' : 'p-button-outlined'"
         />
         <Button 
           v-if="currentUser?.is_admin"
-          :label="currentView === 'users' ? 'Users' : 'Users'"
+          label="Users"
           icon="pi pi-users" 
           @click="currentView = 'users'"
           :class="currentView === 'users' ? 'p-button-primary' : 'p-button-outlined'"
