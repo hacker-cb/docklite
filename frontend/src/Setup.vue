@@ -44,15 +44,15 @@
 
         <div class="form-group">
           <label for="password">Password *</label>
-          <InputText 
+          <input 
             id="password"
             name="password"
             v-model="userData.password" 
             type="password"
-            class="w-full"
+            class="p-inputtext p-component w-full"
             placeholder="Enter password"
             autocomplete="new-password"
-            passwordrules="minlength: 6; required: lower; required: upper; required: digit;"
+            passwordrules="minlength: 6;"
             @keyup.enter="focusNext('confirmPassword')"
           />
           <small class="form-hint">Minimum 6 characters</small>
@@ -60,12 +60,12 @@
 
         <div class="form-group">
           <label for="confirmPassword">Confirm Password *</label>
-          <InputText 
+          <input 
             id="confirmPassword"
             name="confirm-password"
             v-model="confirmPassword" 
             type="password"
-            class="w-full"
+            class="p-inputtext p-component w-full"
             placeholder="Confirm password"
             autocomplete="new-password"
             @keyup.enter="setup"
