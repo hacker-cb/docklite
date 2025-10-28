@@ -134,8 +134,14 @@ const setup = async () => {
   loading.value = true
 
   try {
+    // Prepare data - convert empty email to null
+    const setupData = {
+      ...userData.value,
+      email: userData.value.email.trim() || null
+    }
+    
     // Create first admin user
-    const response = await authApi.setup(userData.value)
+    const response = await authApi.setup(setupData)
     const { access_token } = response.data
     
     // Save token

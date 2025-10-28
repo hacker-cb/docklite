@@ -41,6 +41,13 @@ class ProjectListResponse(BaseModel):
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=255)
     email: Optional[EmailStr] = None
+    
+    @classmethod
+    def model_validate(cls, obj):
+        # Convert empty string to None for email
+        if isinstance(obj, dict) and obj.get('email') == '':
+            obj['email'] = None
+        return super().model_validate(obj)
 
 
 class UserCreate(UserBase):
