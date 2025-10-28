@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: docklite-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /home/pavel/docklite-projects:/home/pavel/docklite-projects
+      - /var/run/docker.sock:/var/run/docker.sock
+      - docklite-data:/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////data/docklite.db
+      - PROJECTS_DIR=/home/pavel/docklite-projects
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    restart: unless-stopped
+    networks:
+      - docklite-network
+
+  frontend:
+    build: ./frontend
+    container_name: docklite-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - docklite-network
+
+volumes:
+  docklite-data:
+
+networks:
+  docklite-network:
+    driver: bridge
+
