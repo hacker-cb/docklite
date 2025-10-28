@@ -17,6 +17,7 @@
           <label for="username">Username *</label>
           <InputText 
             id="username"
+            name="username"
             v-model="userData.username" 
             class="w-full"
             placeholder="admin"
@@ -31,6 +32,7 @@
           <label for="email">Email</label>
           <InputText 
             id="email"
+            name="email"
             v-model="userData.email" 
             type="email"
             class="w-full"
@@ -44,11 +46,13 @@
           <label for="password">Password *</label>
           <InputText 
             id="password"
+            name="password"
             v-model="userData.password" 
             type="password"
             class="w-full"
             placeholder="Enter password"
             autocomplete="new-password"
+            passwordrules="minlength: 6; required: lower; required: upper; required: digit;"
             @keyup.enter="focusNext('confirmPassword')"
           />
           <small class="form-hint">Minimum 6 characters</small>
@@ -58,6 +62,7 @@
           <label for="confirmPassword">Confirm Password *</label>
           <InputText 
             id="confirmPassword"
+            name="confirm-password"
             v-model="confirmPassword" 
             type="password"
             class="w-full"

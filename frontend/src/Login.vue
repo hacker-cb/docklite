@@ -11,6 +11,7 @@
           <label for="username">Username</label>
           <InputText 
             id="username"
+            name="username"
             v-model="credentials.username" 
             class="w-full"
             placeholder="Enter username"
@@ -23,6 +24,7 @@
           <label for="password">Password</label>
           <InputText 
             id="password"
+            name="password"
             v-model="credentials.password" 
             type="password"
             class="w-full"
