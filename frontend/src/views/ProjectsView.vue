@@ -1,6 +1,7 @@
 <template>
   <div class="projects-view">
     <div class="toolbar">
+      <h2><i class="pi pi-folder"></i> Projects</h2>
       <Button 
         label="New Project" 
         icon="pi pi-plus" 
@@ -174,11 +175,22 @@ onMounted(() => {
 
 <style scoped>
 .projects-view {
-  padding: 0;
+  padding: 1rem;
 }
 
 .toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
+}
+
+.toolbar h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
 }
 </style>
 
