@@ -5,7 +5,7 @@
       <Button 
         label="New Project" 
         icon="pi pi-plus" 
-        @click="openCreateDialog"
+        @click="showCreateDialog = true"
         class="p-button-success"
       />
     </div>
@@ -53,7 +53,7 @@
           <Button 
             icon="pi pi-upload" 
             class="p-button-rounded p-button-text p-button-info" 
-            @click="showDeployInfo(slotProps.data)"
+            @click="showDeployInfoDialog(slotProps.data)"
             v-tooltip="'Deploy Info'"
           />
           <Button 
@@ -65,7 +65,7 @@
           <Button 
             icon="pi pi-cog" 
             class="p-button-rounded p-button-text" 
-            @click="editEnvVars(slotProps.data)"
+            @click="editEnvVarsDialog(slotProps.data)"
             v-tooltip="'Environment Variables'"
           />
           <Button 
@@ -78,7 +78,24 @@
       </Column>
     </DataTable>
 
-    <!-- All dialogs from App.vue will go here -->
+    <!-- Dialogs -->
+    <CreateProjectDialog 
+      v-model="showCreateDialog" 
+      :project="editingProject"
+      @saved="handleProjectSaved"
+    />
+    
+    <EnvVarsDialog 
+      v-model="showEnvDialog" 
+      :project-id="envProjectId"
+      @saved="loadProjects"
+    />
+    
+    <DeployInfoDialog 
+      v-model="showDeployDialog" 
+      :project-id="deployProjectId"
+    />
+
     <Toast />
     <ConfirmDialog />
   </div>
@@ -89,12 +106,23 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { projectsApi, containersApi } from '../api'
+import CreateProjectDialog from '../components/CreateProjectDialog.vue'
+import EnvVarsDialog from '../components/EnvVarsDialog.vue'
+import DeployInfoDialog from '../components/DeployInfoDialog.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 
 const projects = ref([])
 const loading = ref(false)
+
+// Dialog state
+const showCreateDialog = ref(false)
+const showEnvDialog = ref(false)
+const showDeployDialog = ref(false)
+const editingProject = ref(null)
+const envProjectId = ref(null)
+const deployProjectId = ref(null)
 
 const loadProjects = async () => {
   loading.value = true
@@ -113,40 +141,24 @@ const loadProjects = async () => {
   }
 }
 
-const openCreateDialog = () => {
-  toast.add({
-    severity: 'info',
-    summary: 'Info',
-    detail: 'Create project dialog - integrating...',
-    life: 2000
-  })
-}
-
-const showDeployInfo = (project) => {
-  toast.add({
-    severity: 'info',
-    summary: 'Deploy Info',
-    detail: `Project ID: ${project.id}`,
-    life: 2000
-  })
-}
-
 const editProject = (project) => {
-  toast.add({
-    severity: 'info',
-    summary: 'Edit',
-    detail: `Editing ${project.name}`,
-    life: 2000
-  })
+  editingProject.value = project
+  showCreateDialog.value = true
 }
 
-const editEnvVars = (project) => {
-  toast.add({
-    severity: 'info',
-    summary: 'Env Vars',
-    detail: `Managing env for ${project.name}`,
-    life: 2000
-  })
+const showDeployInfoDialog = (project) => {
+  deployProjectId.value = project.id
+  showDeployDialog.value = true
+}
+
+const editEnvVarsDialog = (project) => {
+  envProjectId.value = project.id
+  showEnvDialog.value = true
+}
+
+const handleProjectSaved = () => {
+  editingProject.value = null
+  loadProjects()
 }
 
 const confirmDelete = (project) => {
