@@ -148,4 +148,16 @@ def auth_headers(auth_token):
     return {"Authorization": f"Bearer {auth_token}"}
 
 
+@pytest.fixture
+async def test_project(client, sample_project_data, auth_headers):
+    """Create a test project and return its data"""
+    response = await client.post(
+        "/api/projects",
+        json=sample_project_data,
+        headers=auth_headers
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
 
