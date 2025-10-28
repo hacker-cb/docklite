@@ -68,19 +68,49 @@ Expected: **78 tests passing**
 
 Location: `frontend/tests/`
 
+### Structure
+```
+tests/
+├── components/                # Component tests
+│   ├── CreateProjectDialog.spec.js
+│   ├── EnvVarsDialog.spec.js
+│   ├── DeployInfoDialog.spec.js
+│   ├── Login.spec.js
+│   └── Setup.spec.js
+├── views/                     # View tests
+│   ├── ProjectsView.spec.js
+│   └── UsersView.spec.js
+├── composables/               # Composable tests
+│   ├── useProjects.spec.js
+│   ├── useContainers.spec.js
+│   └── usePresets.spec.js
+├── utils/                     # Utility tests
+│   ├── formatters.spec.js
+│   └── toast.spec.js
+├── router.spec.js             # Router tests
+└── setup.js                   # Test setup
+```
+
 ### Setup
 
 - Use happy-dom environment
 - Mock API calls with vi.mock
-- Test forms structure, validation, auth flow
+- Test components, composables, utils, router
+- **Total: 120+ tests**
 
 ### Running Tests
 
+**Locally (recommended for development):**
 ```bash
-cd frontend
+cd /home/pavel/docklite/frontend
 npm install
-npm test
+npm test          # Run all tests
+npm test -- --run # Run once without watch
+npm run test:coverage # With coverage report
 ```
+
+**Note:** Frontend Docker container is for production build only and doesn't include npm/vitest.
+To run tests, you need Node.js installed locally or use a dev Docker container.
 
 ## Critical Test Coverage
 
