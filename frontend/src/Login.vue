@@ -6,7 +6,7 @@
         <p>Web Server Management System</p>
       </div>
 
-      <form class="login-form" @submit.prevent="login">
+      <form class="login-form" @submit.prevent="login" method="post" action="javascript:void(0)">
         <div class="form-group">
           <label for="username">Username</label>
           <InputText 
@@ -34,13 +34,15 @@
           />
         </div>
 
-        <Button 
+        <button 
           type="submit"
-          label="Login" 
-          icon="pi pi-sign-in" 
-          :loading="loading"
-          class="w-full login-button"
-        />
+          :disabled="loading"
+          class="login-button w-full"
+        >
+          <i class="pi pi-sign-in" v-if="!loading"></i>
+          <i class="pi pi-spin pi-spinner" v-else></i>
+          Login
+        </button>
 
         <div v-if="error" class="error-message">
           <i class="pi pi-exclamation-circle"></i>
@@ -174,6 +176,30 @@ const login = async () => {
 
 .login-button {
   margin-top: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+.login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .error-message {

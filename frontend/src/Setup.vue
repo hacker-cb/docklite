@@ -12,7 +12,7 @@
         <p>Welcome! Let's create your admin account to get started.</p>
       </div>
 
-      <form class="setup-form" @submit.prevent="setup">
+      <form class="setup-form" @submit.prevent="setup" method="post" action="javascript:void(0)">
         <div class="form-group">
           <label for="username">Username *</label>
           <InputText 
@@ -72,13 +72,15 @@
           />
         </div>
 
-        <Button 
+        <button 
           type="submit"
-          label="Create Admin Account" 
-          icon="pi pi-check" 
-          :loading="loading"
-          class="w-full setup-button"
-        />
+          :disabled="loading"
+          class="setup-button w-full"
+        >
+          <i class="pi pi-check" v-if="!loading"></i>
+          <i class="pi pi-spin pi-spinner" v-else></i>
+          Create Admin Account
+        </button>
 
         <div v-if="error" class="error-message">
           <i class="pi pi-exclamation-circle"></i>
@@ -286,6 +288,28 @@ const setup = async () => {
   margin-top: 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+.setup-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.setup-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .error-message {
