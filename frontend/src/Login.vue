@@ -90,7 +90,22 @@ const login = async () => {
     // Emit success
     emit('login-success', userResponse.data)
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Login failed. Please check your credentials.'
+    // Handle validation errors from FastAPI
+    if (err.response?.status === 422 && err.response?.data?.detail) {
+      const details = err.response.data.detail
+      if (Array.isArray(details)) {
+        // Extract field errors
+        const fieldErrors = details.map(d => {
+          const field = d.loc?.[d.loc.length - 1] || 'field'
+          return `${field}: ${d.msg}`
+        }).join(', ')
+        error.value = fieldErrors
+      } else {
+        error.value = details
+      }
+    } else {
+      error.value = err.response?.data?.detail || 'Login failed. Please check your credentials.'
+    }
   } finally {
     loading.value = false
   }
