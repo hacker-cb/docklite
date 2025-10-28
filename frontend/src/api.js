@@ -127,5 +127,37 @@ export const authApi = {
   }
 }
 
+export const usersApi = {
+  // Get all users
+  getAll() {
+    return api.get('/users')
+  },
+  
+  // Get user by ID
+  getById(id) {
+    return api.get(`/users/${id}`)
+  },
+  
+  // Create new user
+  create(userData) {
+    return api.post('/users', userData)
+  },
+  
+  // Update user (is_active, is_admin)
+  update(id, data) {
+    return api.put(`/users/${id}`, null, { params: data })
+  },
+  
+  // Delete user
+  delete(id) {
+    return api.delete(`/users/${id}`)
+  },
+  
+  // Change password
+  changePassword(id, newPassword) {
+    return api.put(`/users/${id}/password`, null, { params: { new_password: newPassword } })
+  }
+}
+
 export default api
 

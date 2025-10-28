@@ -30,16 +30,35 @@
       </header>
 
       <main class="main-content">
-      <div class="toolbar">
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
         <Button 
-          label="New Project" 
-          icon="pi pi-plus" 
-          @click="openCreateDialog"
-          class="p-button-success"
+          :label="currentView === 'projects' ? 'Projects' : 'Projects'"
+          icon="pi pi-server" 
+          @click="currentView = 'projects'"
+          :class="currentView === 'projects' ? 'p-button-primary' : 'p-button-outlined'"
+        />
+        <Button 
+          v-if="currentUser?.is_admin"
+          :label="currentView === 'users' ? 'Users' : 'Users'"
+          icon="pi pi-users" 
+          @click="currentView = 'users'"
+          :class="currentView === 'users' ? 'p-button-primary' : 'p-button-outlined'"
         />
       </div>
 
-      <DataTable 
+      <!-- Projects View -->
+      <div v-if="currentView === 'projects'">
+        <div class="toolbar">
+          <Button 
+            label="New Project" 
+            icon="pi pi-plus" 
+            @click="openCreateDialog"
+            class="p-button-success"
+          />
+        </div>
+
+        <DataTable 
         :value="projects" 
         :loading="loading"
         class="p-datatable-sm"
@@ -86,6 +105,10 @@
           </template>
         </Column>
       </DataTable>
+      </div>
+
+      <!-- Users View -->
+      <Users v-if="currentView === 'users' && currentUser?.is_admin" />
     </main>
     </div>
 
@@ -321,6 +344,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { projectsApi, presetsApi, deploymentApi, authApi } from './api'
 import Login from './Login.vue'
 import Setup from './Setup.vue'
+import Users from './Users.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -329,6 +353,9 @@ const confirm = useConfirm()
 const isAuthenticated = ref(false)
 const currentUser = ref(null)
 const needsSetup = ref(false)
+
+// Navigation
+const currentView = ref('projects')  // 'projects' or 'users'
 
 // State
 const projects = ref([])
@@ -774,6 +801,14 @@ onMounted(() => {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .toolbar {
