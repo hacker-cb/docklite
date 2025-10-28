@@ -35,80 +35,20 @@
         <Button 
           label="Projects"
           icon="pi pi-server" 
-          @click="currentView = 'projects'"
-          :class="currentView === 'projects' ? 'p-button-primary' : 'p-button-outlined'"
+          @click="router.push('/projects')"
+          :class="$route.path === '/projects' ? 'p-button-primary' : 'p-button-outlined'"
         />
         <Button 
           v-if="currentUser?.is_admin"
           label="Users"
           icon="pi pi-users" 
-          @click="currentView = 'users'"
-          :class="currentView === 'users' ? 'p-button-primary' : 'p-button-outlined'"
+          @click="router.push('/users')"
+          :class="$route.path === '/users' ? 'p-button-primary' : 'p-button-outlined'"
         />
       </div>
 
-      <!-- Projects View -->
-      <div v-if="currentView === 'projects'">
-        <div class="toolbar">
-          <Button 
-            label="New Project" 
-            icon="pi pi-plus" 
-            @click="openCreateDialog"
-            class="p-button-success"
-          />
-        </div>
-
-        <DataTable 
-        :value="projects" 
-        :loading="loading"
-        class="p-datatable-sm"
-        stripedRows
-        responsiveLayout="scroll"
-      >
-        <Column field="id" header="ID" style="width: 80px"></Column>
-        <Column field="name" header="Name"></Column>
-        <Column field="domain" header="Domain"></Column>
-        <Column field="status" header="Status" style="width: 120px">
-          <template #body="slotProps">
-            <Tag 
-              :value="slotProps.data.status" 
-              :severity="getStatusSeverity(slotProps.data.status)"
-            />
-          </template>
-        </Column>
-        <Column header="Actions" style="width: 250px">
-          <template #body="slotProps">
-            <Button 
-              icon="pi pi-upload" 
-              class="p-button-rounded p-button-text p-button-info" 
-              @click="showDeployInfo(slotProps.data)"
-              v-tooltip="'Deploy Info'"
-            />
-            <Button 
-              icon="pi pi-pencil" 
-              class="p-button-rounded p-button-text" 
-              @click="editProject(slotProps.data)"
-              v-tooltip="'Edit'"
-            />
-            <Button 
-              icon="pi pi-cog" 
-              class="p-button-rounded p-button-text" 
-              @click="editEnvVars(slotProps.data)"
-              v-tooltip="'Environment Variables'"
-            />
-            <Button 
-              icon="pi pi-trash" 
-              class="p-button-rounded p-button-text p-button-danger" 
-              @click="confirmDelete(slotProps.data)"
-              v-tooltip="'Delete'"
-            />
-          </template>
-        </Column>
-      </DataTable>
-      </div>
-
-      <!-- Users View -->
-      <Users v-if="currentView === 'users' && currentUser?.is_admin" />
+      <!-- Router View -->
+      <router-view />
     </main>
     </div>
 
@@ -341,21 +281,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useRouter } from 'vue-router'
 import { projectsApi, presetsApi, deploymentApi, authApi } from './api'
 import Login from './Login.vue'
 import Setup from './Setup.vue'
-import Users from './Users.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
+const router = useRouter()
 
 // Auth state
 const isAuthenticated = ref(false)
 const currentUser = ref(null)
 const needsSetup = ref(false)
-
-// Navigation
-const currentView = ref('projects')  // 'projects' or 'users'
 
 // State
 const projects = ref([])
@@ -404,7 +342,6 @@ const canSave = computed(() => {
   if (editingProject.value) {
     return formData.value.name && formData.value.domain && formData.value.compose_content
   }
-  // For new project: need name, domain, and either preset or custom compose
   return formData.value.name && formData.value.domain && 
          (selectedPreset.value || formData.value.compose_content)
 })
@@ -736,10 +673,17 @@ const handleLogout = async () => {
   } finally {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('currentView')
     isAuthenticated.value = false
     currentUser.value = null
     projects.value = []
   }
+}
+
+const navigateTo = (view) => {
+  currentView.value = view
+  localStorage.setItem('currentView', view)
+  window.location.hash = view
 }
 
 onMounted(() => {

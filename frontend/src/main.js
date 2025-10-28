@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import PrimeVue from 'primevue/config'
+import router from './router'
 import App from './App.vue'
 
 // PrimeVue components
@@ -31,6 +32,7 @@ const app = createApp(App)
 app.use(PrimeVue)
 app.use(ToastService)
 app.use(ConfirmationService)
+app.use(router)
 
 // Register components
 app.component('Button', Button)
