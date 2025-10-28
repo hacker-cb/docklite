@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.core.security import get_current_active_user
 from app.models.user import User
 from app.services.project_service import ProjectService
 from app.core.config import settings
+from app.constants.messages import ErrorMessages
 
 router = APIRouter(prefix="/deployment", tags=["deployment"])
 
@@ -21,7 +23,7 @@ async def get_deployment_info(
     project = await service.get_project(project_id)
     
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
     
     # Get server hostname from request
     server_host = request.headers.get("host", "your-server").split(":")[0]

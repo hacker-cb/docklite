@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from typing import List
+
 from app.core.database import get_db
 from app.core.security import get_current_active_user
 from app.models.user import User
 from app.models.schemas import UserCreate, UserResponse
 from app.services.auth_service import AuthService
-from typing import List
+from app.constants.messages import ErrorMessages, SuccessMessages
+from app.utils.formatters import format_user_response
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -16,7 +19,7 @@ def check_is_admin(current_user: User):
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+            detail=ErrorMessages.ADMIN_REQUIRED
         )
 
 
@@ -31,17 +34,7 @@ async def get_users(
     result = await db.execute(select(User))
     users = result.scalars().all()
     
-    return [
-        UserResponse(
-            id=u.id,
-            username=u.username,
-            email=u.email,
-            is_active=bool(u.is_active),
-            is_admin=bool(u.is_admin),
-            created_at=u.created_at
-        )
-        for u in users
-    ]
+    return [format_user_response(u) for u in users]
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -59,14 +52,7 @@ async def create_user(
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     
-    return UserResponse(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        is_active=bool(user.is_active),
-        is_admin=bool(user.is_admin),
-        created_at=user.created_at
-    )
+    return format_user_response(user)
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -82,16 +68,9 @@ async def get_user(
     user = result.scalar_one_or_none()
     
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
     
-    return UserResponse(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        is_active=bool(user.is_active),
-        is_admin=bool(user.is_admin),
-        created_at=user.created_at
-    )
+    return format_user_response(user)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -109,14 +88,14 @@ async def update_user(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot modify your own account"
+            detail=ErrorMessages.CANNOT_MODIFY_SELF
         )
     
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
     
     if is_active is not None:
         user.is_active = 1 if is_active else 0
@@ -127,14 +106,7 @@ async def update_user(
     await db.commit()
     await db.refresh(user)
     
-    return UserResponse(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        is_active=bool(user.is_active),
-        is_admin=bool(user.is_admin),
-        created_at=user.created_at
-    )
+    return format_user_response(user)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -150,14 +122,14 @@ async def delete_user(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete your own account"
+            detail=ErrorMessages.CANNOT_DELETE_SELF
         )
     
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
     
     await db.delete(user)
     await db.commit()
@@ -180,14 +152,14 @@ async def change_password(
     if len(new_password) < 6:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 6 characters"
+            detail=ErrorMessages.PASSWORD_TOO_SHORT
         )
     
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
     
     # Hash new password
     auth_service = AuthService(db)
@@ -195,5 +167,5 @@ async def change_password(
     
     await db.commit()
     
-    return {"message": "Password changed successfully"}
+    return {"message": SuccessMessages.PASSWORD_CHANGED}
 

@@ -4,9 +4,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
 from app.models.user import User
 from app.models.schemas import UserCreate, TokenData
 from app.core.config import settings
+from app.constants.messages import ErrorMessages
 
 
 # Password hashing context
@@ -70,13 +72,13 @@ class AuthService:
         # Check username uniqueness
         existing_user = await self.get_user_by_username(user_data.username)
         if existing_user:
-            return None, f"Username '{user_data.username}' already exists"
+            return None, ErrorMessages.USERNAME_EXISTS
         
         # Check email uniqueness if provided
         if user_data.email:
             existing_email = await self.get_user_by_email(user_data.email)
             if existing_email:
-                return None, f"Email '{user_data.email}' already exists"
+                return None, "Email already exists"
         
         # Hash password
         password_hash = self.get_password_hash(user_data.password)
@@ -121,7 +123,7 @@ class AuthService:
         """Create first admin user (only works if no users exist)"""
         # Check if users already exist
         if await self.has_users():
-            return None, "Users already exist. Use regular login."
+            return None, ErrorMessages.SETUP_ALREADY_DONE
         
         # Create user with admin privileges
         user, error = await self.create_user(user_data)

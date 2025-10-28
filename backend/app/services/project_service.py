@@ -39,11 +39,11 @@ class ProjectService:
         # Validate compose content
         is_valid, error = await self.validate_compose_content(project_data.compose_content)
         if not is_valid:
-            return None, f"Invalid docker-compose.yml: {error}"
+            return None, f"{ErrorMessages.INVALID_COMPOSE}: {error}"
         
         # Check domain uniqueness
         if not await self.check_domain_unique(project_data.domain):
-            return None, f"Domain '{project_data.domain}' already exists"
+            return None, ErrorMessages.PROJECT_EXISTS
         
         # Create project directory
         project_dir = Path(settings.PROJECTS_DIR)
@@ -96,13 +96,13 @@ class ProjectService:
         """Update project"""
         project = await self.get_project(project_id)
         if not project:
-            return None, "Project not found"
+            return None, ErrorMessages.PROJECT_NOT_FOUND
         
         # Validate compose content if provided
         if project_data.compose_content:
             is_valid, error = await self.validate_compose_content(project_data.compose_content)
             if not is_valid:
-                return None, f"Invalid docker-compose.yml: {error}"
+                return None, f"{ErrorMessages.INVALID_COMPOSE}: {error}"
             project.compose_content = project_data.compose_content
             
             # Update compose file
@@ -113,7 +113,7 @@ class ProjectService:
         # Update domain if provided
         if project_data.domain and project_data.domain != project.domain:
             if not await self.check_domain_unique(project_data.domain, project_id):
-                return None, f"Domain '{project_data.domain}' already exists"
+                return None, ErrorMessages.PROJECT_EXISTS
             project.domain = project_data.domain
         
         # Update name if provided
@@ -141,7 +141,7 @@ class ProjectService:
         """Delete project"""
         project = await self.get_project(project_id)
         if not project:
-            return False, "Project not found"
+            return False, ErrorMessages.PROJECT_NOT_FOUND
         
         # Delete project files
         project_path = Path(settings.PROJECTS_DIR) / str(project_id)
@@ -170,7 +170,7 @@ class ProjectService:
         """Update project environment variables"""
         project = await self.get_project(project_id)
         if not project:
-            return False, "Project not found"
+            return False, ErrorMessages.PROJECT_NOT_FOUND
         
         project.env_vars = json.dumps(env_vars)
         

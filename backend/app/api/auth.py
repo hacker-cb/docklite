@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.core.security import get_current_active_user
 from app.models.schemas import UserLogin, Token, UserResponse, UserCreate
 from app.services.auth_service import AuthService
 from app.models.user import User
+from app.constants.messages import ErrorMessages, SuccessMessages
+from app.utils.formatters import format_user_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,7 +26,7 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail=ErrorMessages.INVALID_CREDENTIALS,
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -41,14 +44,7 @@ async def get_current_user_info(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get current user information"""
-    return UserResponse(
-        id=current_user.id,
-        username=current_user.username,
-        email=current_user.email,
-        is_active=bool(current_user.is_active),
-        is_admin=bool(current_user.is_admin),
-        created_at=current_user.created_at
-    )
+    return format_user_response(current_user)
 
 
 @router.post("/logout")
@@ -56,7 +52,7 @@ async def logout(
     current_user: User = Depends(get_current_active_user)
 ):
     """Logout (client should remove token)"""
-    return {"message": "Successfully logged out"}
+    return {"message": SuccessMessages.LOGOUT_SUCCESS}
 
 
 @router.get("/setup/check")
