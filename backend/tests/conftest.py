@@ -142,4 +142,10 @@ async def auth_token(client, db_session):
     return token
 
 
+@pytest.fixture
+def auth_headers(auth_token):
+    """Get authorization headers with token"""
+    return {"Authorization": f"Bearer {auth_token}"}
+
+
 

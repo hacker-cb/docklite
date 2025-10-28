@@ -159,5 +159,27 @@ export const usersApi = {
   }
 }
 
+export const containersApi = {
+  // Start project containers
+  start(projectId) {
+    return api.post(`/containers/${projectId}/start`)
+  },
+  
+  // Stop project containers
+  stop(projectId) {
+    return api.post(`/containers/${projectId}/stop`)
+  },
+  
+  // Restart project containers
+  restart(projectId) {
+    return api.post(`/containers/${projectId}/restart`)
+  },
+  
+  // Get container status
+  getStatus(projectId) {
+    return api.get(`/containers/${projectId}/status`)
+  }
+}
+
 export default api
 

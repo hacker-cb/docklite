@@ -28,8 +28,28 @@
           />
         </template>
       </Column>
-      <Column header="Actions" style="width: 250px">
+      <Column header="Actions" style="width: 350px">
         <template #body="slotProps">
+          <Button 
+            icon="pi pi-play" 
+            class="p-button-rounded p-button-text p-button-success" 
+            @click="startContainer(slotProps.data)"
+            v-tooltip="'Start'"
+            :disabled="slotProps.data.status === 'running'"
+          />
+          <Button 
+            icon="pi pi-stop" 
+            class="p-button-rounded p-button-text p-button-warning" 
+            @click="stopContainer(slotProps.data)"
+            v-tooltip="'Stop'"
+            :disabled="slotProps.data.status === 'stopped'"
+          />
+          <Button 
+            icon="pi pi-refresh" 
+            class="p-button-rounded p-button-text p-button-info" 
+            @click="restartContainer(slotProps.data)"
+            v-tooltip="'Restart'"
+          />
           <Button 
             icon="pi pi-upload" 
             class="p-button-rounded p-button-text p-button-info" 
@@ -68,7 +88,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { projectsApi } from '../api'
+import { projectsApi, containersApi } from '../api'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -153,6 +173,66 @@ const deleteProject = async (id) => {
       severity: 'error',
       summary: 'Error',
       detail: 'Failed to delete project',
+      life: 3000
+    })
+  }
+}
+
+const startContainer = async (project) => {
+  try {
+    await containersApi.start(project.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Container for "${project.name}" started`,
+      life: 3000
+    })
+    loadProjects()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.response?.data?.detail || 'Failed to start container',
+      life: 3000
+    })
+  }
+}
+
+const stopContainer = async (project) => {
+  try {
+    await containersApi.stop(project.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Container for "${project.name}" stopped`,
+      life: 3000
+    })
+    loadProjects()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.response?.data?.detail || 'Failed to stop container',
+      life: 3000
+    })
+  }
+}
+
+const restartContainer = async (project) => {
+  try {
+    await containersApi.restart(project.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Container for "${project.name}" restarted`,
+      life: 3000
+    })
+    loadProjects()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.response?.data?.detail || 'Failed to restart container',
       life: 3000
     })
   }
