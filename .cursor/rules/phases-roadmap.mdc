@@ -21,21 +21,26 @@ description: Development phases and roadmap
 - Protected endpoints
 - +35 tests (total: 67)
 
-### ✅ Phase 2.5: User Management
+### ✅ Phase 2.5: User Management + Frontend/Backend Refactoring
 - User CRUD API (admin only)
 - Users table UI
 - Change password
 - Toggle active/admin
 - Self-modification protection
+- Vue Router 4 (hash mode, lazy loading, navigation guards)
+- Safari password autofill (autocomplete, passwordrules)
+- **Frontend refactoring:** Composables (useProjects, useContainers, usePresets), Constants, Utils, Dialog Components
+- **Backend refactoring:** Constants (messages, status), Utils (formatters, responses, logger), Validators (compose, domain), Exceptions
 - +11 tests (total: 78)
 
-## Upcoming Phases
-
-### 🔄 Phase 3: Container Management
+### ✅ Phase 3: Container Management
 - Docker service for docker-compose control
 - API: start, stop, restart, status
 - Real container status from Docker API
 - UI buttons for lifecycle management
+- +72 critical tests for validators, utils, deployment API (total: 150)
+
+## Upcoming Phases
 
 ### 🔄 Phase 4: Enhanced Env & Validation
 - Advanced env vars editor
