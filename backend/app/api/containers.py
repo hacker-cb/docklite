@@ -11,6 +11,8 @@ from app.core.security import get_current_active_user
 from app.models.user import User
 from app.services.docker_service import DockerService
 from app.models.project import Project
+from app.constants.messages import ErrorMessages, SuccessMessages
+from app.constants.project_constants import ProjectStatus
 
 router = APIRouter()
 
@@ -49,7 +51,7 @@ async def start_containers(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project {project_id} not found"
+            detail=ErrorMessages.PROJECT_NOT_FOUND
         )
     
     # Start containers
@@ -59,7 +61,7 @@ async def start_containers(
     if success:
         # Update project status
         await db.execute(
-            update(Project).where(Project.id == project_id).values(status="running")
+            update(Project).where(Project.id == project_id).values(status=ProjectStatus.RUNNING)
         )
         await db.commit()
     
@@ -88,7 +90,7 @@ async def stop_containers(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project {project_id} not found"
+            detail=ErrorMessages.PROJECT_NOT_FOUND
         )
     
     # Stop containers
@@ -98,7 +100,7 @@ async def stop_containers(
     if success:
         # Update project status
         await db.execute(
-            update(Project).where(Project.id == project_id).values(status="stopped")
+            update(Project).where(Project.id == project_id).values(status=ProjectStatus.STOPPED)
         )
         await db.commit()
     
@@ -127,7 +129,7 @@ async def restart_containers(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project {project_id} not found"
+            detail=ErrorMessages.PROJECT_NOT_FOUND
         )
     
     # Restart containers
@@ -137,7 +139,7 @@ async def restart_containers(
     if success:
         # Update project status
         await db.execute(
-            update(Project).where(Project.id == project_id).values(status="running")
+            update(Project).where(Project.id == project_id).values(status=ProjectStatus.RUNNING)
         )
         await db.commit()
     
@@ -166,7 +168,7 @@ async def get_container_status(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project {project_id} not found"
+            detail=ErrorMessages.PROJECT_NOT_FOUND
         )
     
     # Get status
@@ -175,7 +177,7 @@ async def get_container_status(
     
     if success:
         # Update project status in DB based on actual container status
-        new_status = "running" if status_data.get("running") else "stopped"
+        new_status = ProjectStatus.RUNNING if status_data.get("running") else ProjectStatus.STOPPED
         await db.execute(
             update(Project).where(Project.id == project_id).values(status=new_status)
         )

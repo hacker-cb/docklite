@@ -1,13 +1,16 @@
-import yaml
 import json
 import os
 from pathlib import Path
 from typing import Optional, Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
 from app.models.project import Project
 from app.models.schemas import ProjectCreate, ProjectUpdate
 from app.core.config import settings
+from app.validators import validate_docker_compose
+from app.constants.project_constants import ProjectStatus, DEFAULT_ENV_VARS
+from app.constants.messages import ErrorMessages
 
 
 class ProjectService:
@@ -18,26 +21,7 @@ class ProjectService:
     
     async def validate_compose_content(self, compose_content: str) -> tuple[bool, Optional[str]]:
         """Validate docker-compose.yml content"""
-        try:
-            data = yaml.safe_load(compose_content)
-            
-            if not isinstance(data, dict):
-                return False, "Invalid YAML format"
-            
-            if 'version' not in data and 'services' not in data:
-                return False, "Missing required fields: 'version' or 'services'"
-            
-            if 'services' not in data:
-                return False, "Missing 'services' section"
-            
-            if not isinstance(data['services'], dict):
-                return False, "'services' must be a dictionary"
-            
-            return True, None
-        except yaml.YAMLError as e:
-            return False, f"YAML parsing error: {str(e)}"
-        except Exception as e:
-            return False, f"Validation error: {str(e)}"
+        return validate_docker_compose(compose_content)
     
     async def check_domain_unique(self, domain: str, exclude_id: Optional[int] = None) -> bool:
         """Check if domain is unique"""
@@ -74,7 +58,7 @@ class ProjectService:
             port=None,
             compose_content=project_data.compose_content,
             env_vars=env_vars_json,
-            status="created"
+            status=ProjectStatus.CREATED
         )
         
         self.db.add(new_project)

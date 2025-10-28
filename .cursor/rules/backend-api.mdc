@@ -1,9 +1,44 @@
 ---
-globs: backend/app/api/*.py
+globs: backend/app/**/*.py
 description: Backend API endpoint patterns and conventions
 ---
 
 # Backend API Conventions
+
+## Architecture
+
+**Layered structure:**
+```
+API → Services → Models
+ ↓       ↓
+Utils  Constants
+ ↓       ↓
+Validators, Exceptions
+```
+
+## Constants (ALWAYS use!)
+
+```python
+from app.constants.project_constants import ProjectStatus
+from app.constants.messages import ErrorMessages, SuccessMessages
+
+project.status = ProjectStatus.CREATED  # NOT "created"
+raise HTTPException(detail=ErrorMessages.PROJECT_NOT_FOUND)
+```
+
+## Utils & Formatters
+
+```python
+from app.utils.formatters import format_project_response
+return format_project_response(project)  # NOT manual dict
+```
+
+## Validators
+
+```python
+from app.validators import validate_docker_compose
+is_valid, error = validate_docker_compose(content)
+```
 
 ## Authentication
 
