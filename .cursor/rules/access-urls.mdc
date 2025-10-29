@@ -11,17 +11,18 @@ alwaysApply: true
 - **Frontend:** http://artem.sokolov.me
 - **Backend API:** http://artem.sokolov.me/api
 - **API Docs:** http://artem.sokolov.me/docs
-- **Traefik Dashboard:** http://artem.sokolov.me/traefik/ (admin-only) ⚠️ **NOT /dashboard/**
+- **Traefik:** http://artem.sokolov.me/traefik/ (admin-only)
+- **Containers:** http://artem.sokolov.me/containers (admin-only)
 
 ## URL Conventions
 
-**CRITICAL:** Always use `/traefik/` for Traefik Dashboard, never `/dashboard/`
+**IMPORTANT:** Use `/traefik/` for Traefik Dashboard (not `/dashboard/`)
 
-### Why `/traefik/` not `/dashboard/`?
+### Path Conventions
 
-- Avoids confusion with future DockLite dashboard
-- Clear separation: Traefik = reverse proxy, DockLite = application
-- Frontend button labeled "Traefik" for clarity
+- `/traefik/` - Traefik reverse proxy dashboard
+- `/containers` - DockLite containers management
+- Clear separation between Traefik (infrastructure) and DockLite (application)
 
 ### Internal vs External URLs
 

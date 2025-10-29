@@ -22,7 +22,7 @@ DockLite - multi-tenant система управления веб-сервер�
 │   │   ├── utils/            # Formatters, responses, logger, hostname
 │   │   ├── validators/       # Compose, domain validation
 │   │   └── presets/          # 14 docker-compose templates (Traefik-ready)
-│   ├── tests/                # Pytest tests (229 tests)
+│   ├── tests/                # Pytest tests (240 tests)
 │   ├── alembic/              # Database migrations (3 revisions)
 │   └── Dockerfile
 ├── frontend/                  # Vue.js 3 + PrimeVue frontend
@@ -84,7 +84,7 @@ DockLite - multi-tenant система управления веб-сервер�
 - SQLAlchemy + Alembic (SQLite, migrateable to PostgreSQL)
 - JWT (python-jose) + bcrypt (passlib)
 - PyYAML for validation
-- Pytest (78 tests, 94% coverage)
+- Pytest (240 tests, 95% coverage)
 
 **Frontend:**
 - Vue.js 3 (Composition API)
@@ -101,18 +101,21 @@ DockLite - multi-tenant система управления веб-сервер�
 - Professional CLI
 - Bash completion
 
-✅ **Phase 4**: Traefik v3 Integration (2025-10-29) - **COMPLETE**
-- Modern reverse proxy (Traefik v3, not Nginx)
-- Domain-based routing (no ports!)
-- Dashboard security (admin-only)
-- Unified hostname system
-- 229 tests (95% coverage)
+## Current Features
+
+**Core Functionality:**
+- Multi-tenant project management
+- Docker containers management with system protection
+- Role-based access control (admin/user)
+- Traefik v3 reverse proxy with domain routing
 - Professional CLI (18 commands)
+- 240 backend tests + 120+ frontend tests (95% coverage)
 
-🔄 **Phase 5**: SSL/HTTPS with Let's Encrypt (next, 90% ready)
-🔄 **Phases 6-9**: Planned
-
-**See:** [phases-roadmap.mdc](mdc:phases-roadmap.mdc)
+**Admin Features:**
+- User management (create, list, reset passwords)
+- System containers protection (backend, frontend, traefik)
+- Traefik dashboard access (admin-only)
+- All containers monitoring and control
 
 ## Important Files
 
@@ -124,16 +127,18 @@ DockLite - multi-tenant система управления веб-сервер�
 **Models & Services:**
 - [backend/app/models/project.py](mdc:backend/app/models/project.py) - Project model (slug-based)
 - [backend/app/models/user.py](mdc:backend/app/models/user.py) - User model
-- [backend/app/services/traefik_service.py](mdc:backend/app/services/traefik_service.py) - Traefik labels (NEW)
+- [backend/app/services/traefik_service.py](mdc:backend/app/services/traefik_service.py) - Traefik labels
+- [backend/app/services/docker_service.py](mdc:backend/app/services/docker_service.py) - Docker CLI wrapper
 - [backend/app/services/project_service.py](mdc:backend/app/services/project_service.py) - Project CRUD with Traefik
 
 **Security & Utils:**
 - [backend/app/core/security.py](mdc:backend/app/core/security.py) - JWT auth + cookie support
-- [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py) - Hostname detection (NEW)
+- [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py) - Hostname detection
 - [backend/app/api/auth.py](mdc:backend/app/api/auth.py) - Auth endpoints + verify-admin
 
 **Frontend:**
-- [frontend/src/App.vue](mdc:frontend/src/App.vue) - Main app with Dashboard button
+- [frontend/src/App.vue](mdc:frontend/src/App.vue) - Main app with nav (Projects, Users, Containers, Traefik)
+- [frontend/src/views/ContainersView.vue](mdc:frontend/src/views/ContainersView.vue) - Containers management
 - [frontend/src/router.js](mdc:frontend/src/router.js) - Vue Router
 
 **Scripts:**
@@ -142,8 +147,9 @@ DockLite - multi-tenant система управления веб-сервер�
 
 **Documentation:**
 - [README.md](mdc:README.md) - Main documentation
-- [TRAEFIK.md](mdc:TRAEFIK.md) - Traefik guide (NEW)
-- [PHASE_4_COMPLETE.md](mdc:PHASE_4_COMPLETE.md) - Phase 4 summary (NEW)
+- [TRAEFIK.md](mdc:TRAEFIK.md) - Traefik guide
+- [CONTAINERS_FEATURE_COMPLETE.md](mdc:CONTAINERS_FEATURE_COMPLETE.md) - Containers module
+- [SYSTEM_CONTAINERS_PROTECTION.md](mdc:SYSTEM_CONTAINERS_PROTECTION.md) - System protection
 
 ## CLI Usage
 
@@ -154,9 +160,10 @@ DockLite - multi-tenant система управления веб-сервер�
 ./docklite start              # Start system (with Traefik)
 ./docklite stop               # Stop system
 ./docklite status             # Check status + URLs
-./docklite test               # Run all tests (229 backend + 120+ frontend)
-./docklite list-users         # List all users (NEW)
-./docklite reset-password     # Reset user password (enhanced)
+./docklite test               # Run all tests (240 backend + 120+ frontend)
+./docklite add-user           # Add new user
+./docklite list-users         # List all users
+./docklite reset-password     # Reset user password
 ./docklite backup             # Backup system
 ./docklite --help             # Show all commands
 ```
@@ -167,8 +174,8 @@ DockLite - multi-tenant система управления веб-сервер�
 
 Always run tests after changes:
 ```bash
-./docklite test               # All tests (229 backend + 120+ frontend)
-./docklite test-backend       # Backend only (229 tests)
+./docklite test               # All tests (240 backend + 120+ frontend)
+./docklite test-backend       # Backend only (240 tests)
 ./docklite test-frontend      # Frontend only (120+ tests)
 
 # Specific test categories
@@ -178,4 +185,4 @@ Always run tests after changes:
 bash scripts/lib/test_hostname.sh     # Bash hostname tests (6)
 ```
 
-Expected: All tests passing ✅ (229 backend, 120+ frontend)
+Expected: All tests passing ✅ (240 backend, 120+ frontend)
