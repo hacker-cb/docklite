@@ -1,8 +1,13 @@
-"""Add multitenancy support
+"""Multi-tenancy and project ownership
 
 Revision ID: 003
 Revises: 002
 Create Date: 2025-10-28
+
+Adds multi-tenancy features:
+- User system_user field for SSH deployment
+- Project ownership (owner_id FK)
+- Slug-based project paths
 
 """
 from typing import Sequence, Union

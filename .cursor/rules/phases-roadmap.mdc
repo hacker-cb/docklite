@@ -6,41 +6,31 @@ description: Development phases and roadmap
 
 ## Completed Phases
 
-### ✅ Phase 1: CRUD + Presets + SSH
-- Projects CRUD API
-- 14 docker-compose presets
-- Vue.js 3 + PrimeVue UI
-- SSH deployment infrastructure
-- 33 tests
+### ✅ Phase 1: Core Infrastructure
+- **Multi-tenancy architecture** - user isolation with system_user mapping
+- **Projects CRUD API** with ownership and slug-based paths
+- **14 docker-compose presets** (web servers, databases, CMS, monitoring)
+- **JWT authentication** with role-based access control
+- **User Management** - CRUD, password management, admin controls
+- **SSH deployment** - per-user isolation via system users
+- **Vue.js 3 + PrimeVue UI** with modern component architecture
+- **Clean architecture** - Services, Models, Validators, Utils, Constants
+- Initial test coverage
 
-### ✅ Phase 2: Authorization
-- JWT authentication (python-jose + bcrypt)
-- User model with migrations
-- Login/Logout API
-- Auto-setup for first admin
-- Protected endpoints
-- +35 tests (total: 67)
+### ✅ Phase 2: Container Management
+- **Docker service** for docker-compose orchestration via SSH
+- **Container lifecycle API** - start, stop, restart, status
+- **Real-time status** from Docker API
+- **UI controls** for container management with ownership checks
+- **Deployment info** endpoint with instructions
 
-### ✅ Phase 2.5: User Management + Frontend/Backend Refactoring
-- User CRUD API (admin only)
-- Users table UI
-- Change password
-- Toggle active/admin
-- Self-modification protection
-- Vue Router 4 (hash mode, lazy loading, navigation guards)
-- Safari password autofill (autocomplete, passwordrules)
-- **Frontend refactoring:** Composables (useProjects, useContainers, usePresets), Constants, Utils, Dialog Components
-- **Backend refactoring:** Constants (messages, status), Utils (formatters, responses, logger), Validators (compose, domain), Exceptions
-- +11 tests (total: 78)
-
-### ✅ Phase 3: Container Management + Comprehensive Testing
-- Docker service for docker-compose control
-- API: start, stop, restart, status
-- Real container status from Docker API
-- UI buttons for lifecycle management
-- **Backend: +72 critical tests** for validators, utils, deployment API (total: 150)
-- **Frontend: +120 comprehensive tests** for components, views, composables, utils, router
-- **Total project tests: 270+** with ~90-95% coverage
+### ✅ Phase 3: Production Ready
+- **Comprehensive testing** - 157 backend tests, 120+ frontend tests
+- **Test coverage** - ~95% overall coverage
+- **Validators** - compose validation, domain validation
+- **Error handling** - custom exceptions, proper error messages
+- **API documentation** - OpenAPI/Swagger
+- **Production architecture** - ready for deployment
 
 ## Upcoming Phases
 
@@ -83,9 +73,10 @@ description: Development phases and roadmap
 
 See [FUTURE_IMPROVEMENTS.md](mdc:FUTURE_IMPROVEMENTS.md) for 27+ ideas including:
 - Health checks
-- Audit logs
+- Audit logs  
 - Project templates
 - Backup/restore
 - Monitoring
 - Webhooks
-- Multi-tenancy
+- Resource limits
+- Performance optimizations
