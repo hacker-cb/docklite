@@ -11,6 +11,13 @@ from app.constants.messages import ErrorMessages, SuccessMessages
 
 router = APIRouter(prefix="/containers", tags=["containers"])
 
+# System containers that cannot be stopped/restarted/removed via API
+SYSTEM_CONTAINERS = [
+    "docklite-backend",
+    "docklite-frontend", 
+    "docklite-traefik"
+]
+
 
 def check_is_admin(current_user: User):
     """Check if current user is admin"""
@@ -19,6 +26,28 @@ def check_is_admin(current_user: User):
             status_code=status.HTTP_403_FORBIDDEN,
             detail=ErrorMessages.ADMIN_REQUIRED
         )
+
+
+def check_system_container(container_id: str, operation: str):
+    """
+    Check if container is a system container and block dangerous operations.
+    
+    Args:
+        container_id: Container ID or name
+        operation: Operation name (stop, restart, remove)
+        
+    Raises:
+        HTTPException: If trying to perform dangerous operation on system container
+    """
+    # Check by name (exact match or prefix)
+    for system_name in SYSTEM_CONTAINERS:
+        if container_id == system_name or container_id.startswith(system_name):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Cannot {operation} system container '{system_name}'. "
+                       f"This would break DockLite functionality. "
+                       f"Use './docklite {operation}' command instead."
+            )
 
 
 @router.get("")
@@ -131,6 +160,9 @@ async def stop_container(
     """
     Stop a container (admin only).
     
+    Note: System containers (docklite-backend, docklite-frontend, docklite-traefik)
+    cannot be stopped via API to prevent breaking DockLite functionality.
+    
     Args:
         container_id: Container ID or name
         current_user: Current authenticated user
@@ -139,6 +171,7 @@ async def stop_container(
         Success message
     """
     check_is_admin(current_user)
+    check_system_container(container_id, "stop")
     
     try:
         docker_service = DockerService()
@@ -168,6 +201,9 @@ async def restart_container(
     """
     Restart a container (admin only).
     
+    Note: System containers (docklite-backend, docklite-frontend, docklite-traefik)
+    cannot be restarted via API to prevent breaking DockLite functionality.
+    
     Args:
         container_id: Container ID or name
         current_user: Current authenticated user
@@ -176,6 +212,7 @@ async def restart_container(
         Success message
     """
     check_is_admin(current_user)
+    check_system_container(container_id, "restart")
     
     try:
         docker_service = DockerService()
@@ -206,6 +243,9 @@ async def remove_container(
     """
     Remove a container (admin only).
     
+    Note: System containers (docklite-backend, docklite-frontend, docklite-traefik)
+    cannot be removed via API to prevent breaking DockLite functionality.
+    
     Args:
         container_id: Container ID or name
         force: Force remove even if running
@@ -215,6 +255,7 @@ async def remove_container(
         Success message
     """
     check_is_admin(current_user)
+    check_system_container(container_id, "remove")
     
     try:
         docker_service = DockerService()

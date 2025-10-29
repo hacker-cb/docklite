@@ -135,6 +135,14 @@ services:
 - Frontend route has `meta: { requiresAdmin: true }`
 - Navigation button only visible to admins
 
+**System Container Protection:**
+- System containers (docklite-backend, docklite-frontend, docklite-traefik) are protected
+- **BLOCKED operations:** Stop, Restart, Remove (would break DockLite)
+- **ALLOWED operations:** Start (recovery), Logs, Stats (safe)
+- Backend returns 403 Forbidden for blocked operations
+- Frontend disables Stop/Restart/Remove buttons with tooltips
+- See [SYSTEM_CONTAINERS_PROTECTION.md](mdc:SYSTEM_CONTAINERS_PROTECTION.md)
+
 **Permissions:**
 - Backend container needs access to Docker socket
 - Container operations run with Docker daemon privileges

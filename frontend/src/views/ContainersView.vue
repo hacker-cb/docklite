@@ -124,14 +124,15 @@
               icon="pi pi-stop" 
               @click="stopContainer(slotProps.data)"
               class="p-button-sm p-button-danger p-button-text"
-              v-tooltip.top="'Stop'"
+              v-tooltip.top="slotProps.data.is_system ? 'Cannot stop system container' : 'Stop'"
+              :disabled="slotProps.data.is_system"
             />
             <Button 
               icon="pi pi-refresh" 
               @click="restartContainer(slotProps.data)"
               class="p-button-sm p-button-warning p-button-text"
-              v-tooltip.top="'Restart'"
-              :disabled="slotProps.data.status !== 'running'"
+              v-tooltip.top="slotProps.data.is_system ? 'Cannot restart system container' : 'Restart'"
+              :disabled="slotProps.data.status !== 'running' || slotProps.data.is_system"
             />
             <Button 
               icon="pi pi-file" 
@@ -143,7 +144,7 @@
               icon="pi pi-trash" 
               @click="confirmRemove(slotProps.data)"
               class="p-button-sm p-button-danger p-button-text"
-              v-tooltip.top="'Remove'"
+              v-tooltip.top="slotProps.data.is_system ? 'Cannot remove system container' : 'Remove'"
               :disabled="slotProps.data.is_system"
             />
           </div>

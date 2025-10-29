@@ -297,3 +297,107 @@ class TestContainersAPI:
         
         assert response.status_code == 400
         assert "Container not running" in response.json()["detail"]
+    
+    # System Container Protection Tests
+    
+    async def test_cannot_stop_system_container_backend(self, client: AsyncClient, admin_token):
+        """Test that backend system container cannot be stopped."""
+        response = await client.post(
+            "/api/containers/docklite-backend/stop",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        assert response.status_code == 403
+        assert 'Cannot stop system container' in response.json()['detail']
+        assert 'docklite-backend' in response.json()['detail']
+    
+    async def test_cannot_stop_system_container_frontend(self, client: AsyncClient, admin_token):
+        """Test that frontend system container cannot be stopped."""
+        response = await client.post(
+            "/api/containers/docklite-frontend/stop",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        assert response.status_code == 403
+        assert 'Cannot stop system container' in response.json()['detail']
+    
+    async def test_cannot_stop_system_container_traefik(self, client: AsyncClient, admin_token):
+        """Test that traefik system container cannot be stopped."""
+        response = await client.post(
+            "/api/containers/docklite-traefik/stop",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        assert response.status_code == 403
+        assert 'Cannot stop system container' in response.json()['detail']
+    
+    async def test_cannot_restart_system_container(self, client: AsyncClient, admin_token):
+        """Test that system containers cannot be restarted."""
+        response = await client.post(
+            "/api/containers/docklite-backend/restart",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        assert response.status_code == 403
+        assert 'Cannot restart system container' in response.json()['detail']
+    
+    async def test_cannot_remove_system_container(self, client: AsyncClient, admin_token):
+        """Test that system containers cannot be removed."""
+        response = await client.delete(
+            "/api/containers/docklite-backend",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        assert response.status_code == 403
+        assert 'Cannot remove system container' in response.json()['detail']
+    
+    @patch('app.api.containers.DockerService')
+    async def test_can_start_system_container(self, mock_service_class, client: AsyncClient, admin_token):
+        """Test that system containers CAN be started (in case they're down)."""
+        # Mock Docker service
+        mock_instance = Mock()
+        mock_instance.start_container.return_value = (True, None)
+        mock_service_class.return_value = mock_instance
+        
+        response = await client.post(
+            "/api/containers/docklite-backend/start",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        # Start should be allowed (for recovery)
+        assert response.status_code == 200
+        assert 'started successfully' in response.json()['detail']
+    
+    @patch('app.api.containers.DockerService')
+    async def test_can_view_logs_system_container(self, mock_service_class, client: AsyncClient, admin_token):
+        """Test that system container logs CAN be viewed (safe operation)."""
+        # Mock Docker service
+        mock_instance = Mock()
+        mock_instance.get_container_logs.return_value = ("Log line 1\nLog line 2", None)
+        mock_service_class.return_value = mock_instance
+        
+        response = await client.get(
+            "/api/containers/docklite-backend/logs?tail=10",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        # Logs should be allowed
+        assert response.status_code == 200
+        assert 'logs' in response.json()
+    
+    @patch('app.api.containers.DockerService')
+    async def test_can_stop_non_system_container(self, mock_service_class, client: AsyncClient, admin_token):
+        """Test that non-system containers CAN be stopped."""
+        # Mock Docker service
+        mock_instance = Mock()
+        mock_instance.stop_container.return_value = (True, None)
+        mock_service_class.return_value = mock_instance
+        
+        response = await client.post(
+            "/api/containers/my-project-web/stop",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        
+        # Non-system containers should be stoppable
+        assert response.status_code == 200
+        assert 'stopped successfully' in response.json()['detail']
