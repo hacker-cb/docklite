@@ -9,7 +9,7 @@ _docklite_completion() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     
     # Main commands
-    local commands="start stop restart rebuild logs test test-backend test-frontend setup-user setup-ssh init-db backup restore clean status reset-password install-completion version help"
+    local commands="start stop restart rebuild logs test test-backend test-frontend setup-user setup-ssh init-db backup restore clean status add-user list-users reset-password install-completion version help"
     
     # If we're completing the first argument (command)
     if [ $COMP_CWORD -eq 1 ]; then
@@ -90,6 +90,20 @@ _docklite_completion() {
         status)
             local status_opts="--verbose --help -h -v"
             COMPREPLY=( $(compgen -W "${status_opts}" -- ${cur}) )
+            ;;
+        add-user)
+            # First arg is username, then suggest options
+            if [ $COMP_CWORD -eq 2 ]; then
+                # Username (no suggestions for security)
+                COMPREPLY=()
+            else
+                local add_opts="--password --admin --email --system --help -h -p -a -e -s"
+                COMPREPLY=( $(compgen -W "${add_opts}" -- ${cur}) )
+            fi
+            ;;
+        list-users)
+            local list_opts="--verbose --help -h -v"
+            COMPREPLY=( $(compgen -W "${list_opts}" -- ${cur}) )
             ;;
         reset-password)
             # First arg is username, suggest --password
