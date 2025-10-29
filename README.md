@@ -139,10 +139,25 @@ sudo ./docklite setup-ssh
 
 После запуска системы, веб-интерфейс будет доступен по адресу (через Traefik):
 
+**Используя системный hostname:**
+- **Frontend**: http://artem.sokolov.me (или ваш hostname)
+- **Backend API**: http://artem.sokolov.me/api
+- **API Docs**: http://artem.sokolov.me/docs
+- **Traefik Dashboard**: http://artem.sokolov.me:8888
+
+**Локальный доступ:**
 - **Frontend**: http://localhost
 - **Backend API**: http://localhost/api
 - **API Docs**: http://localhost/docs
-- **Traefik Dashboard**: http://localhost:8888
+
+**Примечание:** DockLite использует умную логику определения hostname:
+1. **Приоритет 1**: Значение `HOSTNAME` в `.env` файле (если задано)
+2. **Приоритет 2**: Системный hostname из команды `hostname`
+3. **Fallback**: HTTP Host header или "localhost"
+
+Для установки hostname:
+- **Через конфиг** (рекомендуется): добавьте `HOSTNAME=your.domain.com` в `.env`
+- **Системный**: выполните `sudo hostnamectl set-hostname your.domain.com`
 
 **Traefik** автоматически маршрутизирует запросы к правильным сервисам без необходимости указывать порты. Подробнее: [TRAEFIK.md](./TRAEFIK.md)
 

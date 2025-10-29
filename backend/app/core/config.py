@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     DEPLOY_HOST: str = "localhost"
     DEPLOY_PORT: int = 22
     
+    # Server
+    HOSTNAME: Optional[str] = None  # If set, overrides system hostname
+    
     # API
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000

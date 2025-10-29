@@ -60,10 +60,16 @@ fi
 if is_container_running "docklite-traefik" && is_container_running "docklite-backend" && is_container_running "docklite-frontend"; then
     echo ""
     log_step "Access URLs (via Traefik):"
-    log_info "Frontend:         ${COLOR_CYAN}http://localhost${COLOR_NC}"
-    log_info "Backend API:      ${COLOR_CYAN}http://localhost/api${COLOR_NC}"
-    log_info "API Docs:         ${COLOR_CYAN}http://localhost/docs${COLOR_NC}"
-    log_info "Traefik Dashboard: ${COLOR_CYAN}http://localhost:8888${COLOR_NC}"
+    
+    # Get system hostname
+    HOSTNAME=$(hostname)
+    
+    log_info "Frontend:          ${COLOR_CYAN}http://${HOSTNAME}${COLOR_NC}"
+    log_info "Backend API:       ${COLOR_CYAN}http://${HOSTNAME}/api${COLOR_NC}"
+    log_info "API Docs:          ${COLOR_CYAN}http://${HOSTNAME}/docs${COLOR_NC}"
+    log_info "Traefik Dashboard: ${COLOR_CYAN}http://${HOSTNAME}:8888${COLOR_NC}"
+    log_info ""
+    log_info "Local access:      ${COLOR_CYAN}http://localhost${COLOR_NC}"
 fi
 
 # Show version

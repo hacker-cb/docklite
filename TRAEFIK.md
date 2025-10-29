@@ -140,6 +140,21 @@ For projects with multiple services (e.g., WordPress + MySQL):
 
 ## Custom Domains Setup
 
+### System Hostname
+
+DockLite automatically uses your system hostname for access URLs. Check your hostname:
+
+```bash
+hostname
+# Output: artem.sokolov.me (example)
+```
+
+To set/change hostname:
+
+```bash
+sudo hostnamectl set-hostname your.domain.com
+```
+
 ### Development (localhost)
 
 For local development, you can use `/etc/hosts` to map domains:

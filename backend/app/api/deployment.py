@@ -7,6 +7,7 @@ from app.models.user import User
 from app.services.project_service import ProjectService
 from app.core.config import settings
 from app.constants.messages import ErrorMessages
+from app.utils.hostname import get_server_hostname
 
 router = APIRouter(prefix="/deployment", tags=["deployment"])
 
@@ -34,8 +35,12 @@ async def get_deployment_info(
     result = await db.execute(select(User).where(User.id == project.owner_id))
     owner = result.scalar_one()
     
-    # Get server hostname from request
-    server_host = request.headers.get("host", "your-server").split(":")[0]
+    # Get server hostname with priority logic:
+    # 1. Config value (settings.HOSTNAME)
+    # 2. System hostname
+    # 3. HTTP Host header
+    fallback = request.headers.get("host", "localhost").split(":")[0]
+    server_host = get_server_hostname(fallback=fallback)
     
     # Use owner's system_user and slug
     deploy_user = owner.system_user
@@ -81,15 +86,19 @@ async def get_ssh_setup_info():
     """Get SSH setup instructions"""
     deploy_user = getattr(settings, 'DEPLOY_USER', 'docklite')
     
+    # Get server hostname with priority logic
+    server_host = get_server_hostname()
+    
     return {
         "deploy_user": deploy_user,
         "projects_dir": settings.PROJECTS_DIR,
+        "server": server_host,
         "instructions": {
             "setup_server": "cd /home/pavel/docklite && sudo ./setup-docklite-user.sh",
             "generate_key": "ssh-keygen -t ed25519 -C \"your_email@example.com\"",
             "copy_key": "cat ~/.ssh/id_ed25519.pub",
             "add_key": f"sudo -u {deploy_user} nano /home/{deploy_user}/.ssh/authorized_keys",
-            "test_connection": f"ssh {deploy_user}@your-server"
+            "test_connection": f"ssh {deploy_user}@{server_host}"
         },
         "documentation": "/home/pavel/docklite/SSH_ACCESS.md"
     }
