@@ -23,6 +23,7 @@
 #     restore         Restore from backup
 #     clean           Clean up unused resources
 #     status          Show system status
+#     list-users      List all users
 #     reset-password  Reset user password
 #
 #   Setup:
@@ -119,6 +120,9 @@ case "$COMMAND" in
         ;;
     reset-password)
         exec "$SCRIPT_DIR/maintenance/reset-password.sh" "$@"
+        ;;
+    list-users)
+        exec "$SCRIPT_DIR/maintenance/list-users.sh" "$@"
         ;;
     
     # Setup

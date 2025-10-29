@@ -43,9 +43,6 @@ done
 
 print_banner "Reset User Password"
 
-log_info "Username: ${COLOR_CYAN}$USERNAME${COLOR_NC}"
-echo ""
-
 # Check Docker
 check_docker
 
@@ -58,6 +55,56 @@ if ! is_container_running "docklite-backend"; then
     docker_compose_cmd up -d backend
     sleep 3
 fi
+
+# First, get list of existing users
+log_step "Checking existing users..."
+USERS_LIST=$(docker_compose_cmd exec -T backend python -c "
+import asyncio
+from app.core.database import AsyncSessionLocal
+from app.models.user import User
+from sqlalchemy import select
+
+async def list_users():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User.username, User.is_admin))
+        users = result.all()
+        if not users:
+            print('NO_USERS')
+        else:
+            for username, is_admin in users:
+                role = 'admin' if is_admin else 'user'
+                print(f'{username}:{role}')
+
+asyncio.run(list_users())
+" 2>/dev/null)
+
+if [ "$USERS_LIST" = "NO_USERS" ]; then
+    log_warning "No users found in database!"
+    log_info "Use the setup screen to create the first admin user:"
+    log_info "${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
+    exit 1
+fi
+
+# Check if requested user exists
+if ! echo "$USERS_LIST" | grep -q "^${USERNAME}:"; then
+    log_error "User '${USERNAME}' not found!"
+    echo ""
+    log_step "Existing users:"
+    echo "$USERS_LIST" | while IFS=: read -r user role; do
+        if [ "$role" = "admin" ]; then
+            log_info "  ${COLOR_CYAN}$user${COLOR_NC} ${COLOR_YELLOW}($role)${COLOR_NC}"
+        else
+            log_info "  ${COLOR_CYAN}$user${COLOR_NC} ($role)"
+        fi
+    done
+    echo ""
+    log_info "Usage: ${COLOR_CYAN}./docklite reset-password <username>${COLOR_NC}"
+    exit 1
+fi
+
+echo ""
+log_info "Username: ${COLOR_CYAN}$USERNAME${COLOR_NC}"
+echo ""
 
 # If password not provided, ask interactively
 if [ -z "$NEW_PASSWORD" ]; then
