@@ -65,7 +65,7 @@ if is_container_running "docklite-traefik" && is_container_running "docklite-bac
     log_info "Frontend:          ${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
     log_info "Backend API:       ${COLOR_CYAN}$(get_access_url "/api")${COLOR_NC}"
     log_info "API Docs:          ${COLOR_CYAN}$(get_access_url "/docs")${COLOR_NC}"
-    log_info "Traefik Dashboard: ${COLOR_CYAN}$(get_access_url "" "8888")${COLOR_NC}"
+    log_info "Traefik Dashboard: ${COLOR_CYAN}$(get_access_url "/dashboard")${COLOR_NC} ${COLOR_YELLOW}(admin only)${COLOR_NC}"
     
     # Show localhost alternative if hostname is not localhost
     CURRENT_HOSTNAME=$(get_hostname)

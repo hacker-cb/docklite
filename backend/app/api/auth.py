@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import get_current_active_user
+from app.core.security import get_current_active_user, get_current_user_with_cookie
 from app.models.schemas import UserLogin, Token, UserResponse, UserCreate
 from app.services.auth_service import AuthService
 from app.models.user import User
@@ -91,4 +91,40 @@ async def initial_setup(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
+@router.get("/verify-admin")
+async def verify_admin(
+    current_user: User = Depends(get_current_user_with_cookie)
+):
+    """
+    Verify that current user is an admin (for Traefik ForwardAuth)
+    
+    This endpoint is used by Traefik to protect admin-only resources like the dashboard.
+    Supports JWT token from:
+    1. Authorization header (Bearer token) - for API calls
+    2. Cookie (token) - for browser dashboard access
+    
+    Returns 200 OK if user is admin, 403 Forbidden otherwise.
+    
+    Headers returned to Traefik:
+    - X-User-Id: User ID
+    - X-Username: Username
+    - X-Is-Admin: true
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    
+    # Return user info in headers for Traefik
+    from fastapi import Response
+    
+    response = Response(status_code=200)
+    response.headers["X-User-Id"] = str(current_user.id)
+    response.headers["X-Username"] = current_user.username
+    response.headers["X-Is-Admin"] = "true"
+    
+    return response
 

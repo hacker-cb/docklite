@@ -45,6 +45,13 @@
           @click="router.push('/users')"
           :class="$route.path === '/users' ? 'p-button-primary' : 'p-button-outlined'"
         />
+        <Button 
+          v-if="currentUser?.is_admin"
+          label="Dashboard"
+          icon="pi pi-chart-line" 
+          @click="openDashboard"
+          class="p-button-outlined p-button-secondary"
+        />
       </div>
 
       <!-- Router View -->
@@ -116,10 +123,20 @@ const handleLogout = async () => {
   } finally {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    
+    // Clear token cookie
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax'
+    
     isAuthenticated.value = false
     currentUser.value = null
     router.push('/projects')
   }
+}
+
+const openDashboard = () => {
+  // Open Traefik dashboard in new tab
+  // Auth is handled automatically via JWT token in cookies/local storage
+  window.open('/dashboard/', '_blank')
 }
 
 onMounted(() => {

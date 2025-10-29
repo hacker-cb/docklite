@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Server
     HOSTNAME: Optional[str] = None  # If set, overrides system hostname
     
+    # Traefik
+    TRAEFIK_DASHBOARD_HOST: str = "localhost"  # Host for Traefik dashboard
+    
     # API
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000

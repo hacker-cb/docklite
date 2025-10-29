@@ -149,6 +149,72 @@ def auth_headers(auth_token):
 
 
 @pytest.fixture
+async def admin_token(client, db_session):
+    """Create an admin user and return auth token for admin tests"""
+    from app.models.user import User
+    from app.services.auth_service import AuthService
+    
+    # Create admin user directly in DB
+    auth_service = AuthService(db_session)
+    password_hash = auth_service.get_password_hash("adminpass123")
+    
+    admin = User(
+        username="adminuser",
+        email="admin@example.com",
+        password_hash=password_hash,
+        system_user="docklite",
+        is_active=1,
+        is_admin=1  # Admin user
+    )
+    
+    db_session.add(admin)
+    await db_session.commit()
+    
+    # Create token
+    token = auth_service.create_access_token(data={"sub": admin.username})
+    return token
+
+
+@pytest.fixture
+async def user_token(client, db_session):
+    """Create a regular (non-admin) user and return auth token"""
+    from app.models.user import User
+    from app.services.auth_service import AuthService
+    
+    # Ensure admin exists first (for user creation)
+    auth_service = AuthService(db_session)
+    admin_hash = auth_service.get_password_hash("adminpass")
+    admin = User(
+        username="setupadmin",
+        email="admin@test.com",
+        password_hash=admin_hash,
+        system_user="docklite",
+        is_active=1,
+        is_admin=1
+    )
+    db_session.add(admin)
+    await db_session.commit()
+    
+    # Create regular user
+    password_hash = auth_service.get_password_hash("userpass123")
+    regular_user = User(
+        username="regularuser",
+        email="user@example.com",
+        password_hash=password_hash,
+        system_user="docklite",
+        is_active=1,
+        is_admin=0  # NOT admin
+    )
+    
+    db_session.add(regular_user)
+    await db_session.commit()
+    
+    # Create token
+    token = auth_service.create_access_token(data={"sub": regular_user.username})
+    return token
+
+
+@pytest.fixture
 async def test_user(db_session):
     """Create a test user for project ownership"""
     from app.services.auth_service import AuthService

@@ -6,7 +6,6 @@ services:
     container_name: docklite-traefik
     command:
       - "--api.dashboard=true"
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=docklite-network"
@@ -16,7 +15,16 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8888:8080"  # Traefik Dashboard (mapped to 8888 to avoid conflicts)
+    labels:
+      - "traefik.enable=true"
+      # Dashboard router with admin authentication
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.middlewares=admin-auth"
+      # ForwardAuth middleware - delegates auth to DockLite backend
+      - "traefik.http.middlewares.admin-auth.forwardauth.address=http://docklite-backend:8000/api/auth/verify-admin"
+      - "traefik.http.middlewares.admin-auth.forwardauth.authResponseHeaders=X-User-Id,X-Username,X-Is-Admin"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:

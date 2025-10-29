@@ -169,8 +169,11 @@ const setup = async () => {
     const response = await authApi.setup(setupData)
     const { access_token } = response.data
     
-    // Save token
+    // Save token to localStorage
     localStorage.setItem('token', access_token)
+    
+    // Also save to cookie for Traefik ForwardAuth (dashboard access)
+    document.cookie = `token=${access_token}; path=/; max-age=2592000; SameSite=Lax`
     
     // Get user info
     const userResponse = await authApi.me()
