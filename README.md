@@ -1,6 +1,30 @@
 # DockLite - Web Server Management System
 
-DockLite - это система управления веб-сервером с возможностью деплоя множества проектов через docker-compose. Система предоставляет удобный веб-интерфейс, REST API и MCP сервер для взаимодействия с AI агентами.
+![CI](https://github.com/hacker-cb/docklite/workflows/CI/badge.svg)
+![Tests](https://img.shields.io/badge/tests-240%20backend%20%2B%20120%2B%20frontend-success)
+![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+
+DockLite - это система управления веб-сервером с возможностью деплоя множества проектов через docker-compose. Система предоставляет удобный веб-интерфейс, REST API и professional CLI.
+
+## 🚀 Quick Start
+
+```bash
+# Клонируйте репозиторий
+git clone https://github.com/hacker-cb/docklite.git
+cd docklite
+
+# Настройте окружение
+cp .env.example .env
+nano .env  # Укажите ваш HOSTNAME
+
+# Запустите систему
+./docklite start
+
+# Создайте первого админа
+./docklite add-user admin -p "YourPassword" --admin
+```
+
+Откройте в браузере: `http://your-server-hostname`
 
 ## Возможности
 
