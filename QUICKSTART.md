@@ -27,17 +27,26 @@ sudo ./docklite setup-ssh
 
 Sets up SSH keys for localhost deployment.
 
-### 3. Start DockLite
+### 3. Install Bash Completion (Optional)
+
+```bash
+./docklite install-completion
+source ~/.bashrc
+```
+
+Enables Tab auto-completion for all commands!
+
+### 4. Start DockLite
 
 ```bash
 ./docklite start
 ```
 
-### 4. Access UI
+### 5. Access UI
 
 Open: **http://localhost:5173**
 
-### 5. Create Admin
+### 6. Create Admin
 
 Fill in the setup form:
 - Username
@@ -81,11 +90,20 @@ Click "Create Admin Account"
 
 ---
 
+## Forgot Password?
+
+```bash
+./docklite reset-password admin     # Reset admin password
+```
+
+---
+
 ## Next Steps
 
 - Read [README.md](mdc:README.md) for detailed guide
-- Check [scripts/README.md](mdc:scripts/README.md) for CLI documentation
+- Check [SCRIPTS.md](mdc:SCRIPTS.md) for all CLI commands
 - See [ARCHITECTURE.md](mdc:ARCHITECTURE.md) for system architecture
+- Install completion: `./docklite install-completion`
 
 ---
 
@@ -101,6 +119,11 @@ sudo usermod -aG docker $USER
 ```bash
 sudo ./docklite setup-ssh  # Re-run SSH setup
 ssh docklite@localhost     # Test connection
+```
+
+### Forgot password
+```bash
+./docklite reset-password admin  # Reset password
 ```
 
 ### Database issues

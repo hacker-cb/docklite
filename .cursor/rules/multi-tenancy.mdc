@@ -1,0 +1,362 @@
+---
+description: Multi-tenancy architecture and ownership patterns
+---
+
+# DockLite Multi-Tenancy
+
+## Core Concept
+
+DockLite implements **true multi-tenancy** where each project belongs to a user and is isolated by system user.
+
+## Architecture
+
+### User → System User Mapping
+
+**Database:**
+```python
+class User(Base):
+    id = Column(Integer, primary_key=True)
+    username = Column(String)         # DockLite username
+    system_user = Column(String, default="docklite")  # Linux user for SSH
+    
+    projects = relationship("Project", back_populates="owner")
+```
+
+**Location:** [backend/app/models/user.py](mdc:backend/app/models/user.py)
+
+### Project Ownership
+
+**Database:**
+```python
+class Project(Base):
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True)           # Generated from domain
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    
+    owner = relationship("User", back_populates="projects")
+```
+
+**Location:** [backend/app/models/project.py](mdc:backend/app/models/project.py)
+
+### Slug-based Paths
+
+**Format:** `{domain}-{short_id}`
+
+**Examples:**
+- Domain: `example.com`, ID: 123 → Slug: `example-com-a7b2`
+- Domain: `my-site.org`, ID: 456 → Slug: `my-site-org-c3d9`
+
+**Path:** `/home/{owner.system_user}/projects/{slug}/`
+
+**Function:** [backend/app/utils/formatters.py](mdc:backend/app/utils/formatters.py) - `generate_slug_from_domain()`
+
+## Access Control
+
+### Ownership Checks
+
+**Non-admin users can only access their own projects:**
+
+```python
+# In ProjectService
+async def get_project(self, project_id: int, user_id: int, is_admin: bool):
+    query = select(Project).where(Project.id == project_id)
+    
+    # Filter by ownership for non-admins
+    if not is_admin:
+        query = query.where(Project.owner_id == user_id)
+    
+    result = await self.db.execute(query)
+    return result.scalar_one_or_none()
+```
+
+**Location:** [backend/app/services/project_service.py](mdc:backend/app/services/project_service.py)
+
+### API Patterns
+
+**In API endpoints:**
+
+```python
+@router.get("/projects")
+async def get_projects(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = ProjectService(db)
+    projects = await service.get_all_projects(
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
+    return {"projects": [format_project_response(p) for p in projects]}
+```
+
+**Location:** [backend/app/api/projects.py](mdc:backend/app/api/projects.py)
+
+### Container Management
+
+**Ownership check before operations:**
+
+```python
+@router.post("/containers/{project_id}/start")
+async def start_containers(project_id: int, current_user: User, db: AsyncSession):
+    # Get project with ownership check
+    project, owner = await get_project_with_owner_check(project_id, current_user, db)
+    
+    # Use owner's system_user for SSH
+    docker_service = DockerService(project_id, project.slug, owner.system_user)
+    success, message = await docker_service.start()
+    # ...
+```
+
+**Location:** [backend/app/api/containers.py](mdc:backend/app/api/containers.py)
+
+## System User Isolation
+
+### SSH Deployment
+
+Each project uses owner's system_user:
+
+```python
+class DockerService:
+    def __init__(self, project_id: int, slug: str, system_user: str):
+        self.project_id = project_id
+        self.slug = slug
+        self.system_user = system_user
+        self.project_dir = Path(f"/home/{system_user}/projects/{slug}")
+```
+
+**SSH Command:**
+```bash
+ssh {system_user}@{host} "cd /home/{system_user}/projects/{slug} && docker-compose up -d"
+```
+
+**Location:** [backend/app/services/docker_service.py](mdc:backend/app/services/docker_service.py)
+
+### File Paths
+
+**Project directory:**
+```
+/home/{owner.system_user}/projects/{project.slug}/
+├── docker-compose.yml
+├── .env
+└── [project files]
+```
+
+**Getting path in code:**
+```python
+async def get_project_path(self, project: Project) -> Path:
+    result = await self.db.execute(select(User).where(User.id == project.owner_id))
+    owner = result.scalar_one()
+    owner_home = f"/home/{owner.system_user}"
+    return Path(owner_home) / "projects" / project.slug
+```
+
+## Creating Projects
+
+**Auto-assigns owner:**
+
+```python
+@router.post("/projects")
+async def create_project(
+    project: ProjectCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = ProjectService(db)
+    new_project, error = await service.create_project(
+        project, 
+        owner_id=current_user.id  # Current user is owner!
+    )
+    # ...
+```
+
+**Slug generation:**
+```python
+slug = generate_slug_from_domain(project.domain, new_project.id)
+```
+
+## Frontend Integration
+
+### User Creation
+
+**Form includes system_user field:**
+
+```vue
+<InputText 
+  v-model="newUser.system_user" 
+  placeholder="docklite"
+/>
+<small>Linux user for SSH deployment (must exist on server)</small>
+```
+
+**Location:** [frontend/src/views/UsersView.vue](mdc:frontend/src/views/UsersView.vue)
+
+**Note:** System user must exist in Linux:
+```bash
+sudo useradd -m -s /bin/bash newuser
+sudo usermod -aG docker newuser
+```
+
+### Project Display
+
+Projects show owner information (admin view).
+
+**API Response includes:**
+```json
+{
+  "id": 1,
+  "slug": "example-com-a7b2",
+  "owner_id": 1,
+  "status": "running"
+}
+```
+
+## Database Schema
+
+### users table
+```sql
+id           INTEGER PRIMARY KEY
+username     VARCHAR(255) UNIQUE
+email        VARCHAR(255) UNIQUE
+system_user  VARCHAR(255) NOT NULL DEFAULT 'docklite'
+password_hash VARCHAR(255)
+is_admin     INTEGER DEFAULT 0
+is_active    INTEGER DEFAULT 1
+```
+
+### projects table
+```sql
+id          INTEGER PRIMARY KEY
+slug        VARCHAR(255) UNIQUE
+owner_id    INTEGER NOT NULL REFERENCES users(id)
+name        VARCHAR(255)
+domain      VARCHAR(255) UNIQUE
+status      VARCHAR(50) DEFAULT 'created'
+```
+
+**Migration:** [backend/alembic/versions/003_add_multitenancy.py](mdc:backend/alembic/versions/003_add_multitenancy.py)
+
+## Rules
+
+### ALWAYS
+
+✅ Check ownership before operations (unless admin)  
+✅ Use owner's system_user for SSH operations  
+✅ Generate slug from domain  
+✅ Filter projects by ownership (non-admin)  
+✅ Include owner_id when creating projects  
+✅ Validate system_user exists in Linux  
+
+### NEVER
+
+❌ Use numeric IDs in file paths - use slugs  
+❌ Allow cross-user access (unless admin)  
+❌ Hardcode "docklite" - use owner.system_user  
+❌ Skip ownership validation  
+❌ Create projects without owner_id  
+❌ Forget to check is_admin flag  
+
+## Helper Functions
+
+### Get Project with Ownership Check
+
+```python
+async def get_project_with_owner_check(
+    project_id: int,
+    current_user: User,
+    db: AsyncSession
+) -> tuple[Project, User]:
+    # Get project
+    project = await service.get_project(project_id)
+    if not project:
+        raise HTTPException(404, "Project not found")
+    
+    # Check ownership
+    if not current_user.is_admin and project.owner_id != current_user.id:
+        raise HTTPException(403, "Access denied")
+    
+    # Get owner
+    owner = await service.get_user(project.owner_id)
+    return project, owner
+```
+
+**Location:** [backend/app/api/containers.py](mdc:backend/app/api/containers.py)
+
+## Testing Multi-Tenancy
+
+### Test Ownership
+
+```python
+async def test_non_admin_cannot_access_other_projects():
+    # Create two users
+    user1 = await create_user("user1")
+    user2 = await create_user("user2")
+    
+    # User1 creates project
+    project = await create_project(owner_id=user1.id)
+    
+    # User2 tries to access - should fail
+    response = await client.get(f"/api/projects/{project.id}", headers=user2_auth)
+    assert response.status_code == 404  # Not found (filtered out)
+```
+
+### Test Admin Access
+
+```python
+async def test_admin_can_access_all_projects():
+    # Admin can see all projects regardless of owner
+    admin = await create_user("admin", is_admin=True)
+    user = await create_user("user")
+    
+    project = await create_project(owner_id=user.id)
+    
+    response = await client.get(f"/api/projects/{project.id}", headers=admin_auth)
+    assert response.status_code == 200  # Admin sees it
+```
+
+## Common Issues
+
+### Circular Import in Models
+
+**Problem:** User has `projects` relationship, Project has `owner` relationship.
+
+**Solution:** Use `lazy="select"` and string references:
+```python
+# In User model
+projects = relationship("Project", back_populates="owner", lazy="select")
+
+# In Project model
+owner = relationship("User", back_populates="projects", lazy="joined")
+```
+
+### System User Doesn't Exist
+
+**Problem:** User created with system_user that doesn't exist in Linux.
+
+**Solution:** Validate or create:
+```bash
+# Check if exists
+if ! id "$SYSTEM_USER" &>/dev/null; then
+    sudo useradd -m -s /bin/bash "$SYSTEM_USER"
+    sudo usermod -aG docker "$SYSTEM_USER"
+fi
+```
+
+### Permission Denied on Project Directory
+
+**Problem:** Wrong ownership on `/home/{system_user}/projects/{slug}/`
+
+**Solution:** Fix ownership:
+```python
+project_path = Path(f"/home/{owner.system_user}/projects/{slug}")
+project_path.mkdir(parents=True, exist_ok=True)
+# Set ownership via SSH
+ssh_cmd = f"chown -R {owner.system_user}:{owner.system_user} {project_path}"
+```
+
+## Future Enhancements
+
+- Resource quotas per user
+- Project sharing between users
+- Team/organization support
+- User groups
+- Custom system_user per project (not just per user)

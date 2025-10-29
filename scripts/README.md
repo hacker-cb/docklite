@@ -178,6 +178,17 @@ Shows:
 - Database info (verbose)
 - Projects count (verbose)
 
+#### `reset-password` - Reset User Password
+```bash
+./docklite reset-password admin            # Interactive password entry
+./docklite reset-password pavel            # Reset any user
+./docklite reset-password admin -p newpass # Set specific password
+```
+
+**Use case:** Forgot password, locked out of admin account
+
+**Security:** Password must be at least 6 characters
+
 ---
 
 ## Common Library (`lib/common.sh`)

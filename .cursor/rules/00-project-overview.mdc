@@ -5,7 +5,7 @@ description: DockLite project structure and architecture overview
 
 # DockLite Project Overview
 
-DockLite - система управления веб-сервером для деплоя множества проектов через docker-compose.
+DockLite - multi-tenant система управления веб-сервером для деплоя множества проектов через docker-compose с user isolation и role-based access control.
 
 ## Project Structure
 
@@ -13,49 +13,69 @@ DockLite - система управления веб-сервером для д
 /home/pavel/docklite/          # Main DockLite system
 ├── backend/                   # FastAPI backend
 │   ├── app/
-│   │   ├── api/              # API endpoints (auth, users, projects, presets, deployment)
+│   │   ├── api/              # API endpoints (auth, users, projects, containers, presets, deployment)
 │   │   ├── core/             # Config, database, security
 │   │   ├── models/           # SQLAlchemy models & Pydantic schemas
-│   │   ├── services/         # Business logic
+│   │   ├── services/         # Business logic (auth, project, docker)
+│   │   ├── constants/        # Enums, messages
+│   │   ├── exceptions/       # Custom exceptions
+│   │   ├── utils/            # Formatters, responses, logger
+│   │   ├── validators/       # Compose, domain validation
 │   │   └── presets/          # 14 docker-compose templates
-│   ├── tests/                # Pytest tests (78 tests)
-│   ├── alembic/              # Database migrations
+│   ├── tests/                # Pytest tests (157 tests)
+│   ├── alembic/              # Database migrations (3 revisions)
 │   └── Dockerfile
 ├── frontend/                  # Vue.js 3 + PrimeVue frontend
 │   ├── src/
+│   │   ├── components/       # Dialogs (CreateProject, EnvVars, DeployInfo)
 │   │   ├── views/            # Router views (ProjectsView, UsersView)
+│   │   ├── composables/      # Reusable logic (useProjects, useContainers, usePresets)
+│   │   ├── config/           # Constants
+│   │   ├── utils/            # Formatters, toast
 │   │   ├── App.vue           # Main app with auth
 │   │   ├── Login.vue         # Login form
 │   │   ├── Setup.vue         # Initial setup form
 │   │   ├── router.js         # Vue Router config
 │   │   └── api.js            # Axios API client
-│   ├── tests/                # Vitest tests
+│   ├── tests/                # Vitest tests (120+)
 │   └── Dockerfile
+├── scripts/                   # Production scripts (17 total)
+│   ├── docklite.sh           # Main CLI wrapper
+│   ├── lib/                  # Common functions
+│   ├── development/          # Dev scripts (6)
+│   ├── deployment/           # Setup scripts (3)
+│   ├── maintenance/          # Maintenance (5)
+│   └── completion/           # Bash completion (2)
 └── docker-compose.yml
 
-/home/docklite/projects/       # User deployed projects
-    ├── {project_id}/
+/home/{system_user}/projects/  # User deployed projects (multi-tenant)
+    ├── {project-slug}/        # Slug-based path (e.g., example-com-a7b2)
     │   ├── docker-compose.yml
     │   └── .env
 ```
 
 ## Key Architecture Decisions
 
-### Port Field Removed
-- Projects do NOT have a port field
-- All projects will use virtual hosts (Nginx in Phase 5)
-- Access via domains, not ports
+### Multi-Tenancy
+- Each project belongs to a user (owner_id FK)
+- Projects stored in `/home/{system_user}/projects/{slug}/`
+- Slug-based paths (e.g., `example-com-a7b2`) instead of numeric IDs
+- System-level isolation via Linux users
+- Non-admin users see only their projects
+- Admin users see all projects
 
 ### Deployment via SSH
-- User: `docklite` (configurable via DEPLOY_USER env)
-- Projects dir: `/home/docklite/projects/`
+- Each DockLite user maps to a Linux system_user
+- Projects dir: `/home/{system_user}/projects/`
 - Users upload files via rsync/scp/SFTP
+- Docker operations execute as system_user
 
-### Multi-User with JWT
+### Authentication & Authorization
 - JWT authentication with bcrypt password hashing
-- Admin users can manage other users
+- Role-based access control (admin vs user)
+- Ownership checks on all operations
 - Setup screen for first admin creation
-- User Management UI for admins
+- Password reset via CLI: `./docklite reset-password`
 
 ## Tech Stack
 
@@ -75,11 +95,17 @@ DockLite - система управления веб-сервером для д
 
 ## Current Phase Status
 
-✅ **Phase 1**: CRUD + Presets (14) + SSH Deployment
-✅ **Phase 2**: JWT Authorization + Auto-Setup
-✅ **Phase 2.5**: User Management
-🔄 **Phase 3**: Container Management (next)
-🔄 **Phases 4-9**: Planned
+✅ **Phase 1-3**: Production Ready
+- Multi-tenant architecture
+- Container management (start/stop/restart)
+- 270+ tests (95% coverage)
+- Professional CLI (17 commands)
+- Bash completion
+
+🔄 **Phase 4**: Nginx & Virtual Hosts (next)
+🔄 **Phases 5-9**: Planned
+
+**See:** [phases-roadmap.mdc](mdc:phases-roadmap.mdc)
 
 ## Important Files
 
@@ -92,11 +118,30 @@ DockLite - система управления веб-сервером для д
 - [docker-compose.yml](mdc:docker-compose.yml) - DockLite orchestration
 - [README.md](mdc:README.md) - Main documentation
 
+## CLI Usage
+
+**Main CLI:** `./docklite <command>`
+
+### Essential Commands
+```bash
+./docklite start              # Start system
+./docklite stop               # Stop system
+./docklite status             # Check status
+./docklite test               # Run all tests
+./docklite reset-password     # Reset user password
+./docklite backup             # Backup system
+./docklite --help             # Show all commands
+```
+
+**Full docs:** [scripts/README.md](mdc:../scripts/README.md)
+
 ## Testing
 
 Always run tests after changes:
 ```bash
-sg docker -c "docker-compose run --rm backend pytest -v"
+./docklite test               # All tests (157 backend + 120+ frontend)
+./docklite test-backend       # Backend only (157 tests)
+./docklite test-frontend      # Frontend only (120+ tests)
 ```
 
-Expected: 78 tests passing
+Expected: All tests passing ✅

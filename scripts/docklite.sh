@@ -23,6 +23,7 @@
 #     restore         Restore from backup
 #     clean           Clean up unused resources
 #     status          Show system status
+#     reset-password  Reset user password
 #
 #   Setup:
 #     install-completion  Install bash completion
@@ -115,6 +116,9 @@ case "$COMMAND" in
         ;;
     status)
         exec "$SCRIPT_DIR/maintenance/status.sh" "$@"
+        ;;
+    reset-password)
+        exec "$SCRIPT_DIR/maintenance/reset-password.sh" "$@"
         ;;
     
     # Setup

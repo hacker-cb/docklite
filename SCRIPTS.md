@@ -72,3 +72,12 @@ scripts/
 **Quick start:** [QUICKSTART.md](mdc:QUICKSTART.md)  
 **Full guide:** [README.md](mdc:README.md)
 
+
+### Password Recovery
+
+Если забыли пароль:
+
+```bash
+./docklite reset-password admin     # Интерактивный ввод
+./docklite reset-password admin -p newpass  # Указать пароль
+```

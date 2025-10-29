@@ -1,0 +1,286 @@
+---
+description: DockLite CLI scripts patterns and conventions
+---
+
+# DockLite Scripts & CLI
+
+## Main CLI
+
+DockLite uses a professional CLI wrapper: `./docklite <command>`
+
+**Location:** [scripts/docklite.sh](mdc:scripts/docklite.sh)
+
+### Commands (17 total)
+
+**Development:**
+- `start`, `stop`, `restart`, `rebuild`
+- `logs`, `test`, `test-backend`, `test-frontend`
+
+**Deployment:**
+- `setup-user`, `setup-ssh`, `init-db`
+
+**Maintenance:**
+- `backup`, `restore`, `clean`, `status`, `reset-password`
+
+**Setup:**
+- `install-completion`
+
+## Structure
+
+```
+scripts/
+├── docklite.sh              # Main CLI wrapper
+├── lib/
+│   └── common.sh            # Shared functions library
+├── development/             # Dev scripts (6)
+├── deployment/              # Setup scripts (3)
+├── maintenance/             # Maintenance scripts (5)
+└── completion/              # Bash completion (2)
+```
+
+## Common Library
+
+**Location:** [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
+
+### Functions Available
+
+**Logging:**
+```bash
+log_info "message"      # Info with blue icon
+log_success "message"   # Success with green checkmark
+log_warning "message"   # Warning with yellow icon
+log_error "message"     # Error with red X
+log_step "message"      # Step with cyan arrow
+```
+
+**Checks:**
+```bash
+check_root              # Ensure running as root
+check_not_root          # Ensure NOT running as root
+check_docker            # Check Docker installed and running
+check_docker_compose    # Check docker-compose available
+```
+
+**Docker:**
+```bash
+docker_compose_cmd <args>      # Auto uses sg docker if needed
+is_container_running "name"    # Check if container is running
+```
+
+**Utilities:**
+```bash
+get_actual_user        # Get real user (even when using sudo)
+get_actual_home        # Get user's home directory
+user_exists "username" # Check if Linux user exists
+backup_file "/path"    # Create timestamped backup
+confirm "Question?"    # Yes/no prompt
+print_banner "Title"   # Pretty banner
+get_project_root       # Get /home/pavel/docklite
+get_docklite_version   # Get version (1.0.0)
+```
+
+## Script Template
+
+When creating new scripts:
+
+```bash
+#!/bin/bash
+# DockLite - Script Description
+# Usage: ./script.sh [options]
+#
+# Options:
+#   -h, --help      Show this help message
+#   --option        Option description
+#
+# Examples:
+#   ./script.sh              # Basic usage
+#   ./script.sh --option     # With option
+
+set -e
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(dirname "$SCRIPT_DIR")/lib/common.sh"
+
+# Show help
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    show_help "$0"
+    exit 0
+fi
+
+print_banner "Script Title"
+
+# Your logic here
+log_step "Doing something..."
+# ...
+log_success "Done!"
+```
+
+## Rules
+
+### ALWAYS
+
+✅ Use common library functions (log_*, check_*, etc.)  
+✅ Support `--help` flag with usage examples  
+✅ Use `set -e` for safe execution  
+✅ Use `print_banner` for script title  
+✅ Source common.sh from lib/  
+✅ Check prerequisites (Docker, root, etc.)  
+✅ Use `docker_compose_cmd` instead of direct docker-compose  
+✅ Handle errors gracefully with log_error  
+
+### NEVER
+
+❌ Hardcode paths - use `get_project_root()`  
+❌ Use plain echo for important messages - use log_*  
+❌ Skip error handling  
+❌ Forget --help support  
+❌ Use `docker-compose` directly - use `docker_compose_cmd`  
+❌ Assume user is in docker group - check or use sg docker  
+
+## Adding New Commands
+
+1. **Create script** in appropriate directory:
+   ```bash
+   touch scripts/maintenance/my-script.sh
+   chmod +x scripts/maintenance/my-script.sh
+   ```
+
+2. **Use template** (see above)
+
+3. **Add to docklite.sh:**
+   ```bash
+   my-command)
+       exec "$SCRIPT_DIR/maintenance/my-script.sh" "$@"
+       ;;
+   ```
+
+4. **Update completion:**
+   - Add to `commands` list in [scripts/completion/docklite-completion.bash](mdc:scripts/completion/docklite-completion.bash)
+   - Add case for options (if needed)
+
+5. **Update docs:**
+   - Add to [scripts/README.md](mdc:scripts/README.md)
+   - Add to help in [scripts/docklite.sh](mdc:scripts/docklite.sh)
+
+## Bash Completion
+
+**Location:** [scripts/completion/docklite-completion.bash](mdc:scripts/completion/docklite-completion.bash)
+
+**Install:** `./docklite install-completion`
+
+Provides smart auto-completion for:
+- All commands
+- All options (--flags)
+- Service names (backend, frontend)
+- Files (*.tar.gz for restore)
+- Directories (for backup -o)
+
+## Testing Scripts
+
+Before committing new scripts:
+
+```bash
+# Test help
+./docklite my-command --help
+
+# Test execution
+./docklite my-command
+
+# Test with sg docker
+sg docker -c "./docklite my-command"
+
+# Test error cases
+./docklite my-command --invalid-option
+```
+
+## Documentation
+
+When adding scripts, update:
+- [scripts/README.md](mdc:scripts/README.md) - Full docs
+- [SCRIPTS.md](mdc:SCRIPTS.md) - Quick reference
+- [scripts/docklite.sh](mdc:scripts/docklite.sh) - Help message
+- [scripts/completion/docklite-completion.bash](mdc:scripts/completion/docklite-completion.bash) - Completion
+
+## Examples
+
+**Good script structure:**
+```bash
+#!/bin/bash
+# DockLite - Backup System
+# Usage: ./backup.sh [options]
+#
+# Options:
+#   -h, --help      Show this help
+#   -o, --output    Output directory
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(dirname "$SCRIPT_DIR")/lib/common.sh"
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    show_help "$0"
+    exit 0
+fi
+
+print_banner "System Backup"
+check_docker
+
+BACKUP_DIR="${1:-$(get_project_root)/backups}"
+log_step "Creating backup..."
+# ... backup logic
+log_success "Backup complete!"
+```
+
+**Bad - don't do this:**
+```bash
+#!/bin/bash
+# No set -e
+# No help support
+# No common.sh
+# Hardcoded paths
+
+echo "Starting backup"
+cd /home/pavel/docklite  # Hardcoded!
+docker-compose exec backend ...  # Should use docker_compose_cmd!
+echo "Done"  # Should use log_success!
+```
+
+## Common Patterns
+
+### With Docker Commands
+```bash
+# Use docker_compose_cmd (handles sg docker automatically)
+docker_compose_cmd up -d
+docker_compose_cmd logs -f backend
+```
+
+### With User Confirmation
+```bash
+log_warning "This will delete data!"
+if confirm "Continue?"; then
+    # Do dangerous operation
+    log_step "Deleting..."
+else
+    log_info "Cancelled"
+    exit 0
+fi
+```
+
+### With File Backup
+```bash
+backup_file "/path/to/important/file"
+# Creates: /path/to/important/file.backup.20250129_123456
+```
+
+### With Error Handling
+```bash
+log_step "Running operation..."
+if some_command; then
+    log_success "Operation succeeded"
+else
+    log_error "Operation failed"
+    exit 1
+fi
+```

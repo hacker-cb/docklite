@@ -91,21 +91,32 @@ sg docker -c "docker exec -it docklite-backend sqlite3 /data/docklite.db"
 
 ## Important Notes
 
+### Prefer DockLite CLI
+
+**Always use `./docklite` commands when available** - they handle sg docker automatically:
+
+```bash
+# GOOD - Use CLI
+./docklite start
+./docklite stop
+./docklite test
+
+# OK - Direct docker-compose (when needed)
+sg docker -c "docker-compose ..."
+```
+
+### When to Use Direct Docker Commands
+
+Only use direct docker commands for:
+- Debugging specific containers
+- Advanced Docker operations not in CLI
+- Custom docker commands
+
 **Use `sg docker -c "..."` wrapper** because:
 - User `pavel` is in `docker` group
 - But current shell doesn't have group activated
 - `sg docker -c` runs command in docker group context
-
-**Alternative:**
-```bash
-# Relogin to activate docker group
-exit
-ssh pavel@server
-
-# Then docker commands work directly
-docker ps
-docker-compose up -d
-```
+- CLI scripts handle this automatically
 
 ## Container Architecture
 
