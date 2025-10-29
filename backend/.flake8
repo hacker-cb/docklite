@@ -1,0 +1,20 @@
+[flake8]
+max-line-length = 127
+extend-ignore = E203, W503, C901
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .venv,
+    venv,
+    alembic/versions,
+    */migrations/*
+
+# Complexity
+max-complexity = 15
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401,F403
+    */tests/*:F401,F811
+

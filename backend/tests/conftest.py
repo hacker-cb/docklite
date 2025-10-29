@@ -237,7 +237,7 @@ async def test_user(db_session):
 
 
 @pytest.fixture
-async def test_project(client, sample_project_data, auth_headers):
+async def test_project(client, sample_project_data, auth_headers, temp_projects_dir):
     """Create a test project and return its data"""
     response = await client.post(
         "/api/projects",

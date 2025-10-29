@@ -6,7 +6,7 @@ from app.constants.messages import ErrorMessages
 
 
 @pytest.mark.asyncio
-async def test_get_deployment_info_success(client: AsyncClient, test_project, auth_headers):
+async def test_get_deployment_info_success(client: AsyncClient, test_project, auth_headers, temp_projects_dir):
     """Test getting deployment info for existing project"""
     response = await client.get(
         f"/api/deployment/{test_project['id']}/info",
@@ -101,7 +101,8 @@ async def test_get_ssh_setup_info(client: AsyncClient):
 async def test_deployment_info_contains_server_host(
     client: AsyncClient, 
     test_project, 
-    auth_headers
+    auth_headers,
+    temp_projects_dir
 ):
     """Test deployment info contains server hostname with priority logic"""
     # Make request with custom host header (now used as fallback only)
@@ -126,7 +127,7 @@ async def test_deployment_info_contains_server_host(
 
 
 @pytest.mark.asyncio
-async def test_deployment_examples_format(client: AsyncClient, test_project, auth_headers):
+async def test_deployment_examples_format(client: AsyncClient, test_project, auth_headers, temp_projects_dir):
     """Test deployment examples are properly formatted"""
     response = await client.get(
         f"/api/deployment/{test_project['id']}/info",

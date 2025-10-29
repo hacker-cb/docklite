@@ -1,0 +1,58 @@
+repos:
+  # Python formatting and linting
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.11
+        files: ^backend/
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+        files: ^backend/
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ["--config=backend/.flake8"]
+        files: ^backend/
+
+  - repo: https://github.com/pycqa/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args: 
+          - --in-place
+          - --remove-all-unused-imports
+          - --remove-unused-variables
+          - --expand-star-imports
+        files: ^backend/
+
+  # General checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom tags in docker-compose
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+
+  # JavaScript/Vue formatting
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.16.0
+    hooks:
+      - id: eslint
+        files: ^frontend/.*\.(js|vue)$
+        types: [file]
+        additional_dependencies:
+          - eslint@^8.0.0
+          - eslint-plugin-vue@latest
+

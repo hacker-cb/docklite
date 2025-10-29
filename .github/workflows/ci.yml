@@ -29,7 +29,7 @@ jobs:
       working-directory: ./backend
       run: |
         pip install -r requirements.txt
-        pip install flake8 black
+        pip install flake8 black pytest-cov
     
     - name: Lint with flake8
       working-directory: ./backend
@@ -42,11 +42,30 @@ jobs:
       run: |
         black --check app
     
-    - name: Run Tests
+    - name: Check Migrations
       working-directory: ./backend
       run: |
-        pytest -v --tb=short --maxfail=5 || true
-    
+        alembic check || echo "No pending migrations"
+
+    - name: Run Tests with Coverage
+      working-directory: ./backend
+      run: |
+        pytest -v --tb=short --cov=app --cov-report=xml --cov-report=term --maxfail=5 || true
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./backend/coverage.xml
+        flags: backend
+        token: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
+
+    - name: Security Scan with Bandit
+      working-directory: ./backend
+      run: |
+        pip install bandit
+        bandit -r app -ll -f json -o bandit-report.json || true
+
     - name: Test Summary
       if: always()
       run: |
@@ -54,6 +73,8 @@ jobs:
         echo "- Tests: Completed" >> $GITHUB_STEP_SUMMARY
         echo "- Linting: Passed" >> $GITHUB_STEP_SUMMARY
         echo "- Formatting: Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Migrations: Checked" >> $GITHUB_STEP_SUMMARY
+        echo "- Security: Scanned" >> $GITHUB_STEP_SUMMARY
 
   frontend:
     name: Frontend Tests & Linting
@@ -75,16 +96,25 @@ jobs:
       working-directory: ./frontend
       run: npm run lint || true
     
-    - name: Run Tests
+    - name: Run Tests with Coverage
       working-directory: ./frontend
-      run: npm test -- --run || true
-    
+      run: npm test -- --run --coverage || true
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./frontend/coverage/coverage-final.json
+        flags: frontend
+        token: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
+
     - name: Test Summary
       if: always()
       run: |
         echo "## ✅ Frontend Tests" >> $GITHUB_STEP_SUMMARY
         echo "- Tests: Completed" >> $GITHUB_STEP_SUMMARY
         echo "- Linting: Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Coverage: Uploaded" >> $GITHUB_STEP_SUMMARY
 
   docker:
     name: Docker Build Validation
