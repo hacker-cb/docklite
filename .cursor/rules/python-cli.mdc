@@ -1,0 +1,299 @@
+---
+description: Python CLI architecture with Typer, Rich, and hybrid approach
+globs: scripts/**/*.py,backend/app/cli_helpers/*.py
+---
+
+# Python CLI System
+
+## Architecture (Hybrid Approach)
+
+**CLI Location:** [scripts/cli/](mdc:scripts/cli/)  
+**DB Helpers:** [backend/app/cli_helpers/](mdc:backend/app/cli_helpers/)
+
+### Why Hybrid?
+
+✅ **CLI in scripts/** - Independent, no backend dependencies  
+✅ **Helpers in backend/** - Direct database access, use SQLAlchemy models  
+✅ **Best of both worlds** - System commands + DB operations
+
+## Structure
+
+```
+scripts/
+├── docklite                    # Entry point (Python executable)
+├── cli/
+│   ├── main.py                # Typer app with all commands
+│   ├── config.py              # get_hostname(), get_access_url(), paths
+│   ├── utils/
+│   │   ├── console.py         # Rich logging (log_info, log_success, etc)
+│   │   ├── docker.py          # docker_compose_cmd, is_container_running
+│   │   ├── system.py          # User management, file operations
+│   │   └── validation.py      # check_docker, check_docker_compose
+│   └── commands/
+│       ├── development.py     # start, stop, test, logs
+│       ├── deployment.py      # setup-user, setup-ssh, init-db
+│       └── maintenance.py     # backup, status, list-users, reset-password
+└── tests/                      # 60 pytest tests
+
+backend/app/cli_helpers/
+├── list_users.py              # Database user queries
+└── reset_password.py          # Password reset operations
+```
+
+## Key Technologies
+
+**Framework:** [Typer](https://typer.tiangolo.com/) - Modern CLI with auto-completion  
+**UI:** [Rich](https://rich.readthedocs.io/) - Beautiful terminal output  
+**Testing:** pytest with 60 tests
+
+## Commands (17 total)
+
+**Development (8):**
+- `start [--build] [--follow]` - Start services
+- `stop [--volumes]` - Stop services
+- `restart [--build]` - Restart (no logs)
+- `rebuild [--no-cache] [--follow]` - Rebuild images
+- `logs [service]` - Show logs
+- `test [--verbose] [--quiet]` - All tests
+- `test-backend` - Backend tests
+- `test-frontend` - Frontend tests
+
+**Deployment (3):**
+- `setup-user [--user] [--dir]` - Create system user
+- `setup-ssh [--user]` - Configure SSH
+- `init-db [--reset]` - Initialize database
+
+**Maintenance (6):**
+- `backup [--output]` - Backup to tar.gz
+- `restore <file>` - Restore from backup
+- `clean [--all|--images|--volumes|--logs]` - Cleanup
+- `status [--verbose]` - System status with Rich table
+- `list-users [--verbose]` - List users (Rich table in verbose)
+- `reset-password <username> [--password]` - Reset password
+
+## Code Patterns
+
+### Creating New Commands
+
+```python
+# In scripts/cli/commands/development.py (or other)
+from typer import Typer
+from ..utils.console import log_info, log_success, print_banner
+from ..utils.docker import docker_compose_cmd
+from ..config import PROJECT_ROOT
+
+app = Typer(help="Category description")
+
+@app.command()
+def my_command(
+    flag: bool = typer.Option(False, "--flag", "-f", help="Description")
+):
+    """Command description for help."""
+    print_banner("Command Title")
+    
+    log_step("Doing something...")
+    # Your logic here
+    log_success("Done!")
+```
+
+### Using Backend Helpers
+
+```python
+# CLI command that needs database access
+result = docker_compose_cmd(
+    "exec", "-T", "backend",
+    "python", "-m", "app.cli_helpers.list_users", "simple",
+    cwd=PROJECT_ROOT,
+    capture_output=True
+)
+
+# Parse output
+output = result.stdout.strip()
+```
+
+### Backend Helper Pattern
+
+```python
+# backend/app/cli_helpers/my_helper.py
+import asyncio
+import sys
+import logging
+
+# Disable SQLAlchemy logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+
+from app.core.database import AsyncSessionLocal
+from app.models import user, project  # Import all models!
+from app.models.user import User
+
+async def my_operation():
+    async with AsyncSessionLocal() as session:
+        # Database operations
+        pass
+
+if __name__ == "__main__":
+    command = sys.argv[1] if len(sys.argv) > 1 else "default"
+    asyncio.run(my_operation())
+```
+
+## Console Utilities
+
+**From [scripts/cli/utils/console.py](mdc:scripts/cli/utils/console.py):**
+
+```python
+log_info("Information")      # ℹ Blue
+log_success("Success!")       # ✅ Green  
+log_error("Error!")          # ❌ Red
+log_warning("Warning")       # ⚠️ Yellow
+log_step("Step 1...")        # ▶ Cyan
+
+print_banner("Title")        # Rich Panel
+
+table = create_table("Title")
+table.add_column("Name")
+# Add rows...
+
+progress = create_progress()
+with progress:
+    task = progress.add_task("Processing...", total=100)
+```
+
+## Docker Operations
+
+**From [scripts/cli/utils/docker.py](mdc:scripts/cli/utils/docker.py):**
+
+```python
+# Execute docker-compose
+docker_compose_cmd("up", "-d", cwd=PROJECT_ROOT)
+
+# Check container
+if is_container_running("docklite-backend"):
+    # Container is running
+    pass
+
+# Get all status
+status = get_container_status()
+# Returns: {"traefik": True, "backend": True, "frontend": False}
+```
+
+## Configuration
+
+**From [scripts/cli/config.py](mdc:scripts/cli/config.py):**
+
+```python
+from cli.config import (
+    VERSION,              # "1.0.0"
+    PROJECT_ROOT,         # Path("/home/pavel/docklite")
+    BACKUPS_DIR,
+    get_hostname,         # Priority: .env > system > localhost
+    get_access_url        # Build URLs with hostname
+)
+
+# Always use get_access_url for URLs
+url = get_access_url("/api")  # http://artem.sokolov.me/api
+```
+
+## Testing
+
+**Run tests:**
+```bash
+cd scripts
+python3 -m pytest tests/ -v          # Verbose
+python3 -m pytest tests/ -q          # Quiet
+python3 -m pytest tests/test_config.py -v  # Specific file
+```
+
+**Test structure:**
+```python
+# scripts/tests/test_my_feature.py
+import pytest
+from unittest.mock import Mock, patch
+
+def test_something():
+    """Test description."""
+    # Arrange
+    mock = Mock(return_value=True)
+    
+    # Act
+    with patch('module.function', mock):
+        result = function_to_test()
+    
+    # Assert
+    assert result == expected
+```
+
+## Critical Rules
+
+### ✅ DO
+
+- **Use Typer** for all CLI commands
+- **Use Rich** for beautiful output (tables, panels, colors)
+- **Call backend helpers** for database operations (not inline SQL)
+- **Import all models** in helpers to avoid circular imports
+- **Disable SQL logging** in helpers (`logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)`)
+- **Use get_access_url()** for all URLs (never hardcode!)
+- **Write tests** for new commands (follow existing patterns)
+- **Use type hints** everywhere
+- **Handle errors** gracefully with try/except
+
+### ❌ DON'T
+
+- **Never hardcode** URLs (localhost:8000, etc) - use `get_access_url()`
+- **Never pass long Python scripts** as command args - use backend helpers
+- **Never import only one model** - always `from app.models import user, project`
+- **Don't call functions directly** in restart/rebuild - use explicit logic
+- **Don't forget follow=False** when calling start() from other commands
+- **Don't use print()** - use Rich console functions
+- **Don't skip error handling**
+
+## Examples
+
+### Status Command (Perfect Example)
+
+See [scripts/cli/commands/maintenance.py](mdc:scripts/cli/commands/maintenance.py) `status()` function:
+- ✅ Rich table output
+- ✅ Colored status indicators
+- ✅ Uses get_access_url()
+- ✅ Handles all containers
+- ✅ Verbose mode
+
+### List Users (Backend Helper Example)
+
+See [backend/app/cli_helpers/list_users.py](mdc:backend/app/cli_helpers/list_users.py):
+- ✅ Imports all models
+- ✅ Disables SQL logging
+- ✅ Multiple output formats (simple/detailed/count)
+- ✅ CLI-friendly output format
+
+## Installation
+
+```bash
+# Dependencies (already installed)
+sudo apt-get install python3-typer python3-rich python3-dotenv python3-pytest
+
+# Run CLI
+./docklite --help
+./docklite --install-completion bash
+```
+
+## Migration Notes
+
+**Old:** Bash scripts (~2000 lines)  
+**New:** Python CLI (~800 lines) + 2 helpers + 60 tests  
+**Improvement:** 60% less code, 100% tested, beautiful UX
+
+**Status:** ✅ Production ready, all 60 tests passing
+
+## Common Issues
+
+**Issue:** Long Python script fails in docker exec  
+**Solution:** Create helper in `backend/app/cli_helpers/`
+
+**Issue:** Circular import errors  
+**Solution:** Import ALL models: `from app.models import user, project`
+
+**Issue:** SQL logs cluttering output  
+**Solution:** `logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)`
+
+**Issue:** Command hangs on logs  
+**Solution:** Pass `follow=False` when calling `start()` from other commands
