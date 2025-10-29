@@ -1,0 +1,122 @@
+---
+description: Traefik Dashboard security with ForwardAuth admin-only access
+---
+
+# Dashboard Security
+
+Traefik Dashboard protected by **ForwardAuth** - only admins can access.
+
+## Access
+
+**URL:** `http://hostname/dashboard`  
+**Auth:** Admin-only (JWT + is_admin check)  
+**Tests:** 34 security tests, zero vulnerabilities
+
+## ForwardAuth Endpoint
+
+```python
+# backend/app/api/auth.py
+
+@router.get("/verify-admin")
+async def verify_admin(
+    current_user: User = Depends(get_current_user_with_cookie)
+):
+    """Verify user is admin (for Traefik ForwardAuth)"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    response = Response(status_code=200)
+    response.headers["X-User-Id"] = str(current_user.id)
+    response.headers["X-Username"] = current_user.username
+    response.headers["X-Is-Admin"] = "true"
+    return response
+```
+
+**Location:** [backend/app/api/auth.py](mdc:backend/app/api/auth.py)
+
+## Cookie + Header Authentication
+
+```python
+from app.core.security import get_current_user_with_cookie
+
+# Supports JWT from:
+# 1. Authorization header (Bearer token) - Priority 1
+# 2. Cookie (token) - Priority 2
+```
+
+**Location:** [backend/app/core/security.py](mdc:backend/app/core/security.py)
+
+## Frontend Integration
+
+### Cookie Storage (Login)
+
+```javascript
+// Save JWT to cookie for dashboard access
+document.cookie = `token=${access_token}; path=/; max-age=2592000; SameSite=Lax`
+```
+
+**Files:** [frontend/src/Login.vue](mdc:frontend/src/Login.vue), [frontend/src/Setup.vue](mdc:frontend/src/Setup.vue)
+
+### Dashboard Button
+
+```vue
+<!-- Only visible for admins -->
+<Button 
+  v-if="currentUser?.is_admin"
+  label="Dashboard"
+  icon="pi pi-chart-line" 
+  @click="openDashboard"
+/>
+```
+
+```javascript
+const openDashboard = () => {
+  window.open('/dashboard/', '_blank')  // Auth via cookie
+}
+```
+
+**Location:** [frontend/src/App.vue](mdc:frontend/src/App.vue)
+
+## Traefik Configuration
+
+```yaml
+# docker-compose.yml
+traefik:
+  labels:
+    - "traefik.http.routers.dashboard.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+    - "traefik.http.routers.dashboard.service=api@internal"
+    - "traefik.http.routers.dashboard.middlewares=admin-auth"
+    - "traefik.http.middlewares.admin-auth.forwardauth.address=http://docklite-backend:8000/api/auth/verify-admin"
+    - "traefik.http.middlewares.admin-auth.forwardauth.authResponseHeaders=X-User-Id,X-Username,X-Is-Admin"
+```
+
+**Location:** [docker-compose.yml](mdc:docker-compose.yml)
+
+## Security Guarantees
+
+✅ **Authentication:** JWT signature validation, expiration check  
+✅ **Authorization:** is_admin=true required  
+✅ **Attack Prevention:** SQL injection, XSS, header injection all blocked  
+✅ **Privilege Escalation:** Prevented (2 tests)  
+✅ **Token Security:** Never leaked in responses  
+
+## Access Control
+
+| User Type | Dashboard Access | Result |
+|-----------|------------------|--------|
+| Admin | ✅ Allowed | 200 OK |
+| Regular User | ❌ Blocked | 403 Forbidden |
+| Unauthenticated | ❌ Blocked | 401 Unauthorized |
+| Inactive Admin | ❌ Blocked | 401/403 |
+
+## Testing
+
+**34 comprehensive security tests** in [test_auth_admin_verify.py](mdc:backend/tests/test_api/test_auth_admin_verify.py):
+- Authentication (16 tests)
+- Cookie auth (5 tests)
+- Integration (3 tests)
+- ForwardAuth (4 tests)
+- Access control (2 tests)
+- Vulnerabilities (4 tests)
+
+All tests passing ✅

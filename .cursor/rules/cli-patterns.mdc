@@ -1,0 +1,104 @@
+---
+description: DockLite CLI patterns and hostname functions usage
+---
+
+# CLI Patterns
+
+## Hostname Functions (MANDATORY)
+
+**ALWAYS use these functions** in [scripts/lib/common.sh](mdc:scripts/lib/common.sh):
+
+```bash
+# Get hostname (Priority: .env > system > localhost)
+hostname=$(get_hostname)
+
+# Build URLs (NEVER hardcode!)
+$(get_access_url)                    # http://artem.sokolov.me
+$(get_access_url "/api")             # http://artem.sokolov.me/api
+$(get_access_url "/dashboard")       # http://artem.sokolov.me/dashboard
+$(get_access_url "" "8888")          # http://artem.sokolov.me:8888
+$(get_access_url "/path" "443" "https")  # https://artem.sokolov.me/path
+```
+
+## Display URLs in Scripts
+
+✅ **CORRECT:**
+```bash
+log_info "Frontend: $(get_access_url)"
+log_info "Backend API: $(get_access_url "/api")"
+log_info "Dashboard: $(get_access_url "/dashboard") (admin only)"
+```
+
+❌ **WRONG (Never do this!):**
+```bash
+log_info "Frontend: http://localhost:5173"  # Hardcoded!
+log_info "Backend: http://localhost:8000"   # Wrong!
+```
+
+## Commands
+
+**18 total commands:**
+
+Development: start, stop, restart, rebuild, logs, test, test-backend, test-frontend  
+Deployment: setup-user, setup-ssh, init-db  
+Maintenance: backup, restore, clean, status, **list-users**, reset-password  
+Setup: install-completion
+
+## User Management
+
+### list-users
+
+```bash
+./docklite list-users           # Simple list
+./docklite list-users --verbose # Detailed table
+```
+
+Shows all users with roles (admin/user) and status (active/inactive).
+
+### reset-password
+
+```bash
+./docklite reset-password <username>
+```
+
+Now validates user exists and shows helpful list if not found.
+
+## Database Access in Scripts
+
+Use `AsyncSessionLocal` from [backend/app/core/database.py](mdc:backend/app/core/database.py):
+
+```python
+from app.core.database import AsyncSessionLocal
+
+async with AsyncSessionLocal() as session:
+    result = await session.execute(select(User))
+    users = result.all()
+```
+
+**NOT** `get_async_session()` (doesn't exist)
+
+## Script Template
+
+```bash
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(dirname "$SCRIPT_DIR")/lib/common.sh"
+
+print_banner "Script Title"
+
+# Use hostname functions
+log_info "Access: $(get_access_url)"
+```
+
+## Rules
+
+✅ ALWAYS use `get_access_url()` for URLs  
+✅ ALWAYS use `get_hostname()` for hostname  
+✅ ALWAYS use `docker_compose_cmd`  
+✅ ALWAYS support --help  
+
+❌ NEVER hardcode localhost:5173 or localhost:8000  
+❌ NEVER hardcode any URLs  
+❌ NEVER use direct `docker-compose` command

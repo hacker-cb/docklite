@@ -16,13 +16,13 @@ DockLite - multi-tenant система управления веб-сервер�
 │   │   ├── api/              # API endpoints (auth, users, projects, containers, presets, deployment)
 │   │   ├── core/             # Config, database, security
 │   │   ├── models/           # SQLAlchemy models & Pydantic schemas
-│   │   ├── services/         # Business logic (auth, project, docker)
+│   │   ├── services/         # Business logic (auth, project, docker, traefik)
 │   │   ├── constants/        # Enums, messages
 │   │   ├── exceptions/       # Custom exceptions
-│   │   ├── utils/            # Formatters, responses, logger
+│   │   ├── utils/            # Formatters, responses, logger, hostname
 │   │   ├── validators/       # Compose, domain validation
-│   │   └── presets/          # 14 docker-compose templates
-│   ├── tests/                # Pytest tests (157 tests)
+│   │   └── presets/          # 14 docker-compose templates (Traefik-ready)
+│   ├── tests/                # Pytest tests (229 tests)
 │   ├── alembic/              # Database migrations (3 revisions)
 │   └── Dockerfile
 ├── frontend/                  # Vue.js 3 + PrimeVue frontend
@@ -39,12 +39,12 @@ DockLite - multi-tenant система управления веб-сервер�
 │   │   └── api.js            # Axios API client
 │   ├── tests/                # Vitest tests (120+)
 │   └── Dockerfile
-├── scripts/                   # Production scripts (17 total)
+├── scripts/                   # Production scripts (18 total)
 │   ├── docklite.sh           # Main CLI wrapper
-│   ├── lib/                  # Common functions
+│   ├── lib/                  # Common functions (hostname, utilities)
 │   ├── development/          # Dev scripts (6)
 │   ├── deployment/           # Setup scripts (3)
-│   ├── maintenance/          # Maintenance (5)
+│   ├── maintenance/          # Maintenance (6: +list-users)
 │   └── completion/           # Bash completion (2)
 └── docker-compose.yml
 
@@ -98,50 +98,84 @@ DockLite - multi-tenant система управления веб-сервер�
 ✅ **Phase 1-3**: Production Ready
 - Multi-tenant architecture
 - Container management (start/stop/restart)
-- 270+ tests (95% coverage)
-- Professional CLI (17 commands)
+- Professional CLI
 - Bash completion
 
-🔄 **Phase 4**: Nginx & Virtual Hosts (next)
-🔄 **Phases 5-9**: Planned
+✅ **Phase 4**: Traefik v3 Integration (2025-10-29) - **COMPLETE**
+- Modern reverse proxy (Traefik v3, not Nginx)
+- Domain-based routing (no ports!)
+- Dashboard security (admin-only)
+- Unified hostname system
+- 229 tests (95% coverage)
+- Professional CLI (18 commands)
+
+🔄 **Phase 5**: SSL/HTTPS with Let's Encrypt (next, 90% ready)
+🔄 **Phases 6-9**: Planned
 
 **See:** [phases-roadmap.mdc](mdc:phases-roadmap.mdc)
 
 ## Important Files
 
+**Core:**
 - [backend/app/main.py](mdc:backend/app/main.py) - FastAPI app entry point
-- [backend/app/core/config.py](mdc:backend/app/core/config.py) - Settings
-- [backend/app/models/project.py](mdc:backend/app/models/project.py) - Project model
+- [backend/app/core/config.py](mdc:backend/app/core/config.py) - Settings (HOSTNAME, TRAEFIK_DASHBOARD_HOST)
+- [docker-compose.yml](mdc:docker-compose.yml) - DockLite orchestration with Traefik v3
+
+**Models & Services:**
+- [backend/app/models/project.py](mdc:backend/app/models/project.py) - Project model (slug-based)
 - [backend/app/models/user.py](mdc:backend/app/models/user.py) - User model
-- [frontend/src/App.vue](mdc:frontend/src/App.vue) - Main Vue app
+- [backend/app/services/traefik_service.py](mdc:backend/app/services/traefik_service.py) - Traefik labels (NEW)
+- [backend/app/services/project_service.py](mdc:backend/app/services/project_service.py) - Project CRUD with Traefik
+
+**Security & Utils:**
+- [backend/app/core/security.py](mdc:backend/app/core/security.py) - JWT auth + cookie support
+- [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py) - Hostname detection (NEW)
+- [backend/app/api/auth.py](mdc:backend/app/api/auth.py) - Auth endpoints + verify-admin
+
+**Frontend:**
+- [frontend/src/App.vue](mdc:frontend/src/App.vue) - Main app with Dashboard button
 - [frontend/src/router.js](mdc:frontend/src/router.js) - Vue Router
-- [docker-compose.yml](mdc:docker-compose.yml) - DockLite orchestration
+
+**Scripts:**
+- [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Hostname functions (get_hostname, get_access_url)
+- [scripts/docklite.sh](mdc:scripts/docklite.sh) - CLI wrapper (18 commands)
+
+**Documentation:**
 - [README.md](mdc:README.md) - Main documentation
+- [TRAEFIK.md](mdc:TRAEFIK.md) - Traefik guide (NEW)
+- [PHASE_4_COMPLETE.md](mdc:PHASE_4_COMPLETE.md) - Phase 4 summary (NEW)
 
 ## CLI Usage
 
-**Main CLI:** `./docklite <command>`
+**Main CLI:** `./docklite <command>` (18 commands)
 
 ### Essential Commands
 ```bash
-./docklite start              # Start system
+./docklite start              # Start system (with Traefik)
 ./docklite stop               # Stop system
-./docklite status             # Check status
-./docklite test               # Run all tests
-./docklite reset-password     # Reset user password
+./docklite status             # Check status + URLs
+./docklite test               # Run all tests (229 backend + 120+ frontend)
+./docklite list-users         # List all users (NEW)
+./docklite reset-password     # Reset user password (enhanced)
 ./docklite backup             # Backup system
 ./docklite --help             # Show all commands
 ```
 
-**Full docs:** [scripts/README.md](mdc:../scripts/README.md)
+**Full docs:** [scripts/README.md](mdc:scripts/README.md)
 
 ## Testing
 
 Always run tests after changes:
 ```bash
-./docklite test               # All tests (157 backend + 120+ frontend)
-./docklite test-backend       # Backend only (157 tests)
+./docklite test               # All tests (229 backend + 120+ frontend)
+./docklite test-backend       # Backend only (229 tests)
 ./docklite test-frontend      # Frontend only (120+ tests)
+
+# Specific test categories
+./docklite test-backend -k traefik    # Traefik tests (18)
+./docklite test-backend -k hostname   # Hostname tests (20)
+./docklite test-backend -k security   # Security tests (34)
+bash scripts/lib/test_hostname.sh     # Bash hostname tests (6)
 ```
 
-Expected: All tests passing ✅
+Expected: All tests passing ✅ (229 backend, 120+ frontend)

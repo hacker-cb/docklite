@@ -1,0 +1,87 @@
+---
+description: Traefik v3 integration patterns and label management
+---
+
+# Traefik Integration
+
+DockLite uses **Traefik v3** for automatic reverse proxy with domain-based routing.
+
+## Access Pattern
+
+Projects accessible by domain: `http://example.com` (NOT `http://example.com:8080`)
+
+## Auto Label Injection
+
+**NEVER manually add Traefik labels** - [TraefikService](mdc:backend/app/services/traefik_service.py) does this automatically.
+
+```python
+from app.services.traefik_service import TraefikService
+
+# Auto-inject labels into compose
+modified_compose, error = TraefikService.inject_labels_to_compose(
+    compose_content,
+    domain="example.com",
+    slug="example-com-1"
+)
+
+# Detect internal port
+port = TraefikService.detect_internal_port(compose_content)
+
+# Generate labels
+labels = TraefikService.generate_labels(domain, slug, internal_port)
+```
+
+Used automatically by [ProjectService](mdc:backend/app/services/project_service.py) on create/update.
+
+## Generated Labels
+
+```yaml
+services:
+  app:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.{slug}.rule=Host(`{domain}`)"
+      - "traefik.http.routers.{slug}.entrypoints=web"
+      - "traefik.http.services.{slug}.loadbalancer.server.port={port}"
+    networks:
+      - docklite-network
+
+networks:
+  docklite-network:
+    external: true
+```
+
+## Network Configuration
+
+All services must be on `docklite-network`:
+- Main system: `external: false`
+- Projects: `external: true`
+
+## Presets
+
+All 14 presets in [backend/app/presets/](mdc:backend/app/presets/) use:
+- `expose:` instead of `ports:`
+- No PORT env vars
+- Traefik labels auto-injected
+
+## Dashboard Security
+
+Dashboard at `http://hostname/dashboard` protected by ForwardAuth:
+- Only admins can access
+- Endpoint: [/api/auth/verify-admin](mdc:backend/app/api/auth.py)
+- JWT validation + is_admin check
+
+## Port Detection
+
+Internal port auto-detected:
+1. From `expose:` section
+2. From `ports:` section (extracts internal port)
+3. Default: 80
+
+## Important Notes
+
+- Port field deprecated in Project model
+- All routing through Traefik (80/443)
+- Labels injected on every project create/update
+- Slug must be unique (used in router names)
+- Network `docklite-network` is shared

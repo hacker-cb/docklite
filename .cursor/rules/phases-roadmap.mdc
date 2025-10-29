@@ -32,24 +32,33 @@ description: Development phases and roadmap
 - **API documentation** - OpenAPI/Swagger
 - **Production architecture** - ready for deployment
 
+### ✅ Phase 4: Traefik v3 Integration + Security (2025-10-29)
+- **Traefik v3 reverse proxy** - modern cloud-native solution (not Nginx)
+- **Auto service discovery** - via Docker labels
+- **Domain-based routing** - `http://example.com` without ports
+- **TraefikService** - auto-injects labels into docker-compose
+- **Unified hostname system** - Config > System > Fallback priority
+- **Dashboard security** - Admin-only via ForwardAuth (JWT + is_admin)
+- **14 presets updated** - Traefik-ready (expose, networks, labels)
+- **CLI improvements** - list-users, enhanced reset-password
+- **229 tests passing** - +72 new tests (Traefik, hostname, security)
+- **Zero vulnerabilities** - 34 comprehensive security tests
+- See: [TRAEFIK.md](mdc:TRAEFIK.md), [PHASE_4_COMPLETE.md](mdc:PHASE_4_COMPLETE.md)
+
 ## Upcoming Phases
 
-### 🔄 Phase 4: Nginx & Virtual Hosts ⭐ CRITICAL
-- Nginx on ports 8080 (admin) and 80/443 (projects)
-- Auto-generate nginx configs for each project
-- Domain-based routing
-- Auto-reload nginx after changes
+### 🔄 Phase 5: SSL/HTTPS with Let's Encrypt ⭐ NEXT (90% Ready)
+- **Let's Encrypt integration** - automatic SSL certificates
+- **Certificate resolver** - Traefik built-in support
+- **TLS configuration** - HTTPS labels for projects
+- **HTTP → HTTPS redirect** - automatic
+- **Auto-renewal** - certificate management
+- **Infrastructure ready:** Traefik websecure entrypoint (443), domain routing working
 
-### 🔄 Phase 5: Enhanced Env & Validation
+### 🔄 Phase 6: Enhanced Features
 - Advanced env vars editor
 - Improved compose validation
 - Secrets management
-
-### 🔄 Phase 6: SSL/HTTPS
-- Let's Encrypt integration (certbot)
-- Automatic SSL certificates
-- Auto-renewal
-- HTTPS nginx configs
 
 ### 🔄 Phase 7: Logs
 - View container logs in UI
