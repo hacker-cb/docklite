@@ -5,11 +5,14 @@ from typing import Dict
 from app.core.database import get_db
 from app.core.security import get_current_active_user
 from app.models.user import User
-from app.models.project import Project
-from app.models.schemas import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectListResponse
+from app.models.schemas import (
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectResponse,
+    ProjectListResponse,
+)
 from app.services.project_service import ProjectService
 from app.utils.formatters import format_project_response
-from app.exceptions import ProjectNotFoundError, ProjectExistsError, InvalidComposeError
 from app.constants.messages import ErrorMessages, SuccessMessages
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -19,33 +22,32 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 async def create_project(
     project: ProjectCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Create a new project (owned by current user)"""
     service = ProjectService(db)
     new_project, error = await service.create_project(project, owner_id=current_user.id)
-    
+
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
-    
+
     return format_project_response(new_project)
 
 
 @router.get("", response_model=ProjectListResponse)
 async def get_projects(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get all projects (filtered by ownership for non-admin)"""
     service = ProjectService(db)
     projects = await service.get_all_projects(
-        user_id=current_user.id, 
-        is_admin=bool(current_user.is_admin)
+        user_id=current_user.id, is_admin=bool(current_user.is_admin)
     )
-    
+
     return {
         "projects": [format_project_response(p) for p in projects],
-        "total": len(projects)
+        "total": len(projects),
     }
 
 
@@ -53,19 +55,20 @@ async def get_projects(
 async def get_project(
     project_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get project by ID (with ownership check)"""
     service = ProjectService(db)
     project = await service.get_project(
-        project_id, 
-        user_id=current_user.id, 
-        is_admin=bool(current_user.is_admin)
+        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
     )
-    
+
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorMessages.PROJECT_NOT_FOUND,
+        )
+
     return format_project_response(project)
 
 
@@ -74,20 +77,20 @@ async def update_project(
     project_id: int,
     project: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Update project (with ownership check)"""
     service = ProjectService(db)
     updated_project, error = await service.update_project(
-        project_id, 
+        project_id,
         project,
         user_id=current_user.id,
-        is_admin=bool(current_user.is_admin)
+        is_admin=bool(current_user.is_admin),
     )
-    
+
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
-    
+
     return format_project_response(updated_project)
 
 
@@ -95,19 +98,17 @@ async def update_project(
 async def delete_project(
     project_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Delete project (with ownership check)"""
     service = ProjectService(db)
     success, error = await service.delete_project(
-        project_id,
-        user_id=current_user.id,
-        is_admin=bool(current_user.is_admin)
+        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
     )
-    
+
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error)
-    
+
     return None
 
 
@@ -115,19 +116,20 @@ async def delete_project(
 async def get_env_vars(
     project_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get project environment variables (with ownership check)"""
     service = ProjectService(db)
     env_vars = await service.get_env_vars(
-        project_id,
-        user_id=current_user.id,
-        is_admin=bool(current_user.is_admin)
+        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
     )
-    
+
     if env_vars is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorMessages.PROJECT_NOT_FOUND,
+        )
+
     return env_vars
 
 
@@ -136,19 +138,18 @@ async def update_env_vars(
     project_id: int,
     env_vars: Dict[str, str],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Update project environment variables (with ownership check)"""
     service = ProjectService(db)
     success, error = await service.update_env_vars(
-        project_id, 
+        project_id,
         env_vars,
         user_id=current_user.id,
-        is_admin=bool(current_user.is_admin)
+        is_admin=bool(current_user.is_admin),
     )
-    
+
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error)
-    
-    return {"message": SuccessMessages.ENV_VARS_UPDATED}
 
+    return {"message": SuccessMessages.ENV_VARS_UPDATED}

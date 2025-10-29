@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={},
-    tags=["test", "simple", "nginx", "hello", "traefik"]
+    tags=["test", "simple", "nginx", "hello", "traefik"],
 )
 
 NGINX_STATIC = Preset(
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={},
-    tags=["nginx", "static", "simple", "traefik"]
+    tags=["nginx", "static", "simple", "traefik"],
 )
 
 APACHE_STATIC = Preset(
@@ -60,7 +60,7 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={},
-    tags=["apache", "static", "simple", "traefik"]
+    tags=["apache", "static", "simple", "traefik"],
 )
 
 NGINX_PROXY = Preset(
@@ -80,11 +80,8 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
 """,
-    default_env_vars={
-        "BACKEND_URL": "http://backend:3000"
-    },
-    tags=["nginx", "proxy", "reverse-proxy", "traefik"]
+    default_env_vars={"BACKEND_URL": "http://backend:3000"},
+    tags=["nginx", "proxy", "reverse-proxy", "traefik"],
 )
 
 WEB_PRESETS = [HELLO_WORLD, NGINX_STATIC, APACHE_STATIC, NGINX_PROXY]
-

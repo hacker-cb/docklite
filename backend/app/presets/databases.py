@@ -20,7 +20,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
-  
+
   pgadmin:
     image: dpage/pgadmin4:latest
     expose:
@@ -40,9 +40,9 @@ volumes:
         "POSTGRES_USER": "admin",
         "POSTGRES_PASSWORD": "changeme123",
         "PGADMIN_EMAIL": "admin@admin.com",
-        "PGADMIN_PASSWORD": "admin123"
+        "PGADMIN_PASSWORD": "admin123",
     },
-    tags=["postgresql", "database", "pgadmin", "traefik"]
+    tags=["postgresql", "database", "pgadmin", "traefik"],
 )
 
 MYSQL = Preset(
@@ -64,7 +64,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     restart: unless-stopped
-  
+
   phpmyadmin:
     image: phpmyadmin:latest
     expose:
@@ -83,9 +83,9 @@ volumes:
         "MYSQL_ROOT_PASSWORD": "rootpass123",
         "MYSQL_DATABASE": "mydb",
         "MYSQL_USER": "admin",
-        "MYSQL_PASSWORD": "changeme123"
+        "MYSQL_PASSWORD": "changeme123",
     },
-    tags=["mysql", "database", "phpmyadmin", "traefik"]
+    tags=["mysql", "database", "phpmyadmin", "traefik"],
 )
 
 MONGODB = Preset(
@@ -105,7 +105,7 @@ services:
     volumes:
       - mongo-data:/data/db
     restart: unless-stopped
-  
+
   mongo-express:
     image: mongo-express:latest
     expose:
@@ -121,11 +121,8 @@ services:
 volumes:
   mongo-data:
 """,
-    default_env_vars={
-        "MONGO_USER": "admin",
-        "MONGO_PASSWORD": "changeme123"
-    },
-    tags=["mongodb", "nosql", "mongo-express", "traefik"]
+    default_env_vars={"MONGO_USER": "admin", "MONGO_PASSWORD": "changeme123"},
+    tags=["mongodb", "nosql", "mongo-express", "traefik"],
 )
 
 REDIS = Preset(
@@ -149,11 +146,8 @@ services:
 volumes:
   redis-data:
 """,
-    default_env_vars={
-        "REDIS_PASSWORD": "changeme123"
-    },
-    tags=["redis", "cache", "queue"]
+    default_env_vars={"REDIS_PASSWORD": "changeme123"},
+    tags=["redis", "cache", "queue"],
 )
 
 DATABASE_PRESETS = [POSTGRESQL, MYSQL, MONGODB, REDIS]
-

@@ -18,22 +18,21 @@ def check_is_admin(current_user: User):
     """Check if current user is admin"""
     if not current_user.is_admin:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ErrorMessages.ADMIN_REQUIRED
+            status_code=status.HTTP_403_FORBIDDEN, detail=ErrorMessages.ADMIN_REQUIRED
         )
 
 
 @router.get("", response_model=List[UserResponse])
 async def get_users(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get all users (admin only)"""
     check_is_admin(current_user)
-    
+
     result = await db.execute(select(User))
     users = result.scalars().all()
-    
+
     return [format_user_response(u) for u in users]
 
 
@@ -41,17 +40,17 @@ async def get_users(
 async def create_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Create a new user (admin only)"""
     check_is_admin(current_user)
-    
+
     auth_service = AuthService(db)
     user, error = await auth_service.create_user(user_data)
-    
+
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
-    
+
     return format_user_response(user)
 
 
@@ -59,17 +58,19 @@ async def create_user(
 async def get_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get user by ID (admin only)"""
     check_is_admin(current_user)
-    
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND
+        )
+
     return format_user_response(user)
 
 
@@ -79,33 +80,35 @@ async def update_user(
     is_active: bool = None,
     is_admin: bool = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Update user (admin only)"""
     check_is_admin(current_user)
-    
+
     # Cannot deactivate or remove admin from yourself
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorMessages.CANNOT_MODIFY_SELF
+            detail=ErrorMessages.CANNOT_MODIFY_SELF,
         )
-    
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND
+        )
+
     if is_active is not None:
         user.is_active = 1 if is_active else 0
-    
+
     if is_admin is not None:
         user.is_admin = 1 if is_admin else 0
-    
+
     await db.commit()
     await db.refresh(user)
-    
+
     return format_user_response(user)
 
 
@@ -113,27 +116,29 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Delete user (admin only)"""
     check_is_admin(current_user)
-    
+
     # Cannot delete yourself
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorMessages.CANNOT_DELETE_SELF
+            detail=ErrorMessages.CANNOT_DELETE_SELF,
         )
-    
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND
+        )
+
     await db.delete(user)
     await db.commit()
-    
+
     return None
 
 
@@ -142,30 +147,31 @@ async def change_password(
     user_id: int,
     new_password: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Change user password (admin or self)"""
     # Admin can change any password, user can change only own
     if user_id != current_user.id:
         check_is_admin(current_user)
-    
+
     if len(new_password) < 6:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorMessages.PASSWORD_TOO_SHORT
+            detail=ErrorMessages.PASSWORD_TOO_SHORT,
         )
-    
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND)
-    
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.USER_NOT_FOUND
+        )
+
     # Hash new password
     auth_service = AuthService(db)
     user.password_hash = auth_service.get_password_hash(new_password)
-    
-    await db.commit()
-    
-    return {"message": SuccessMessages.PASSWORD_CHANGED}
 
+    await db.commit()
+
+    return {"message": SuccessMessages.PASSWORD_CHANGED}

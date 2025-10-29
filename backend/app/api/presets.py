@@ -4,7 +4,7 @@ from app.presets.registry import (
     get_all_presets,
     get_preset_by_id,
     get_presets_by_category,
-    get_categories
+    get_categories,
 )
 
 router = APIRouter(prefix="/presets", tags=["presets"])
@@ -28,13 +28,13 @@ async def list_categories():
 async def get_preset(preset_id: str):
     """Get preset details including compose content and env vars"""
     preset = get_preset_by_id(preset_id)
-    
+
     if not preset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Preset '{preset_id}' not found"
+            detail=f"Preset '{preset_id}' not found",
         )
-    
+
     return {
         "id": preset.id,
         "name": preset.name,
@@ -45,4 +45,3 @@ async def get_preset(preset_id: str):
         "default_env_vars": preset.default_env_vars,
         "tags": preset.tags,
     }
-

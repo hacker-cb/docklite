@@ -28,7 +28,7 @@ class ProjectResponse(ProjectBase):
     status: str
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -40,16 +40,17 @@ class ProjectListResponse(BaseModel):
 
 # ========== User Schemas ==========
 
+
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=255)
     email: Optional[EmailStr] = None
     system_user: str = Field(default="docklite", min_length=1, max_length=255)
-    
+
     @classmethod
     def model_validate(cls, obj):
         # Convert empty string to None for email
-        if isinstance(obj, dict) and obj.get('email') == '':
-            obj['email'] = None
+        if isinstance(obj, dict) and obj.get("email") == "":
+            obj["email"] = None
         return super().model_validate(obj)
 
 
@@ -68,7 +69,7 @@ class UserResponse(UserBase):
     is_admin: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -80,4 +81,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
-

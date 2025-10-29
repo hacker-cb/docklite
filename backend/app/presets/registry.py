@@ -70,4 +70,3 @@ def get_categories() -> List[dict]:
         {"id": "database", "name": "Database", "count": len(DATABASE_PRESETS)},
         {"id": "cms", "name": "CMS", "count": len(CMS_PRESETS)},
     ]
-

@@ -25,7 +25,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-  
+
   db:
     image: mysql:8.0
     environment:
@@ -45,9 +45,9 @@ volumes:
         "DB_NAME": "wordpress",
         "DB_USER": "wordpress",
         "DB_PASSWORD": "changeme123",
-        "DB_ROOT_PASSWORD": "rootpass123"
+        "DB_ROOT_PASSWORD": "rootpass123",
     },
-    tags=["wordpress", "cms", "php", "mysql", "traefik"]
+    tags=["wordpress", "cms", "php", "mysql", "traefik"],
 )
 
 GHOST = Preset(
@@ -75,7 +75,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-  
+
   db:
     image: mysql:8.0
     environment:
@@ -96,9 +96,9 @@ volumes:
         "DB_NAME": "ghost",
         "DB_USER": "ghost",
         "DB_PASSWORD": "changeme123",
-        "DB_ROOT_PASSWORD": "rootpass123"
+        "DB_ROOT_PASSWORD": "rootpass123",
     },
-    tags=["ghost", "blog", "cms", "nodejs", "traefik"]
+    tags=["ghost", "blog", "cms", "nodejs", "traefik"],
 )
 
 STRAPI = Preset(
@@ -126,7 +126,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-  
+
   db:
     image: postgres:15-alpine
     environment:
@@ -144,10 +144,9 @@ volumes:
     default_env_vars={
         "DB_NAME": "strapi",
         "DB_USER": "strapi",
-        "DB_PASSWORD": "changeme123"
+        "DB_PASSWORD": "changeme123",
     },
-    tags=["strapi", "headless-cms", "nodejs", "api", "traefik"]
+    tags=["strapi", "headless-cms", "nodejs", "api", "traefik"],
 )
 
 CMS_PRESETS = [WORDPRESS, GHOST, STRAPI]
-

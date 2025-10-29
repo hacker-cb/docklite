@@ -1,11 +1,13 @@
 """
 Project-related constants
 """
+
 from enum import Enum
 
 
 class ProjectStatus(str, Enum):
     """Project status enum"""
+
     CREATED = "created"
     RUNNING = "running"
     STOPPED = "stopped"
@@ -24,4 +26,3 @@ PROJECT_STATUS_MAP = {
 # Default values
 DEFAULT_PROJECT_STATUS = ProjectStatus.CREATED
 DEFAULT_ENV_VARS = "{}"
-

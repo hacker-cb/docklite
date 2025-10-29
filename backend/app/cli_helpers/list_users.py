@@ -1,16 +1,16 @@
 """List all users from database."""
 
+from sqlalchemy import select, func
+from app.models.user import User
+
+# Import all models to avoid circular import issues
+from app.core.database import AsyncSessionLocal
 import asyncio
 import sys
 import logging
 
 # Disable SQLAlchemy logging
-logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-
-from app.core.database import AsyncSessionLocal
-from app.models import user, project  # Import all models to avoid circular import issues
-from app.models.user import User
-from sqlalchemy import select, func
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 
 async def list_users_simple():
@@ -20,15 +20,15 @@ async def list_users_simple():
             select(User.username, User.is_admin, User.is_active)
         )
         users = result.all()
-        
+
         if not users:
-            print('NO_USERS')
+            print("NO_USERS")
             return
-        
+
         for username, is_admin, is_active in users:
-            role = 'admin' if is_admin else 'user'
-            status = '✓' if is_active else '✗'
-            print(f'{username}:{role}:{status}')
+            role = "admin" if is_admin else "user"
+            status = "✓" if is_active else "✗"
+            print(f"{username}:{role}:{status}")
 
 
 async def list_users_detailed():
@@ -41,21 +41,21 @@ async def list_users_detailed():
                 User.email,
                 User.is_admin,
                 User.is_active,
-                User.system_user
+                User.system_user,
             )
         )
         users = result.all()
-        
+
         if not users:
-            print('NO_USERS')
+            print("NO_USERS")
             return
-        
+
         for user_id, username, email, is_admin, is_active, system_user in users:
-            role = 'admin' if is_admin else 'user'
-            status = 'active' if is_active else 'inactive'
-            email_display = email or '-'
-            sys_user = system_user or '-'
-            print(f'{user_id}|{username}|{email_display}|{role}|{status}|{sys_user}')
+            role = "admin" if is_admin else "user"
+            status = "active" if is_active else "inactive"
+            email_display = email or "-"
+            sys_user = system_user or "-"
+            print(f"{user_id}|{username}|{email_display}|{role}|{status}|{sys_user}")
 
 
 async def count_users():
@@ -69,7 +69,7 @@ async def count_users():
 if __name__ == "__main__":
     # Parse command line arguments
     command = sys.argv[1] if len(sys.argv) > 1 else "simple"
-    
+
     if command == "simple":
         asyncio.run(list_users_simple())
     elif command == "detailed":
@@ -79,4 +79,3 @@ if __name__ == "__main__":
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)
-

@@ -24,10 +24,8 @@ services:
       - PORT=3000
     restart: unless-stopped
 """,
-    default_env_vars={
-        "NODE_ENV": "production"
-    },
-    tags=["nodejs", "express", "javascript", "traefik"]
+    default_env_vars={"NODE_ENV": "production"},
+    tags=["nodejs", "express", "javascript", "traefik"],
 )
 
 PYTHON_FASTAPI = Preset(
@@ -52,7 +50,7 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={},
-    tags=["python", "fastapi", "api", "traefik"]
+    tags=["python", "fastapi", "api", "traefik"],
 )
 
 PYTHON_FLASK = Preset(
@@ -77,10 +75,8 @@ services:
       - FLASK_ENV=${FLASK_ENV:-production}
     restart: unless-stopped
 """,
-    default_env_vars={
-        "FLASK_ENV": "production"
-    },
-    tags=["python", "flask", "web", "traefik"]
+    default_env_vars={"FLASK_ENV": "production"},
+    tags=["python", "flask", "web", "traefik"],
 )
 
 PHP_LARAVEL = Preset(
@@ -98,7 +94,7 @@ services:
     volumes:
       - ./app:/var/www
     restart: unless-stopped
-  
+
   nginx:
     image: nginx:alpine
     expose:
@@ -110,11 +106,8 @@ services:
       - app
     restart: unless-stopped
 """,
-    default_env_vars={
-        "APP_ENV": "production"
-    },
-    tags=["php", "laravel", "framework", "traefik"]
+    default_env_vars={"APP_ENV": "production"},
+    tags=["php", "laravel", "framework", "traefik"],
 )
 
 BACKEND_PRESETS = [NODEJS_EXPRESS, PYTHON_FASTAPI, PYTHON_FLASK, PHP_LARAVEL]
-
