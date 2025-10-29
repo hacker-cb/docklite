@@ -103,8 +103,8 @@ async def test_deployment_info_contains_server_host(
     test_project, 
     auth_headers
 ):
-    """Test deployment info extracts server host from request headers"""
-    # Make request with custom host header
+    """Test deployment info contains server hostname with priority logic"""
+    # Make request with custom host header (now used as fallback only)
     headers = {**auth_headers, "host": "myserver.com:3000"}
     response = await client.get(
         f"/api/deployment/{test_project['id']}/info",
@@ -114,11 +114,15 @@ async def test_deployment_info_contains_server_host(
     assert response.status_code == 200
     data = response.json()
     
-    # Server should be extracted without port
-    assert data["server"] == "myserver.com"
+    # Server should be present and valid (could be system hostname or fallback)
+    assert "server" in data
+    assert data["server"]  # Not empty
+    assert isinstance(data["server"], str)
     
-    # Instructions should contain the server
-    assert "myserver.com" in data["instructions"]["upload_files"]
+    # Instructions should contain the server hostname
+    server = data["server"]
+    assert server in data["instructions"]["upload_files"]
+    assert server in data["instructions"]["start_containers"]
 
 
 @pytest.mark.asyncio

@@ -152,6 +152,57 @@ show_help() {
     fi
 }
 
+# Hostname detection with priority logic
+get_hostname() {
+    # Priority 1: HOSTNAME from .env file
+    if [ -f "$(get_project_root)/.env" ]; then
+        local env_hostname=$(grep "^HOSTNAME=" "$(get_project_root)/.env" 2>/dev/null | cut -d'=' -f2- | tr -d ' "'"'"'')
+        if [ -n "$env_hostname" ]; then
+            echo "$env_hostname"
+            return 0
+        fi
+    fi
+    
+    # Priority 2: System hostname (if valid)
+    local sys_hostname=$(hostname 2>/dev/null)
+    if [ -n "$sys_hostname" ] && [ "$sys_hostname" != "localhost" ]; then
+        # Check if it's not an IP address
+        if ! echo "$sys_hostname" | grep -qE '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'; then
+            echo "$sys_hostname"
+            return 0
+        fi
+    fi
+    
+    # Priority 3: Default to localhost
+    echo "localhost"
+}
+
+# Get full access URL
+get_access_url() {
+    local path="${1:-}"
+    local port="${2:-}"
+    local protocol="${3:-http}"
+    
+    local hostname=$(get_hostname)
+    local url="${protocol}://${hostname}"
+    
+    # Add port if specified and not default
+    if [ -n "$port" ] && [ "$port" != "80" ] && [ "$port" != "443" ]; then
+        url="${url}:${port}"
+    fi
+    
+    # Add path
+    if [ -n "$path" ]; then
+        # Ensure path starts with /
+        if [[ ! "$path" =~ ^/ ]]; then
+            path="/$path"
+        fi
+        url="${url}${path}"
+    fi
+    
+    echo "$url"
+}
+
 # Version info
 get_docklite_version() {
     echo "1.0.0"

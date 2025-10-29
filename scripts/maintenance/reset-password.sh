@@ -145,7 +145,7 @@ if docker_compose_cmd exec -T backend python3 -c "$RESET_SCRIPT" "$USERNAME" "$N
     log_info "  Username: ${COLOR_CYAN}$USERNAME${COLOR_NC}"
     log_info "  Password: ${COLOR_CYAN}[your new password]${COLOR_NC}"
     echo ""
-    log_info "Frontend: ${COLOR_CYAN}http://localhost:5173${COLOR_NC}"
+    log_info "Frontend: ${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
     
 else
     echo ""

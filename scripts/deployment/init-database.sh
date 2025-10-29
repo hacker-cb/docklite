@@ -54,8 +54,8 @@ docker_compose_cmd exec -T backend alembic upgrade head
 
 log_success "Database initialized!"
 echo ""
-log_info "Backend is ready at: ${COLOR_CYAN}http://localhost:8000${COLOR_NC}"
-log_info "API Docs at:         ${COLOR_CYAN}http://localhost:8000/docs${COLOR_NC}"
+log_info "Backend is ready at: ${COLOR_CYAN}$(get_access_url "/api")${COLOR_NC}"
+log_info "API Docs at:         ${COLOR_CYAN}$(get_access_url "/docs")${COLOR_NC}"
 echo ""
 
 if [ "$1" = "--reset" ]; then

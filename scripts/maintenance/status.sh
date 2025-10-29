@@ -61,15 +61,18 @@ if is_container_running "docklite-traefik" && is_container_running "docklite-bac
     echo ""
     log_step "Access URLs (via Traefik):"
     
-    # Get system hostname
-    HOSTNAME=$(hostname)
+    # Use unified hostname function
+    log_info "Frontend:          ${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
+    log_info "Backend API:       ${COLOR_CYAN}$(get_access_url "/api")${COLOR_NC}"
+    log_info "API Docs:          ${COLOR_CYAN}$(get_access_url "/docs")${COLOR_NC}"
+    log_info "Traefik Dashboard: ${COLOR_CYAN}$(get_access_url "" "8888")${COLOR_NC}"
     
-    log_info "Frontend:          ${COLOR_CYAN}http://${HOSTNAME}${COLOR_NC}"
-    log_info "Backend API:       ${COLOR_CYAN}http://${HOSTNAME}/api${COLOR_NC}"
-    log_info "API Docs:          ${COLOR_CYAN}http://${HOSTNAME}/docs${COLOR_NC}"
-    log_info "Traefik Dashboard: ${COLOR_CYAN}http://${HOSTNAME}:8888${COLOR_NC}"
-    log_info ""
-    log_info "Local access:      ${COLOR_CYAN}http://localhost${COLOR_NC}"
+    # Show localhost alternative if hostname is not localhost
+    CURRENT_HOSTNAME=$(get_hostname)
+    if [ "$CURRENT_HOSTNAME" != "localhost" ]; then
+        log_info ""
+        log_info "Local access:      ${COLOR_CYAN}http://localhost${COLOR_NC}"
+    fi
 fi
 
 # Show version

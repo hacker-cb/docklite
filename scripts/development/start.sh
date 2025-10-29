@@ -78,9 +78,10 @@ fi
 
 echo ""
 print_banner "DockLite is Running"
-log_info "Frontend:  ${COLOR_CYAN}http://localhost:5173${COLOR_NC}"
-log_info "Backend:   ${COLOR_CYAN}http://localhost:8000${COLOR_NC}"
-log_info "API Docs:  ${COLOR_CYAN}http://localhost:8000/docs${COLOR_NC}"
+log_info "Frontend:  ${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
+log_info "Backend:   ${COLOR_CYAN}$(get_access_url "/api")${COLOR_NC}"
+log_info "API Docs:  ${COLOR_CYAN}$(get_access_url "/docs")${COLOR_NC}"
+log_info "Dashboard: ${COLOR_CYAN}$(get_access_url "" "8888")${COLOR_NC}"
 echo ""
 log_info "View logs: ${COLOR_CYAN}./scripts/docklite.sh logs${COLOR_NC}"
 log_info "Stop:      ${COLOR_CYAN}./scripts/docklite.sh stop${COLOR_NC}"
