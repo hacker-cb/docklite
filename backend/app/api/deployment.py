@@ -20,17 +20,26 @@ async def get_deployment_info(
 ):
     """Get deployment instructions for a project"""
     service = ProjectService(db)
-    project = await service.get_project(project_id)
+    project = await service.get_project(
+        project_id,
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
     
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
     
+    # Get owner to determine system_user
+    from sqlalchemy import select
+    result = await db.execute(select(User).where(User.id == project.owner_id))
+    owner = result.scalar_one()
+    
     # Get server hostname from request
     server_host = request.headers.get("host", "your-server").split(":")[0]
     
-    deploy_user = getattr(settings, 'DEPLOY_USER', 'docklite')
-    projects_dir = settings.PROJECTS_DIR
-    project_path = f"{projects_dir}/{project_id}"
+    # Use owner's system_user and slug
+    deploy_user = owner.system_user
+    project_path = f"/home/{deploy_user}/projects/{project.slug}"
     
     return {
         "project_id": project_id,

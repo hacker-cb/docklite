@@ -78,7 +78,7 @@ class AuthService:
         if user_data.email:
             existing_email = await self.get_user_by_email(user_data.email)
             if existing_email:
-                return None, "Email already exists"
+                return None, ErrorMessages.EMAIL_EXISTS
         
         # Hash password
         password_hash = self.get_password_hash(user_data.password)
@@ -88,6 +88,7 @@ class AuthService:
             username=user_data.username,
             email=user_data.email,
             password_hash=password_hash,
+            system_user=user_data.system_user,
             is_active=1,
             is_admin=0
         )

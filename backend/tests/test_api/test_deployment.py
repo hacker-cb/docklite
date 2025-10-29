@@ -20,11 +20,15 @@ async def test_get_deployment_info_success(client: AsyncClient, test_project, au
     assert data["project_id"] == test_project["id"]
     assert data["project_name"] == test_project["name"]
     assert data["domain"] == test_project["domain"]
-    assert data["deploy_user"] == getattr(settings, 'DEPLOY_USER', 'docklite')
+    # deploy_user is now from owner.system_user
+    assert "deploy_user" in data
     
-    # Check project path
-    expected_path = f"{settings.PROJECTS_DIR}/{test_project['id']}"
-    assert data["project_path"] == expected_path
+    # Check project path contains slug
+    assert "project_path" in data
+    project_path = data["project_path"]
+    # Path should contain slug, not just ID
+    assert test_project["slug"] in project_path
+    assert "/projects/" in project_path
     
     # Check instructions exist
     assert "instructions" in data
@@ -36,9 +40,9 @@ async def test_get_deployment_info_success(client: AsyncClient, test_project, au
     assert "restart" in instructions
     assert "stop" in instructions
     
-    # Verify instructions contain correct paths
-    assert expected_path in instructions["upload_files"]
-    assert expected_path in instructions["start_containers"]
+    # Verify instructions contain correct paths (with slug)
+    assert test_project["slug"] in instructions["upload_files"]
+    assert test_project["slug"] in instructions["start_containers"]
     
     # Check examples exist
     assert "examples" in data

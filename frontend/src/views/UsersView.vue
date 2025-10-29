@@ -19,6 +19,7 @@
       <Column field="id" header="ID" style="width: 80px"></Column>
       <Column field="username" header="Username"></Column>
       <Column field="email" header="Email"></Column>
+      <Column field="system_user" header="System User" style="width: 150px"></Column>
       <Column field="is_admin" header="Admin" style="width: 100px">
         <template #body="slotProps">
           <Tag 
@@ -85,6 +86,12 @@
       <div class="form-group">
         <label>Email</label>
         <InputText v-model="newUser.email" type="email" class="w-full" placeholder="user@example.com (optional)" />
+      </div>
+
+      <div class="form-group">
+        <label>System User *</label>
+        <InputText v-model="newUser.system_user" class="w-full" placeholder="docklite" />
+        <small class="form-hint">Linux user for SSH deployment (must exist on server)</small>
       </div>
 
       <div class="form-group">
@@ -187,6 +194,7 @@ const newPassword = ref('')
 const newUser = ref({
   username: '',
   email: '',
+  system_user: 'docklite',
   password: '',
   is_admin: false
 })
@@ -224,6 +232,7 @@ const createUser = async () => {
     const userData = {
       username: newUser.value.username,
       email: newUser.value.email || null,
+      system_user: newUser.value.system_user || 'docklite',
       password: newUser.value.password
     }
     
@@ -371,6 +380,7 @@ const closeCreateDialog = () => {
   newUser.value = {
     username: '',
     email: '',
+    system_user: 'docklite',
     password: '',
     is_admin: false
   }

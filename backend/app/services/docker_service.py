@@ -15,19 +15,22 @@ logger = logging.getLogger(__name__)
 class DockerService:
     """Service for managing Docker containers via docker-compose"""
     
-    def __init__(self, project_id: int, project_dir: Optional[Path] = None):
+    def __init__(self, project_id: int, slug: str, system_user: str):
         """
         Initialize DockerService for a specific project
         
         Args:
             project_id: ID of the project
-            project_dir: Path to project directory (defaults to /home/{DEPLOY_USER}/projects/{project_id})
+            slug: Project slug (URL-safe identifier)
+            system_user: System user for SSH connection (e.g., "docklite", "pavel")
         """
         self.project_id = project_id
-        if project_dir:
-            self.project_dir = project_dir
-        else:
-            self.project_dir = Path(settings.PROJECTS_DIR) / str(project_id)
+        self.slug = slug
+        self.system_user = system_user
+        
+        # Project directory in owner's home
+        owner_home = f"/home/{system_user}"
+        self.project_dir = Path(owner_home) / "projects" / slug
     
     async def _run_ssh_command(self, command: str) -> tuple[int, str, str]:
         """
@@ -41,7 +44,7 @@ class DockerService:
         """
         ssh_cmd = [
             "ssh",
-            f"{settings.DEPLOY_USER}@{settings.DEPLOY_HOST}",
+            f"{self.system_user}@{settings.DEPLOY_HOST}",
             "-p", str(settings.DEPLOY_PORT),
             command
         ]

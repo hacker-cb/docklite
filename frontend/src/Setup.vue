@@ -38,8 +38,21 @@
             class="w-full"
             placeholder="admin@example.com (optional)"
             autocomplete="email"
+            @keyup.enter="focusNext('system_user')"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="system_user">System User *</label>
+          <InputText 
+            id="system_user"
+            name="system_user"
+            v-model="userData.system_user" 
+            class="w-full"
+            placeholder="docklite"
             @keyup.enter="focusNext('password')"
           />
+          <small class="form-hint">Linux user for SSH deployment (must exist on server)</small>
         </div>
 
         <div class="form-group">
@@ -105,6 +118,7 @@ const emit = defineEmits(['setup-complete'])
 const userData = ref({
   username: '',
   email: '',
+  system_user: 'docklite',
   password: ''
 })
 

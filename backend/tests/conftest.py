@@ -149,6 +149,28 @@ def auth_headers(auth_token):
 
 
 @pytest.fixture
+async def test_user(db_session):
+    """Create a test user for project ownership"""
+    from app.services.auth_service import AuthService
+    from app.models.schemas import UserCreate
+    
+    service = AuthService(db_session)
+    user_data = UserCreate(
+        username="testuser",
+        email="test@example.com",
+        system_user="docklite",
+        password="testpass123"
+    )
+    user, error = await service.create_user(user_data)
+    assert user is not None
+    # Make admin for easier testing
+    user.is_admin = 1
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
 async def test_project(client, sample_project_data, auth_headers):
     """Create a test project and return its data"""
     response = await client.post(

@@ -17,6 +17,43 @@ from app.constants.project_constants import ProjectStatus
 router = APIRouter()
 
 
+async def get_project_with_owner_check(
+    project_id: int,
+    current_user: User,
+    db: AsyncSession
+) -> tuple[Project, User]:
+    """
+    Get project and owner with ownership check
+    
+    Returns: (project, owner)
+    Raises: HTTPException if project not found or access denied
+    """
+    # Get project
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorMessages.PROJECT_NOT_FOUND
+        )
+    
+    # Check ownership (non-admin can only manage own projects)
+    if not current_user.is_admin and project.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only manage your own projects"
+        )
+    
+    # Get owner
+    result = await db.execute(select(User).where(User.id == project.owner_id))
+    owner = result.scalar_one()
+    
+    return project, owner
+
+
 class ContainerActionResponse(BaseModel):
     """Response for container actions"""
     success: bool
@@ -42,20 +79,10 @@ async def start_containers(
     """
     Start project containers (docker-compose up -d)
     """
-    # Verify project exists
-    result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = result.scalar_one_or_none()
-    
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrorMessages.PROJECT_NOT_FOUND
-        )
+    project, owner = await get_project_with_owner_check(project_id, current_user, db)
     
     # Start containers
-    docker_service = DockerService(project_id)
+    docker_service = DockerService(project_id, project.slug, owner.system_user)
     success, message = await docker_service.start()
     
     if success:
@@ -81,20 +108,10 @@ async def stop_containers(
     """
     Stop project containers (docker-compose down)
     """
-    # Verify project exists
-    result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = result.scalar_one_or_none()
-    
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrorMessages.PROJECT_NOT_FOUND
-        )
+    project, owner = await get_project_with_owner_check(project_id, current_user, db)
     
     # Stop containers
-    docker_service = DockerService(project_id)
+    docker_service = DockerService(project_id, project.slug, owner.system_user)
     success, message = await docker_service.stop()
     
     if success:
@@ -120,20 +137,10 @@ async def restart_containers(
     """
     Restart project containers (docker-compose restart)
     """
-    # Verify project exists
-    result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = result.scalar_one_or_none()
-    
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrorMessages.PROJECT_NOT_FOUND
-        )
+    project, owner = await get_project_with_owner_check(project_id, current_user, db)
     
     # Restart containers
-    docker_service = DockerService(project_id)
+    docker_service = DockerService(project_id, project.slug, owner.system_user)
     success, message = await docker_service.restart()
     
     if success:
@@ -159,20 +166,10 @@ async def get_container_status(
     """
     Get container status (docker-compose ps)
     """
-    # Verify project exists
-    result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = result.scalar_one_or_none()
-    
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrorMessages.PROJECT_NOT_FOUND
-        )
+    project, owner = await get_project_with_owner_check(project_id, current_user, db)
     
     # Get status
-    docker_service = DockerService(project_id)
+    docker_service = DockerService(project_id, project.slug, owner.system_user)
     success, status_data = await docker_service.get_status()
     
     if success:

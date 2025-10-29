@@ -20,6 +20,8 @@ class TestFormatProjectResponse:
             id = 1
             name = "test-project"
             domain = "example.com"
+            slug = "example-com-1"
+            owner_id = 1
             compose_content = "version: '3.8'\nservices:\n  web:\n    image: nginx"
             env_vars = '{"KEY": "value", "DB_HOST": "localhost"}'
             status = "running"
@@ -32,6 +34,8 @@ class TestFormatProjectResponse:
         assert result["id"] == 1
         assert result["name"] == "test-project"
         assert result["domain"] == "example.com"
+        assert result["slug"] == "example-com-1"
+        assert result["owner_id"] == 1
         assert result["compose_content"] == project.compose_content
         assert result["env_vars"] == {"KEY": "value", "DB_HOST": "localhost"}
         assert result["status"] == "running"
@@ -44,6 +48,8 @@ class TestFormatProjectResponse:
             id = 2
             name = "minimal-project"
             domain = "test.com"
+            slug = "test-com-2"
+            owner_id = 1
             compose_content = "services:\n  app:\n    image: alpine"
             env_vars = None
             status = "created"
@@ -65,9 +71,11 @@ class TestFormatUserResponse:
             id = 1
             username = "admin"
             email = "admin@example.com"
+            system_user = "docklite"
             is_active = 1
             is_admin = 1
             created_at = datetime(2024, 1, 1, 10, 0, 0)
+            updated_at = datetime(2024, 1, 1, 10, 0, 0)
         
         user = MockUser()
         result = format_user_response(user)
@@ -75,9 +83,11 @@ class TestFormatUserResponse:
         assert result["id"] == 1
         assert result["username"] == "admin"
         assert result["email"] == "admin@example.com"
+        assert result["system_user"] == "docklite"
         assert result["is_active"] is True
         assert result["is_admin"] is True
         assert result["created_at"] == user.created_at
+        assert result["updated_at"] == user.updated_at
     
     def test_format_regular_user(self):
         """Test formatting regular user"""
@@ -85,9 +95,11 @@ class TestFormatUserResponse:
             id = 2
             username = "user"
             email = "user@example.com"
+            system_user = "docklite"
             is_active = 1
             is_admin = 0
             created_at = datetime(2024, 1, 2, 11, 0, 0)
+            updated_at = datetime(2024, 1, 2, 11, 0, 0)
         
         user = MockUser()
         result = format_user_response(user)
@@ -101,9 +113,11 @@ class TestFormatUserResponse:
             id = 3
             username = "inactive"
             email = "inactive@example.com"
+            system_user = "docklite"
             is_active = 0
             is_admin = 0
             created_at = datetime.now()
+            updated_at = datetime.now()
         
         user = MockUser()
         result = format_user_response(user)

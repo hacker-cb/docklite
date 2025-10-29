@@ -21,9 +21,9 @@ async def create_project(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Create a new project"""
+    """Create a new project (owned by current user)"""
     service = ProjectService(db)
-    new_project, error = await service.create_project(project)
+    new_project, error = await service.create_project(project, owner_id=current_user.id)
     
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
@@ -36,9 +36,12 @@ async def get_projects(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get all projects"""
+    """Get all projects (filtered by ownership for non-admin)"""
     service = ProjectService(db)
-    projects = await service.get_all_projects()
+    projects = await service.get_all_projects(
+        user_id=current_user.id, 
+        is_admin=bool(current_user.is_admin)
+    )
     
     return {
         "projects": [format_project_response(p) for p in projects],
@@ -52,9 +55,13 @@ async def get_project(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get project by ID"""
+    """Get project by ID (with ownership check)"""
     service = ProjectService(db)
-    project = await service.get_project(project_id)
+    project = await service.get_project(
+        project_id, 
+        user_id=current_user.id, 
+        is_admin=bool(current_user.is_admin)
+    )
     
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
@@ -69,9 +76,14 @@ async def update_project(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Update project"""
+    """Update project (with ownership check)"""
     service = ProjectService(db)
-    updated_project, error = await service.update_project(project_id, project)
+    updated_project, error = await service.update_project(
+        project_id, 
+        project,
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
     
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
@@ -85,9 +97,13 @@ async def delete_project(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Delete project"""
+    """Delete project (with ownership check)"""
     service = ProjectService(db)
-    success, error = await service.delete_project(project_id)
+    success, error = await service.delete_project(
+        project_id,
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
     
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error)
@@ -101,9 +117,13 @@ async def get_env_vars(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get project environment variables"""
+    """Get project environment variables (with ownership check)"""
     service = ProjectService(db)
-    env_vars = await service.get_env_vars(project_id)
+    env_vars = await service.get_env_vars(
+        project_id,
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
     
     if env_vars is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorMessages.PROJECT_NOT_FOUND)
@@ -118,9 +138,14 @@ async def update_env_vars(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Update project environment variables"""
+    """Update project environment variables (with ownership check)"""
     service = ProjectService(db)
-    success, error = await service.update_env_vars(project_id, env_vars)
+    success, error = await service.update_env_vars(
+        project_id, 
+        env_vars,
+        user_id=current_user.id,
+        is_admin=bool(current_user.is_admin)
+    )
     
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error)

@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.project import Project
+from app.models.user import User
 from app.models.schemas import ProjectCreate, ProjectUpdate
 from app.core.config import settings
 from app.validators import validate_docker_compose
+from app.utils.formatters import generate_slug_from_domain
 from app.constants.project_constants import ProjectStatus, DEFAULT_ENV_VARS
 from app.constants.messages import ErrorMessages
 
@@ -34,7 +36,7 @@ class ProjectService:
         return existing is None
     
     
-    async def create_project(self, project_data: ProjectCreate) -> tuple[Optional[Project], Optional[str]]:
+    async def create_project(self, project_data: ProjectCreate, owner_id: int) -> tuple[Optional[Project], Optional[str]]:
         """Create a new project"""
         # Validate compose content
         is_valid, error = await self.validate_compose_content(project_data.compose_content)
@@ -45,37 +47,47 @@ class ProjectService:
         if not await self.check_domain_unique(project_data.domain):
             return None, ErrorMessages.PROJECT_EXISTS
         
-        # Create project directory
-        project_dir = Path(settings.PROJECTS_DIR)
-        project_dir.mkdir(parents=True, exist_ok=True)
+        # Get owner to determine system_user
+        result = await self.db.execute(select(User).where(User.id == owner_id))
+        owner = result.scalar_one_or_none()
+        if not owner:
+            return None, "Owner user not found"
         
-        # Create project in database
+        # Create project in database first to get ID
         env_vars_json = json.dumps(project_data.env_vars or {})
         
         new_project = Project(
             name=project_data.name,
             domain=project_data.domain,
             port=None,
+            owner_id=owner_id,
+            slug="",  # Will be set after flush
             compose_content=project_data.compose_content,
             env_vars=env_vars_json,
             status=ProjectStatus.CREATED
         )
         
         self.db.add(new_project)
-        await self.db.flush()  # Flush to get ID before file operations
+        await self.db.flush()  # Flush to get ID
+        
+        # Generate slug from domain and ID
+        slug = generate_slug_from_domain(project_data.domain, new_project.id)
+        new_project.slug = slug
+        
         await self.db.commit()
         await self.db.refresh(new_project)
         
-        # Create project directory and files
-        project_path = project_dir / str(new_project.id)
-        project_path.mkdir(parents=True, exist_ok=True)
+        # Create project directory in owner's home
+        owner_home = f"/home/{owner.system_user}"
+        project_dir = Path(owner_home) / "projects" / slug
+        project_dir.mkdir(parents=True, exist_ok=True)
         
         # Write docker-compose.yml
-        compose_file = project_path / "docker-compose.yml"
+        compose_file = project_dir / "docker-compose.yml"
         compose_file.write_text(project_data.compose_content)
         
         # Write .env file (always create, even if empty)
-        env_file = project_path / ".env"
+        env_file = project_dir / ".env"
         if project_data.env_vars:
             env_content = "\n".join([f"{k}={v}" for k, v in project_data.env_vars.items()])
             env_file.write_text(env_content)
@@ -84,21 +96,42 @@ class ProjectService:
         
         return new_project, None
     
-    async def get_project(self, project_id: int) -> Optional[Project]:
-        """Get project by ID"""
-        result = await self.db.execute(select(Project).where(Project.id == project_id))
+    async def get_project_path(self, project: Project) -> Path:
+        """Get project directory path"""
+        result = await self.db.execute(select(User).where(User.id == project.owner_id))
+        owner = result.scalar_one()
+        owner_home = f"/home/{owner.system_user}"
+        return Path(owner_home) / "projects" / project.slug
+    
+    async def get_project(self, project_id: int, user_id: Optional[int] = None, is_admin: bool = False) -> Optional[Project]:
+        """Get project by ID with ownership check"""
+        query = select(Project).where(Project.id == project_id)
+        
+        # Non-admin users can only see their own projects
+        if user_id and not is_admin:
+            query = query.where(Project.owner_id == user_id)
+        
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
-    async def get_all_projects(self) -> List[Project]:
-        """Get all projects"""
-        result = await self.db.execute(select(Project))
+    async def get_all_projects(self, user_id: Optional[int] = None, is_admin: bool = False) -> List[Project]:
+        """Get all projects (filtered by owner for non-admin)"""
+        query = select(Project)
+        
+        # Non-admin users can only see their own projects
+        if user_id and not is_admin:
+            query = query.where(Project.owner_id == user_id)
+        
+        result = await self.db.execute(query)
         return list(result.scalars().all())
     
-    async def update_project(self, project_id: int, project_data: ProjectUpdate) -> tuple[Optional[Project], Optional[str]]:
+    async def update_project(self, project_id: int, project_data: ProjectUpdate, user_id: Optional[int] = None, is_admin: bool = False) -> tuple[Optional[Project], Optional[str]]:
         """Update project"""
-        project = await self.get_project(project_id)
+        project = await self.get_project(project_id, user_id, is_admin)
         if not project:
             return None, ErrorMessages.PROJECT_NOT_FOUND
+        
+        project_path = await self.get_project_path(project)
         
         # Validate compose content if provided
         if project_data.compose_content:
@@ -108,7 +141,6 @@ class ProjectService:
             project.compose_content = project_data.compose_content
             
             # Update compose file
-            project_path = Path(settings.PROJECTS_DIR) / str(project_id)
             compose_file = project_path / "docker-compose.yml"
             compose_file.write_text(project_data.compose_content)
         
@@ -127,7 +159,6 @@ class ProjectService:
             project.env_vars = json.dumps(project_data.env_vars)
             
             # Update .env file
-            project_path = Path(settings.PROJECTS_DIR) / str(project_id)
             env_file = project_path / ".env"
             if project_data.env_vars:
                 env_content = "\n".join([f"{k}={v}" for k, v in project_data.env_vars.items()])
@@ -139,14 +170,14 @@ class ProjectService:
         await self.db.refresh(project)
         return project, None
     
-    async def delete_project(self, project_id: int) -> tuple[bool, Optional[str]]:
+    async def delete_project(self, project_id: int, user_id: Optional[int] = None, is_admin: bool = False) -> tuple[bool, Optional[str]]:
         """Delete project"""
-        project = await self.get_project(project_id)
+        project = await self.get_project(project_id, user_id, is_admin)
         if not project:
             return False, ErrorMessages.PROJECT_NOT_FOUND
         
         # Delete project files
-        project_path = Path(settings.PROJECTS_DIR) / str(project_id)
+        project_path = await self.get_project_path(project)
         if project_path.exists():
             import shutil
             shutil.rmtree(project_path)
@@ -157,9 +188,9 @@ class ProjectService:
         
         return True, None
     
-    async def get_env_vars(self, project_id: int) -> Optional[Dict[str, str]]:
+    async def get_env_vars(self, project_id: int, user_id: Optional[int] = None, is_admin: bool = False) -> Optional[Dict[str, str]]:
         """Get project environment variables"""
-        project = await self.get_project(project_id)
+        project = await self.get_project(project_id, user_id, is_admin)
         if not project:
             return None
         
@@ -168,16 +199,16 @@ class ProjectService:
         except:
             return {}
     
-    async def update_env_vars(self, project_id: int, env_vars: Dict[str, str]) -> tuple[bool, Optional[str]]:
+    async def update_env_vars(self, project_id: int, env_vars: Dict[str, str], user_id: Optional[int] = None, is_admin: bool = False) -> tuple[bool, Optional[str]]:
         """Update project environment variables"""
-        project = await self.get_project(project_id)
+        project = await self.get_project(project_id, user_id, is_admin)
         if not project:
             return False, ErrorMessages.PROJECT_NOT_FOUND
         
         project.env_vars = json.dumps(env_vars)
         
         # Update .env file
-        project_path = Path(settings.PROJECTS_DIR) / str(project_id)
+        project_path = await self.get_project_path(project)
         project_path.mkdir(parents=True, exist_ok=True)
         env_file = project_path / ".env"
         

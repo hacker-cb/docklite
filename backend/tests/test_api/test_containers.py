@@ -9,21 +9,10 @@ class TestContainers:
     """Test container management endpoints"""
     
     @pytest.mark.asyncio
-    async def test_start_container_success(self, client, auth_headers, db_session):
+    async def test_start_container_success(self, client, auth_headers, test_project):
         """Test starting container for a project"""
-        from app.models.project import Project
-        
-        # Create test project
-        project = Project(
-            name="test-project",
-            domain="test.com",
-            compose_content="version: '3.8'\nservices:\n  web:\n    image: nginx:alpine",
-            env_vars="{}",
-            status="stopped"
-        )
-        db_session.add(project)
-        await db_session.commit()
-        await db_session.refresh(project)
+        # Use test_project fixture which creates project via API
+        project_id = test_project["id"]
         
         # Mock DockerService
         with patch('app.api.containers.DockerService') as mock_docker:
@@ -32,31 +21,21 @@ class TestContainers:
             mock_docker.return_value = mock_instance
             
             response = await client.post(
-                f"/api/containers/{project.id}/start",
+                f"/api/containers/{project_id}/start",
                 headers=auth_headers
             )
         
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert data["project_id"] == project.id
+        assert data["project_id"] == project_id
     
     @pytest.mark.asyncio
-    async def test_stop_container_success(self, client, auth_headers, db_session):
+    async def test_stop_container_success(self, client, auth_headers, test_project):
         """Test stopping container for a project"""
-        from app.models.project import Project
+        # Use test_project fixture
+        project_id = test_project["id"]
         
-        # Create test project
-        project = Project(
-            name="test-project",
-            domain="test.com",
-            compose_content="version: '3.8'\nservices:\n  web:\n    image: nginx:alpine",
-            env_vars="{}",
-            status="running"
-        )
-        db_session.add(project)
-        await db_session.commit()
-        await db_session.refresh(project)
         
         # Mock DockerService
         with patch('app.api.containers.DockerService') as mock_docker:
@@ -65,31 +44,20 @@ class TestContainers:
             mock_docker.return_value = mock_instance
             
             response = await client.post(
-                f"/api/containers/{project.id}/stop",
+                f"/api/containers/{project_id}/stop",
                 headers=auth_headers
             )
         
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert data["project_id"] == project.id
+        assert data["project_id"] == project_id
     
     @pytest.mark.asyncio
-    async def test_restart_container_success(self, client, auth_headers, db_session):
+    async def test_restart_container_success(self, client, auth_headers, test_project):
         """Test restarting container for a project"""
-        from app.models.project import Project
-        
-        # Create test project
-        project = Project(
-            name="test-project",
-            domain="test.com",
-            compose_content="version: '3.8'\nservices:\n  web:\n    image: nginx:alpine",
-            env_vars="{}",
-            status="running"
-        )
-        db_session.add(project)
-        await db_session.commit()
-        await db_session.refresh(project)
+        # Use test_project fixture
+        project_id = test_project["id"]
         
         # Mock DockerService
         with patch('app.api.containers.DockerService') as mock_docker:
@@ -98,31 +66,20 @@ class TestContainers:
             mock_docker.return_value = mock_instance
             
             response = await client.post(
-                f"/api/containers/{project.id}/restart",
+                f"/api/containers/{project_id}/restart",
                 headers=auth_headers
             )
         
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert data["project_id"] == project.id
+        assert data["project_id"] == project_id
     
     @pytest.mark.asyncio
-    async def test_get_container_status(self, client, auth_headers, db_session):
+    async def test_get_container_status(self, client, auth_headers, test_project):
         """Test getting container status"""
-        from app.models.project import Project
-        
-        # Create test project
-        project = Project(
-            name="test-project",
-            domain="test.com",
-            compose_content="version: '3.8'\nservices:\n  web:\n    image: nginx:alpine",
-            env_vars="{}",
-            status="running"
-        )
-        db_session.add(project)
-        await db_session.commit()
-        await db_session.refresh(project)
+        # Use test_project fixture
+        project_id = test_project["id"]
         
         # Mock DockerService
         with patch('app.api.containers.DockerService') as mock_docker:
@@ -137,7 +94,7 @@ class TestContainers:
             mock_docker.return_value = mock_instance
             
             response = await client.get(
-                f"/api/containers/{project.id}/status",
+                f"/api/containers/{project_id}/status",
                 headers=auth_headers
             )
         
@@ -167,21 +124,10 @@ class TestContainers:
         assert response.status_code == 403
     
     @pytest.mark.asyncio
-    async def test_container_start_failure(self, client, auth_headers, db_session):
+    async def test_container_start_failure(self, client, auth_headers, test_project):
         """Test handling of container start failure"""
-        from app.models.project import Project
-        
-        # Create test project
-        project = Project(
-            name="test-project",
-            domain="test.com",
-            compose_content="version: '3.8'\nservices:\n  web:\n    image: nginx:alpine",
-            env_vars="{}",
-            status="stopped"
-        )
-        db_session.add(project)
-        await db_session.commit()
-        await db_session.refresh(project)
+        # Use test_project fixture
+        project_id = test_project["id"]
         
         # Mock DockerService with failure
         with patch('app.api.containers.DockerService') as mock_docker:
@@ -190,7 +136,7 @@ class TestContainers:
             mock_docker.return_value = mock_instance
             
             response = await client.post(
-                f"/api/containers/{project.id}/start",
+                f"/api/containers/{project_id}/start",
                 headers=auth_headers
             )
         

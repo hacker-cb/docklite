@@ -23,6 +23,8 @@ class ProjectUpdate(BaseModel):
 
 class ProjectResponse(ProjectBase):
     id: int
+    slug: str
+    owner_id: int
     status: str
     created_at: datetime
     updated_at: datetime
@@ -41,6 +43,7 @@ class ProjectListResponse(BaseModel):
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=255)
     email: Optional[EmailStr] = None
+    system_user: str = Field(default="docklite", min_length=1, max_length=255)
     
     @classmethod
     def model_validate(cls, obj):
@@ -64,6 +67,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_admin: bool
     created_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True
