@@ -17,11 +17,21 @@ services:
       - "443:443"
     labels:
       - "traefik.enable=true"
-      # Dashboard router with admin authentication
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.routers.dashboard.middlewares=admin-auth"
+      # Traefik Dashboard UI router - handles /traefik path
+      - "traefik.http.routers.traefik-ui.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-localhost}`) && PathPrefix(`/traefik`)"
+      - "traefik.http.routers.traefik-ui.service=api@internal"
+      - "traefik.http.routers.traefik-ui.entrypoints=web"
+      - "traefik.http.routers.traefik-ui.middlewares=admin-auth,traefik-stripprefix"
+      - "traefik.http.routers.traefik-ui.priority=50"
+      # Traefik API router - handles Traefik-specific API endpoints with highest priority
+      - "traefik.http.routers.traefik-api.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-localhost}`) && PathPrefix(`/api`) && (Path(`/api/version`) || Path(`/api/overview`) || PathPrefix(`/api/http`) || PathPrefix(`/api/tcp`) || PathPrefix(`/api/udp`) || PathPrefix(`/api/entrypoints`) || PathPrefix(`/api/rawdata`))"
+      - "traefik.http.routers.traefik-api.service=api@internal"
+      - "traefik.http.routers.traefik-api.entrypoints=web"
+      - "traefik.http.routers.traefik-api.middlewares=admin-auth"
+      - "traefik.http.routers.traefik-api.priority=250"
+      # ReplacePathRegex middleware - converts /traefik to /dashboard for Traefik's api@internal
+      - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.regex=^/traefik(.*)"
+      - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.replacement=/dashboard$$1"
       # ForwardAuth middleware - delegates auth to DockLite backend
       - "traefik.http.middlewares.admin-auth.forwardauth.address=http://docklite-backend:8000/api/auth/verify-admin"
       - "traefik.http.middlewares.admin-auth.forwardauth.authResponseHeaders=X-User-Id,X-Username,X-Is-Admin"
@@ -40,6 +50,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.docklite-backend.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`)"
       - "traefik.http.routers.docklite-backend.entrypoints=web"
+      - "traefik.http.routers.docklite-backend.priority=200"
       - "traefik.http.services.docklite-backend.loadbalancer.server.port=8000"
     volumes:
       - ./backend:/app

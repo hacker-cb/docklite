@@ -1,0 +1,145 @@
+---
+alwaysApply: true
+---
+
+# DockLite Access URLs
+
+## Production URLs
+
+**Hostname:** `artem.sokolov.me` (configured in `.env`)
+
+- **Frontend:** http://artem.sokolov.me
+- **Backend API:** http://artem.sokolov.me/api
+- **API Docs:** http://artem.sokolov.me/docs
+- **Traefik Dashboard:** http://artem.sokolov.me/traefik/ (admin-only) ⚠️ **NOT /dashboard/**
+
+## URL Conventions
+
+**CRITICAL:** Always use `/traefik/` for Traefik Dashboard, never `/dashboard/`
+
+### Why `/traefik/` not `/dashboard/`?
+
+- Avoids confusion with future DockLite dashboard
+- Clear separation: Traefik = reverse proxy, DockLite = application
+- Frontend button labeled "Traefik" for clarity
+
+### Internal vs External URLs
+
+- **External (user-facing):** `/traefik/` 
+- **Internal (Traefik expects):** `/dashboard/`
+- **Conversion:** Done via `traefik-stripprefix` middleware in [docker-compose.yml](mdc:docker-compose.yml)
+
+## Dynamic URL Generation
+
+**ALWAYS use hostname functions, NEVER hardcode URLs:**
+
+### Bash Scripts
+
+```bash
+# Load hostname functions
+source "$SCRIPT_DIR/lib/common.sh"
+
+# Get URLs
+get_access_url                # http://artem.sokolov.me
+get_access_url "/api"         # http://artem.sokolov.me/api
+get_access_url "/traefik"     # http://artem.sokolov.me/traefik
+```
+
+See: [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
+
+### Python CLI
+
+```python
+from cli.utils.hostname import get_hostname, get_access_url
+
+# Get URLs
+get_access_url()              # http://artem.sokolov.me
+get_access_url('/api')        # http://artem.sokolov.me/api
+get_access_url('/traefik')    # http://artem.sokolov.me/traefik
+```
+
+See: [scripts/cli/utils/hostname.py](mdc:scripts/cli/utils/hostname.py)
+
+### Backend Python
+
+```python
+from app.utils.hostname import get_server_hostname, get_access_url
+
+# Get URLs
+get_access_url()              # http://artem.sokolov.me
+get_access_url('/api')        # http://artem.sokolov.me/api
+get_access_url('/traefik')    # http://artem.sokolov.me/traefik
+```
+
+See: [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py)
+
+## Hostname Configuration
+
+**Priority order:**
+
+1. `HOSTNAME` in `.env` file (highest priority)
+2. System hostname (`hostname` command)
+3. `localhost` (fallback)
+
+### .env File
+
+```bash
+# DockLite Configuration
+HOSTNAME=artem.sokolov.me
+TRAEFIK_DASHBOARD_HOST=artem.sokolov.me
+```
+
+See: [.env](mdc:.env)
+
+## CLI Output Examples
+
+### Start/Rebuild/Status Commands
+
+```
+Frontend:  http://artem.sokolov.me
+Backend:   http://artem.sokolov.me/api
+API Docs:  http://artem.sokolov.me/docs
+Traefik:   http://artem.sokolov.me/traefik (admin only)
+```
+
+**Updated files:**
+- [scripts/development/start.sh](mdc:scripts/development/start.sh)
+- [scripts/development/rebuild.sh](mdc:scripts/development/rebuild.sh)
+- [scripts/maintenance/status.sh](mdc:scripts/maintenance/status.sh)
+- [scripts/cli/commands/development.py](mdc:scripts/cli/commands/development.py)
+- [scripts/cli/commands/maintenance.py](mdc:scripts/cli/commands/maintenance.py)
+
+## Test User Credentials
+
+For testing and automation:
+
+- **Username:** `cursor`
+- **Password:** `CursorAI_Test2024!`
+- **Role:** Admin
+- **Create:** `./docklite add-user cursor -p "CursorAI_Test2024!" --admin`
+
+## Common Mistakes to Avoid
+
+❌ **DON'T:**
+```python
+# Hardcoded URL
+url = "http://localhost/dashboard"
+
+# Wrong path
+window.open('/dashboard/', '_blank')
+
+# Hardcoded hostname
+base_url = "http://artem.sokolov.me"
+```
+
+✅ **DO:**
+```python
+# Dynamic URL generation
+url = get_access_url("/traefik")
+
+# Correct path
+window.open('/traefik/', '_blank')
+
+# Dynamic hostname
+base_url = get_access_url()
+```

@@ -47,9 +47,9 @@
         />
         <Button 
           v-if="currentUser?.is_admin"
-          label="Dashboard"
+          label="Traefik"
           icon="pi pi-chart-line" 
-          @click="openDashboard"
+          @click="openTraefik"
           class="p-button-outlined p-button-secondary"
         />
       </div>
@@ -133,10 +133,10 @@ const handleLogout = async () => {
   }
 }
 
-const openDashboard = () => {
+const openTraefik = () => {
   // Open Traefik dashboard in new tab
-  // Auth is handled automatically via JWT token in cookies/local storage
-  window.open('/dashboard/', '_blank')
+  // Auth is handled automatically via JWT token in cookies
+  window.open('/traefik/', '_blank')
 }
 
 onMounted(() => {

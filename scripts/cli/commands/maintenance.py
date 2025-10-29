@@ -374,7 +374,7 @@ def status(
         log_info(f"Frontend:          [cyan]{get_access_url()}[/cyan]")
         log_info(f"Backend API:       [cyan]{get_access_url('/api')}[/cyan]")
         log_info(f"API Docs:          [cyan]{get_access_url('/docs')}[/cyan]")
-        log_info(f"Traefik Dashboard: [cyan]{get_access_url('/dashboard')}[/cyan] [yellow](admin only)[/yellow]")
+        log_info(f"Traefik Dashboard: [cyan]{get_access_url('/traefik')}[/cyan] [yellow](admin only)[/yellow]")
         
         # Show localhost alternative if hostname is not localhost
         current_hostname = get_hostname()

@@ -73,7 +73,7 @@ def start(
     log_info(f"Frontend:  [cyan]{get_access_url()}[/cyan]")
     log_info(f"Backend:   [cyan]{get_access_url('/api')}[/cyan]")
     log_info(f"API Docs:  [cyan]{get_access_url('/docs')}[/cyan]")
-    log_info(f"Dashboard: [cyan]{get_access_url('/dashboard')}[/cyan] [yellow](admin only)[/yellow]")
+    log_info(f"Traefik: [cyan]{get_access_url('/traefik')}[/cyan] [yellow](admin only)[/yellow]")
     console.print()
     log_info(f"View logs: [cyan]./docklite logs[/cyan]")
     log_info(f"Stop:      [cyan]./docklite stop[/cyan]")
@@ -163,7 +163,7 @@ def rebuild(
     log_info(f"Frontend:  [cyan]{get_access_url()}[/cyan]")
     log_info(f"Backend:   [cyan]{get_access_url('/api')}[/cyan]")
     log_info(f"API Docs:  [cyan]{get_access_url('/docs')}[/cyan]")
-    log_info(f"Dashboard: [cyan]{get_access_url('/dashboard')}[/cyan] [yellow](admin only)[/yellow]")
+    log_info(f"Traefik: [cyan]{get_access_url('/traefik')}[/cyan] [yellow](admin only)[/yellow]")
     console.print()
     
     # Follow logs if requested

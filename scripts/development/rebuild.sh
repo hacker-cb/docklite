@@ -74,7 +74,7 @@ print_banner "DockLite is Running"
 log_info "Frontend:  ${COLOR_CYAN}$(get_access_url)${COLOR_NC}"
 log_info "Backend:   ${COLOR_CYAN}$(get_access_url "/api")${COLOR_NC}"
 log_info "API Docs:  ${COLOR_CYAN}$(get_access_url "/docs")${COLOR_NC}"
-log_info "Dashboard: ${COLOR_CYAN}$(get_access_url "/dashboard")${COLOR_NC} ${COLOR_YELLOW}(admin only)${COLOR_NC}"
+log_info "Traefik: ${COLOR_CYAN}$(get_access_url "/traefik")${COLOR_NC} ${COLOR_YELLOW}(admin only)${COLOR_NC}"
 echo ""
 
 # Follow logs if requested

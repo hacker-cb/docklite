@@ -1,0 +1,175 @@
+---
+description: User management via CLI add-user command and test user conventions
+---
+
+# User Management CLI Commands
+
+## Add User Command
+
+**Location:** [scripts/maintenance/add-user.sh](mdc:scripts/maintenance/add-user.sh)
+
+**Usage:**
+```bash
+./docklite add-user <username> [options]
+
+Options:
+  -p, --password    Password (interactive if not provided)
+  -a, --admin       Create as admin user
+  -e, --email       Email address (optional)
+  -s, --system      System user for deployment (default: docklite)
+
+Examples:
+  ./docklite add-user john                      # Interactive mode
+  ./docklite add-user john -p Pass123 --admin   # Admin with password
+  ./docklite add-user john -e john@example.com  # With email
+```
+
+## CLI Integration
+
+Added to [scripts/docklite.sh](mdc:scripts/docklite.sh):
+
+```bash
+add-user)
+    exec "$SCRIPT_DIR/maintenance/add-user.sh" "$@"
+    ;;
+```
+
+Bash completion support in [scripts/completion/docklite-completion.bash](mdc:scripts/completion/docklite-completion.bash):
+
+```bash
+add-user)
+    if [ $COMP_CWORD -eq 2 ]; then
+        COMPREPLY=()  # Username (no suggestions for security)
+    else
+        local add_opts="--password --admin --email --system --help -h -p -a -e -s"
+        COMPREPLY=( $(compgen -W "${add_opts}" -- ${cur}) )
+    fi
+    ;;
+```
+
+## Test User Convention
+
+For testing and AI assistant access:
+
+**Username:** `cursor`
+**Password:** Use complex password (e.g., `CursorAI_Test2024!`)
+**Role:** Admin
+**Purpose:** Testing, browser automation, demonstrations
+
+### Creating Test User
+
+```bash
+# Direct creation (inside backend container)
+docker compose exec -T backend python -c "
+import asyncio
+from app.core.database import AsyncSessionLocal
+from passlib.context import CryptContext
+from sqlalchemy import text
+
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+async def create_user():
+    async with AsyncSessionLocal() as db:
+        password_hash = pwd_context.hash('CursorAI_Test2024!')
+        await db.execute(
+            text('''
+                INSERT INTO users (username, password_hash, email, is_admin, is_active, system_user)
+                VALUES (:username, :password_hash, :email, :is_admin, 1, :system_user)
+            '''),
+            {
+                'username': 'cursor',
+                'password_hash': password_hash,
+                'email': 'cursor@example.com',
+                'is_admin': 1,
+                'system_user': 'docklite'
+            }
+        )
+        await db.commit()
+        print('User created')
+
+asyncio.run(create_user())
+"
+```
+
+## List Users
+
+```bash
+./docklite list-users           # Simple list
+./docklite list-users --verbose # Detailed info
+```
+
+## Reset Password
+
+```bash
+./docklite reset-password <username>       # Interactive
+./docklite reset-password <username> -p <new-password>  # Direct
+```
+
+## User Management API
+
+**Endpoint:** `POST /api/users` (admin-only)
+
+**Schema:** [backend/app/models/schemas.py](mdc:backend/app/models/schemas.py)
+
+```python
+class UserCreate(UserBase):
+    username: str = Field(..., min_length=3, max_length=255)
+    email: Optional[EmailStr] = None
+    system_user: str = Field(default="docklite", min_length=1, max_length=255)
+    password: str = Field(..., min_length=6)
+```
+
+**Service:** [backend/app/services/auth_service.py](mdc:backend/app/services/auth_service.py)
+
+```python
+async def create_user(self, user_data: UserCreate) -> Tuple[Optional[User], Optional[str]]:
+    # Check if user exists
+    existing_user = await self.get_user_by_username(user_data.username)
+    if existing_user:
+        return None, ErrorMessages.USERNAME_EXISTS
+    
+    # Hash password
+    password_hash = self.get_password_hash(user_data.password)
+    
+    # Create user
+    new_user = User(
+        username=user_data.username,
+        email=user_data.email,
+        password_hash=password_hash,
+        system_user=user_data.system_user,
+        is_active=1,
+        is_admin=0
+    )
+    
+    self.db.add(new_user)
+    await self.db.flush()
+    await self.db.commit()
+    
+    return new_user, None
+```
+
+## Security Considerations
+
+1. **Password Requirements:**
+   - Minimum 6 characters
+   - Use complex passwords for production
+   - Interactive mode hides password input
+
+2. **Admin Access:**
+   - Only admins can create users via API
+   - CLI commands use direct database access
+   - First user created via setup screen
+
+3. **System User:**
+   - Default: `docklite`
+   - Must exist as Linux user for SSH deployment
+   - Controls project ownership in `/home/{system_user}/projects/`
+
+## Testing Workflow
+
+When testing with browser automation:
+
+1. Create cursor user: `./docklite add-user cursor -p "CursorAI_Test2024!" --admin`
+2. Use for login in automated tests
+3. Clean up after testing (optional): Remove via database or recreate
+4. Never commit test user credentials to version control
