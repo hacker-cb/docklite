@@ -28,7 +28,7 @@ app.include_router(users.router, prefix="/api")  # User management (admin only)
 app.include_router(projects.router, prefix="/api")
 app.include_router(presets.router, prefix="/api")
 app.include_router(deployment.router, prefix="/api")
-app.include_router(containers.router, prefix="/api/containers")  # Container management
+app.include_router(containers.router, prefix="/api")  # Container management
 
 
 # Startup event

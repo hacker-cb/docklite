@@ -15,6 +15,12 @@ const routes = [
     name: 'Users',
     component: () => import('./views/UsersView.vue'),
     meta: { requiresAdmin: true }
+  },
+  {
+    path: '/containers',
+    name: 'Containers',
+    component: () => import('./views/ContainersView.vue'),
+    meta: { requiresAdmin: true }
   }
 ]
 

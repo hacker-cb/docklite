@@ -47,6 +47,13 @@
         />
         <Button 
           v-if="currentUser?.is_admin"
+          label="Containers"
+          icon="pi pi-box" 
+          @click="router.push('/containers')"
+          :class="$route.path === '/containers' ? 'p-button-primary' : 'p-button-outlined'"
+        />
+        <Button 
+          v-if="currentUser?.is_admin"
           label="Traefik"
           icon="pi pi-chart-line" 
           @click="openTraefik"

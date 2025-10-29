@@ -160,24 +160,44 @@ export const usersApi = {
 }
 
 export const containersApi = {
-  // Start project containers
-  start(projectId) {
-    return api.post(`/containers/${projectId}/start`)
+  // Get all Docker containers
+  getAll(all = true) {
+    return api.get('/containers', { params: { all } })
   },
   
-  // Stop project containers
-  stop(projectId) {
-    return api.post(`/containers/${projectId}/stop`)
+  // Get container by ID
+  getById(id) {
+    return api.get(`/containers/${id}`)
   },
   
-  // Restart project containers
-  restart(projectId) {
-    return api.post(`/containers/${projectId}/restart`)
+  // Start container
+  start(containerId) {
+    return api.post(`/containers/${containerId}/start`)
   },
   
-  // Get container status
-  getStatus(projectId) {
-    return api.get(`/containers/${projectId}/status`)
+  // Stop container
+  stop(containerId) {
+    return api.post(`/containers/${containerId}/stop`)
+  },
+  
+  // Restart container
+  restart(containerId) {
+    return api.post(`/containers/${containerId}/restart`)
+  },
+  
+  // Remove container
+  remove(containerId, force = false) {
+    return api.delete(`/containers/${containerId}`, { params: { force } })
+  },
+  
+  // Get container logs
+  getLogs(containerId, tail = 100) {
+    return api.get(`/containers/${containerId}/logs`, { params: { tail } })
+  },
+  
+  // Get container stats
+  getStats(containerId) {
+    return api.get(`/containers/${containerId}/stats`)
   }
 }
 

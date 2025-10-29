@@ -1,201 +1,319 @@
-"""
-Docker/Docker Compose management service
-Executes docker-compose commands via SSH on the deployment server
-"""
-import asyncio
-import logging
-from typing import Dict, List, Optional
-from pathlib import Path
+"""Docker service for managing containers."""
 
-from app.core.config import settings
-
-logger = logging.getLogger(__name__)
+import subprocess
+import json
+from typing import List, Dict, Optional, Tuple
+from datetime import datetime
 
 
 class DockerService:
-    """Service for managing Docker containers via docker-compose"""
+    """Service for interacting with Docker via CLI."""
     
-    def __init__(self, project_id: int, slug: str, system_user: str):
+    def __init__(self):
+        """Initialize Docker service."""
+        # Test Docker is available
+        try:
+            subprocess.run(['docker', 'version'], capture_output=True, check=True, timeout=5)
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+            raise Exception(f"Docker is not available: {str(e)}")
+    
+    def list_all_containers(self, all: bool = True) -> List[Dict]:
         """
-        Initialize DockerService for a specific project
+        List all Docker containers.
         
         Args:
-            project_id: ID of the project
-            slug: Project slug (URL-safe identifier)
-            system_user: System user for SSH connection (e.g., "docklite", "pavel")
-        """
-        self.project_id = project_id
-        self.slug = slug
-        self.system_user = system_user
-        
-        # Project directory in owner's home
-        owner_home = f"/home/{system_user}"
-        self.project_dir = Path(owner_home) / "projects" / slug
-    
-    async def _run_ssh_command(self, command: str) -> tuple[int, str, str]:
-        """
-        Execute command via SSH on deployment server
-        
-        Args:
-            command: Command to execute
+            all: If True, show all containers (default). If False, show only running.
             
         Returns:
-            Tuple of (return_code, stdout, stderr)
+            List of container dictionaries
         """
-        ssh_cmd = [
-            "ssh",
-            f"{self.system_user}@{settings.DEPLOY_HOST}",
-            "-p", str(settings.DEPLOY_PORT),
-            command
-        ]
-        
-        logger.info(f"Executing SSH command: {' '.join(ssh_cmd)}")
-        
         try:
-            process = await asyncio.create_subprocess_exec(
-                *ssh_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            cmd = ['docker', 'ps', '--format', '{{json .}}']
+            if all:
+                cmd.append('--all')
             
-            stdout, stderr = await process.communicate()
-            return_code = process.returncode or 0
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
             
-            stdout_str = stdout.decode('utf-8').strip()
-            stderr_str = stderr.decode('utf-8').strip()
+            containers = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    container_data = json.loads(line)
+                    containers.append(self._format_container(container_data))
             
-            if return_code != 0:
-                logger.error(f"SSH command failed: {stderr_str}")
-            else:
-                logger.info(f"SSH command succeeded: {stdout_str}")
-            
-            return return_code, stdout_str, stderr_str
-            
+            return containers
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Failed to list containers: {e.stderr}")
         except Exception as e:
-            logger.error(f"SSH command exception: {e}")
-            return 1, "", str(e)
+            raise Exception(f"Failed to list containers: {str(e)}")
     
-    async def _run_docker_compose(self, action: str) -> tuple[bool, str]:
+    def get_container(self, container_id: str) -> Optional[Dict]:
         """
-        Run docker-compose command
+        Get a specific container by ID or name.
         
         Args:
-            action: Docker Compose action (up -d, down, restart, ps, etc.)
+            container_id: Container ID or name
             
         Returns:
-            Tuple of (success, message)
+            Container dictionary or None if not found
         """
-        command = f"cd {self.project_dir} && docker-compose {action}"
-        return_code, stdout, stderr = await self._run_ssh_command(command)
-        
-        if return_code == 0:
-            return True, stdout
-        else:
-            return False, stderr or "Command failed"
-    
-    async def start(self) -> tuple[bool, str]:
-        """
-        Start project containers (docker-compose up -d)
-        
-        Returns:
-            Tuple of (success, message)
-        """
-        logger.info(f"Starting containers for project {self.project_id}")
-        return await self._run_docker_compose("up -d")
-    
-    async def stop(self) -> tuple[bool, str]:
-        """
-        Stop project containers (docker-compose down)
-        
-        Returns:
-            Tuple of (success, message)
-        """
-        logger.info(f"Stopping containers for project {self.project_id}")
-        return await self._run_docker_compose("down")
-    
-    async def restart(self) -> tuple[bool, str]:
-        """
-        Restart project containers (docker-compose restart)
-        
-        Returns:
-            Tuple of (success, message)
-        """
-        logger.info(f"Restarting containers for project {self.project_id}")
-        return await self._run_docker_compose("restart")
-    
-    async def get_status(self) -> tuple[bool, Dict]:
-        """
-        Get container status (docker-compose ps)
-        
-        Returns:
-            Tuple of (success, status_dict)
-            status_dict: {
-                "running": bool,
-                "containers": [{"name": "...", "status": "..."}],
-                "raw_output": "..."
-            }
-        """
-        logger.info(f"Getting status for project {self.project_id}")
-        
-        # Use docker-compose ps --format json for structured output
-        success, output = await self._run_docker_compose("ps --format json")
-        
-        if not success:
-            return False, {"running": False, "containers": [], "raw_output": output}
-        
-        # Parse JSON output
-        import json
-        containers = []
-        running = False
-        
         try:
-            # docker-compose ps --format json outputs one JSON object per line
-            for line in output.split('\n'):
-                if line.strip():
-                    container = json.loads(line)
-                    containers.append({
-                        "name": container.get("Name", ""),
-                        "status": container.get("State", ""),
-                        "health": container.get("Health", "")
-                    })
-                    if container.get("State") == "running":
-                        running = True
-        except json.JSONDecodeError:
-            # Fallback: parse text output
-            lines = output.split('\n')
-            for line in lines:
-                if 'Up' in line:
-                    running = True
-                    parts = line.split()
-                    if parts:
-                        containers.append({
-                            "name": parts[0],
-                            "status": "running",
-                            "health": ""
-                        })
+            cmd = ['docker', 'inspect', container_id]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
+            
+            data = json.loads(result.stdout)
+            if data:
+                return self._format_inspect_data(data[0])
+            return None
+        except subprocess.CalledProcessError:
+            return None
+        except Exception as e:
+            raise Exception(f"Failed to get container: {str(e)}")
+    
+    def start_container(self, container_id: str) -> Tuple[bool, Optional[str]]:
+        """
+        Start a container.
         
-        return True, {
-            "running": running,
-            "containers": containers,
-            "raw_output": output
+        Args:
+            container_id: Container ID or name
+            
+        Returns:
+            Tuple of (success, error_message)
+        """
+        try:
+            subprocess.run(['docker', 'start', container_id], 
+                         capture_output=True, text=True, check=True, timeout=30)
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e.stderr.strip() or f"Failed to start container '{container_id}'"
+        except Exception as e:
+            return False, f"Docker error: {str(e)}"
+    
+    def stop_container(self, container_id: str, timeout: int = 10) -> Tuple[bool, Optional[str]]:
+        """
+        Stop a container.
+        
+        Args:
+            container_id: Container ID or name
+            timeout: Seconds to wait before killing
+            
+        Returns:
+            Tuple of (success, error_message)
+        """
+        try:
+            subprocess.run(['docker', 'stop', '-t', str(timeout), container_id], 
+                         capture_output=True, text=True, check=True, timeout=timeout + 10)
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e.stderr.strip() or f"Failed to stop container '{container_id}'"
+        except Exception as e:
+            return False, f"Docker error: {str(e)}"
+    
+    def restart_container(self, container_id: str, timeout: int = 10) -> Tuple[bool, Optional[str]]:
+        """
+        Restart a container.
+        
+        Args:
+            container_id: Container ID or name
+            timeout: Seconds to wait before killing
+            
+        Returns:
+            Tuple of (success, error_message)
+        """
+        try:
+            subprocess.run(['docker', 'restart', '-t', str(timeout), container_id], 
+                         capture_output=True, text=True, check=True, timeout=timeout + 10)
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e.stderr.strip() or f"Failed to restart container '{container_id}'"
+        except Exception as e:
+            return False, f"Docker error: {str(e)}"
+    
+    def remove_container(self, container_id: str, force: bool = False) -> Tuple[bool, Optional[str]]:
+        """
+        Remove a container.
+        
+        Args:
+            container_id: Container ID or name
+            force: Force remove even if running
+            
+        Returns:
+            Tuple of (success, error_message)
+        """
+        try:
+            cmd = ['docker', 'rm', container_id]
+            if force:
+                cmd.insert(2, '-f')
+            
+            subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=30)
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e.stderr.strip() or f"Failed to remove container '{container_id}'"
+        except Exception as e:
+            return False, f"Docker error: {str(e)}"
+    
+    def get_container_logs(self, container_id: str, tail: int = 100, timestamps: bool = True) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Get container logs.
+        
+        Args:
+            container_id: Container ID or name
+            tail: Number of lines from the end (default 100)
+            timestamps: Include timestamps
+            
+        Returns:
+            Tuple of (logs, error_message)
+        """
+        try:
+            cmd = ['docker', 'logs', '--tail', str(tail)]
+            if timestamps:
+                cmd.append('--timestamps')
+            cmd.append(container_id)
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=30)
+            return result.stdout + result.stderr, None
+        except subprocess.CalledProcessError as e:
+            return None, e.stderr.strip() or f"Failed to get logs for '{container_id}'"
+        except Exception as e:
+            return None, f"Docker error: {str(e)}"
+    
+    def get_container_stats(self, container_id: str) -> Tuple[Optional[Dict], Optional[str]]:
+        """
+        Get container resource usage statistics.
+        
+        Args:
+            container_id: Container ID or name
+            
+        Returns:
+            Tuple of (stats_dict, error_message)
+        """
+        try:
+            # Get stats in JSON format (no-stream for single snapshot)
+            cmd = ['docker', 'stats', '--no-stream', '--format', '{{json .}}', container_id]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
+            
+            if result.stdout.strip():
+                stats_data = json.loads(result.stdout.strip())
+                
+                # Parse CPU percentage (remove %)
+                cpu_str = stats_data.get('CPUPerc', '0%').rstrip('%')
+                cpu_percent = float(cpu_str) if cpu_str else 0.0
+                
+                # Parse memory (format: "100MiB / 2GiB")
+                mem_usage_str = stats_data.get('MemUsage', '0B / 0B')
+                mem_perc_str = stats_data.get('MemPerc', '0%').rstrip('%')
+                mem_percent = float(mem_perc_str) if mem_perc_str else 0.0
+                
+                # Parse network I/O (format: "1.5kB / 2kB")
+                net_io = stats_data.get('NetIO', '0B / 0B')
+                
+                return {
+                    'cpu_percent': round(cpu_percent, 2),
+                    'memory_usage': mem_usage_str.split(' / ')[0],
+                    'memory_limit': mem_usage_str.split(' / ')[1] if ' / ' in mem_usage_str else '0B',
+                    'memory_percent': round(mem_percent, 2),
+                    'network_io': net_io,
+                }, None
+            
+            return None, "No stats available"
+        except subprocess.CalledProcessError as e:
+            return None, e.stderr.strip() or f"Failed to get stats for '{container_id}'"
+        except Exception as e:
+            return None, f"Docker error: {str(e)}"
+    
+    def _format_container(self, data: Dict) -> Dict:
+        """
+        Format docker ps JSON output to our format.
+        
+        Args:
+            data: Docker ps JSON output
+            
+        Returns:
+            Formatted container dictionary
+        """
+        # Extract info from docker ps format
+        name = data.get('Names', '')
+        image = data.get('Image', '')
+        status = data.get('Status', '').lower()
+        ports = data.get('Ports', '')
+        
+        # Determine state from status
+        state = 'running' if 'up' in status else 'exited'
+        
+        # Parse project from name (docker-compose naming: project_service_number)
+        project = ''
+        service = ''
+        is_system = name.startswith('docklite-')
+        
+        if '-' in name and not is_system:
+            parts = name.split('_')
+            if len(parts) >= 2:
+                project = parts[0]
+                service = parts[1]
+        
+        # Format ports list
+        ports_list = []
+        if ports:
+            ports_list = [p.strip() for p in ports.split(',') if p.strip()]
+        
+        return {
+            'id': data.get('ID', '')[:12],
+            'name': name,
+            'image': image,
+            'status': state,
+            'state': state,
+            'created': data.get('CreatedAt', ''),
+            'started': '',  # Not available in ps output
+            'ports': ports_list,
+            'project': project,
+            'service': service,
+            'is_system': is_system,
+            'labels': {},
         }
     
-    async def get_logs(self, tail: int = 100, follow: bool = False) -> tuple[bool, str]:
+    def _format_inspect_data(self, data: Dict) -> Dict:
         """
-        Get container logs (docker-compose logs)
+        Format docker inspect JSON output to our format.
         
         Args:
-            tail: Number of lines to show
-            follow: Whether to follow logs (stream)
+            data: Docker inspect JSON output
             
         Returns:
-            Tuple of (success, logs)
+            Formatted container dictionary
         """
-        logger.info(f"Getting logs for project {self.project_id}")
+        config = data.get('Config', {})
+        state = data.get('State', {})
+        network_settings = data.get('NetworkSettings', {})
+        labels = config.get('Labels', {})
         
-        action = f"logs --tail={tail}"
-        if follow:
-            action += " -f"
+        name = data.get('Name', '').lstrip('/')
+        project = labels.get('com.docker.compose.project', '')
+        service = labels.get('com.docker.compose.service', '')
+        is_system = name.startswith('docklite-')
         
-        return await self._run_docker_compose(action)
-
+        # Format ports
+        ports = []
+        port_bindings = network_settings.get('Ports', {})
+        if port_bindings:
+            for container_port, host_bindings in port_bindings.items():
+                if host_bindings:
+                    for binding in host_bindings:
+                        host_ip = binding.get('HostIp', '0.0.0.0')
+                        host_port = binding.get('HostPort', '')
+                        ports.append(f"{host_ip}:{host_port}->{container_port}")
+                else:
+                    ports.append(container_port)
+        
+        return {
+            'id': data.get('Id', '')[:12],
+            'name': name,
+            'image': config.get('Image', ''),
+            'status': state.get('Status', ''),
+            'state': state.get('Status', ''),
+            'created': data.get('Created', ''),
+            'started': state.get('StartedAt', ''),
+            'ports': ports,
+            'project': project,
+            'service': service,
+            'is_system': is_system,
+            'labels': labels,
+        }
