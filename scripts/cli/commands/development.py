@@ -112,10 +112,17 @@ def restart(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before restarting")
 ):
     """Restart DockLite services."""
-    # Stop then start
-    stop()
+    print_banner("Restarting DockLite")
+    
+    # Stop services
+    log_step("Stopping services...")
+    docker_compose_cmd("down", cwd=PROJECT_ROOT)
+    log_success("DockLite stopped")
+    
     console.print()
-    start(build=build)
+    
+    # Start services (without following logs)
+    start(build=build, follow=False)
 
 
 @app.command()
