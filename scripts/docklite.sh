@@ -24,6 +24,9 @@
 #     clean           Clean up unused resources
 #     status          Show system status
 #
+#   Setup:
+#     install-completion  Install bash completion
+#
 #   Other:
 #     version         Show DockLite version
 #     help            Show this help message
@@ -112,6 +115,11 @@ case "$COMMAND" in
         ;;
     status)
         exec "$SCRIPT_DIR/maintenance/status.sh" "$@"
+        ;;
+    
+    # Setup
+    install-completion)
+        exec "$SCRIPT_DIR/completion/install-completion.sh" "$@"
         ;;
     
     # Other

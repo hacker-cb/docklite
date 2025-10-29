@@ -12,7 +12,7 @@
 - **CREATED** common functions library (`scripts/lib/common.sh`)
 
 #### New Scripts
-- `./docklite` - Main CLI wrapper (15 commands)
+- `./docklite` - Main CLI wrapper (16 commands)
 - `scripts/lib/common.sh` - Shared functions library
 - `scripts/development/test-backend.sh` - Backend-specific tests
 - `scripts/development/test-frontend.sh` - Frontend-specific tests
@@ -21,6 +21,8 @@
 - `scripts/maintenance/restore.sh` - System restore
 - `scripts/maintenance/clean.sh` - Resource cleanup
 - `scripts/maintenance/status.sh` - System status
+- `scripts/completion/docklite-completion.bash` - Bash auto-completion
+- `scripts/completion/install-completion.sh` - Completion installer
 
 #### Renamed Scripts
 - `rebuild.sh` → `scripts/development/rebuild.sh`
@@ -46,10 +48,18 @@
 - All phase completion docs (PHASE1_COMPLETE.md, etc.)
 - Historical migration scripts
 
+#### Bash Completion
+- **CREATED** Smart auto-completion system
+- **ADDED** `scripts/completion/docklite-completion.bash` - Completion logic
+- **ADDED** `scripts/completion/install-completion.sh` - Auto-installer
+- **ADDED** `./docklite install-completion` command
+- **FEATURES** - Commands, options, services, files completion
+
 #### Infrastructure
 - **ADDED** `.dockerignore` for optimized builds
 - **UPDATED** `.gitignore` - backups/, .env.backup*
 - **CREATED** `docs/` directory for historical docs
+- **CREATED** `scripts/completion/` directory for bash completion
 
 ---
 

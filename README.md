@@ -406,3 +406,17 @@ DockLite имеет комплексное покрытие тестами:
 
 MIT License
 
+
+### Bash Completion
+
+Установите умное автодополнение для CLI:
+
+```bash
+./docklite install-completion
+source ~/.bashrc
+```
+
+Теперь можно использовать Tab для автодополнения команд, опций, имен сервисов и файлов!
+
+**Документация:** [scripts/completion/README.md](mdc:scripts/completion/README.md)
+

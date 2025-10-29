@@ -29,11 +29,20 @@ sudo ./docklite setup-ssh   # Configure SSH
 ./docklite clean            # Clean resources
 ```
 
-## Help
+## Help & Completion
 
 ```bash
+# Show help
 ./docklite --help           # Show all commands
 ./docklite <command> --help # Help for specific command
+
+# Install bash completion (smart auto-complete)
+./docklite install-completion
+source ~/.bashrc
+
+# Then use Tab:
+./docklite <TAB><TAB>       # Show all commands
+./docklite st<TAB>          # Auto-complete
 ```
 
 ## Full Documentation

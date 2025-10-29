@@ -316,11 +316,24 @@ All scripts follow standard exit codes:
 
 ## Tips
 
-### Use Tab Completion
+### Enable Tab Completion
+
+DockLite includes smart bash completion! Install it:
+
 ```bash
-# Enable tab completion (add to ~/.bashrc)
-complete -W "start stop restart rebuild logs test test-backend test-frontend setup-user setup-ssh init-db backup restore clean status version help" ./docklite
+./docklite install-completion
+source ~/.bashrc
 ```
+
+Then enjoy auto-completion:
+```bash
+./docklite <TAB><TAB>        # Show all commands
+./docklite st<TAB>            # Complete start/status
+./docklite logs <TAB>         # Complete backend/frontend
+./docklite restore <TAB>      # Complete .tar.gz files
+```
+
+**Full docs:** [scripts/completion/README.md](mdc:completion/README.md)
 
 ### Alias for Convenience
 ```bash
