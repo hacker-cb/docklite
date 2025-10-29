@@ -444,28 +444,9 @@ def reset_password(
     # First, get list of existing users
     log_step("Checking existing users...")
     
-    users_script = """
-import asyncio
-from app.core.database import AsyncSessionLocal
-from app.models.user import User
-from sqlalchemy import select
-
-async def list_users():
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(User.username, User.is_admin))
-        users = result.all()
-        if not users:
-            print('NO_USERS')
-        else:
-            for username, is_admin in users:
-                role = 'admin' if is_admin else 'user'
-                print(f'{username}:{role}')
-
-asyncio.run(list_users())
-"""
-    
     result = docker_compose_cmd(
-        "exec", "-T", "backend", "python", "-c", users_script,
+        "exec", "-T", "backend",
+        "python", "-m", "app.cli_helpers.reset_password", "list",
         cwd=PROJECT_ROOT,
         capture_output=True
     )
@@ -512,57 +493,12 @@ asyncio.run(list_users())
             log_error("Password must be at least 6 characters!")
             raise typer.Exit(1)
     
-    # Create Python script to reset password
+    # Execute password reset
     log_step("Resetting password...")
     
-    reset_script = """
-import asyncio
-import sys
-sys.path.insert(0, '/app')
-
-from app.core.database import AsyncSessionLocal
-from passlib.context import CryptContext
-from sqlalchemy import text
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-async def reset_password(username: str, new_password: str):
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            text("SELECT id, username, email, is_admin, is_active FROM users WHERE username = :username"),
-            {"username": username}
-        )
-        user_row = result.fetchone()
-        
-        if not user_row:
-            print(f"ERROR: User '{username}' not found")
-            return False
-        
-        password_hash = pwd_context.hash(new_password)
-        
-        await db.execute(
-            text("UPDATE users SET password_hash = :hash WHERE username = :username"),
-            {"hash": password_hash, "username": username}
-        )
-        await db.commit()
-        
-        print(f"SUCCESS: Password reset for user '{username}'")
-        print(f"User ID: {user_row[0]}")
-        print(f"Email: {user_row[2] or 'N/A'}")
-        print(f"Admin: {'Yes' if user_row[3] else 'No'}")
-        print(f"Active: {'Yes' if user_row[4] else 'No'}")
-        return True
-
-if __name__ == "__main__":
-    username = sys.argv[1]
-    password = sys.argv[2]
-    result = asyncio.run(reset_password(username, password))
-    sys.exit(0 if result else 1)
-"""
-    
-    # Execute password reset
     result = docker_compose_cmd(
-        "exec", "-T", "backend", "python3", "-c", reset_script, username, password,
+        "exec", "-T", "backend",
+        "python", "-m", "app.cli_helpers.reset_password", "reset", username, password,
         cwd=PROJECT_ROOT,
         capture_output=True,
         check=False
@@ -614,34 +550,9 @@ def list_users(
     
     if verbose:
         # Detailed user info
-        detailed_script = """
-import asyncio
-from app.core.database import AsyncSessionLocal
-from app.models.user import User
-from sqlalchemy import select
-
-async def list_users_detailed():
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(User.id, User.username, User.email, User.is_admin, User.is_active, User.system_user)
-        )
-        users = result.all()
-        
-        if not users:
-            print('NO_USERS')
-        else:
-            for user_id, username, email, is_admin, is_active, system_user in users:
-                role = 'admin' if is_admin else 'user'
-                status = 'active' if is_active else 'inactive'
-                email_display = email or '-'
-                sys_user = system_user or '-'
-                print(f'{user_id}|{username}|{email_display}|{role}|{status}|{sys_user}')
-
-asyncio.run(list_users_detailed())
-"""
-        
         result = docker_compose_cmd(
-            "exec", "-T", "backend", "python", "-c", detailed_script,
+            "exec", "-T", "backend",
+            "python", "-m", "app.cli_helpers.list_users", "detailed",
             cwd=PROJECT_ROOT,
             capture_output=True
         )
@@ -685,30 +596,9 @@ asyncio.run(list_users_detailed())
         console.print(table)
     else:
         # Simple list
-        simple_script = """
-import asyncio
-from app.core.database import AsyncSessionLocal
-from app.models.user import User
-from sqlalchemy import select
-
-async def list_users():
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(User.username, User.is_admin, User.is_active))
-        users = result.all()
-        
-        if not users:
-            print('NO_USERS')
-        else:
-            for username, is_admin, is_active in users:
-                role = 'admin' if is_admin else 'user'
-                status = '✓' if is_active else '✗'
-                print(f'{username}:{role}:{status}')
-
-asyncio.run(list_users())
-"""
-        
         result = docker_compose_cmd(
-            "exec", "-T", "backend", "python", "-c", simple_script,
+            "exec", "-T", "backend",
+            "python", "-m", "app.cli_helpers.list_users", "simple",
             cwd=PROJECT_ROOT,
             capture_output=True
         )
@@ -741,23 +631,9 @@ asyncio.run(list_users())
     console.print()
     
     # Count users
-    count_script = """
-import asyncio
-from app.core.database import AsyncSessionLocal
-from app.models.user import User
-from sqlalchemy import select, func
-
-async def count_users():
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(func.count(User.id)))
-        count = result.scalar()
-        print(count)
-
-asyncio.run(count_users())
-"""
-    
     result = docker_compose_cmd(
-        "exec", "-T", "backend", "python", "-c", count_script,
+        "exec", "-T", "backend",
+        "python", "-m", "app.cli_helpers.list_users", "count",
         cwd=PROJECT_ROOT,
         capture_output=True,
         check=False
