@@ -1,0 +1,13 @@
+# DockLite CLI Dependencies
+# Python 3.8+ required
+
+# CLI Framework
+typer[all]>=0.12.0      # Modern CLI with auto-completion
+rich>=13.7.0            # Beautiful terminal output, tables, progress bars
+
+# Configuration
+python-dotenv>=1.0.0    # .env file support
+
+# Optional for advanced features
+PyYAML>=6.0            # YAML parsing (if needed for docker-compose.yml)
+
