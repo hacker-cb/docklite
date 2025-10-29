@@ -14,8 +14,8 @@ services:
   app:
     image: node:20-alpine
     working_dir: /app
-    ports:
-      - "${PORT:-3000}:3000"
+    expose:
+      - "3000"
     volumes:
       - ./app:/app
     command: sh -c "npm install && npm start"
@@ -25,10 +25,9 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={
-        "PORT": "3000",
         "NODE_ENV": "production"
     },
-    tags=["nodejs", "express", "javascript"]
+    tags=["nodejs", "express", "javascript", "traefik"]
 )
 
 PYTHON_FASTAPI = Preset(
@@ -43,8 +42,8 @@ services:
   api:
     image: python:3.11-slim
     working_dir: /app
-    ports:
-      - "${PORT:-8000}:8000"
+    expose:
+      - "8000"
     volumes:
       - ./app:/app
     command: sh -c "pip install fastapi uvicorn && uvicorn main:app --host 0.0.0.0 --port 8000"
@@ -52,10 +51,8 @@ services:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
 """,
-    default_env_vars={
-        "PORT": "8000"
-    },
-    tags=["python", "fastapi", "api"]
+    default_env_vars={},
+    tags=["python", "fastapi", "api", "traefik"]
 )
 
 PYTHON_FLASK = Preset(
@@ -70,8 +67,8 @@ services:
   app:
     image: python:3.11-slim
     working_dir: /app
-    ports:
-      - "${PORT:-5000}:5000"
+    expose:
+      - "5000"
     volumes:
       - ./app:/app
     command: sh -c "pip install flask && flask run --host=0.0.0.0"
@@ -81,10 +78,9 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={
-        "PORT": "5000",
         "FLASK_ENV": "production"
     },
-    tags=["python", "flask", "web"]
+    tags=["python", "flask", "web", "traefik"]
 )
 
 PHP_LARAVEL = Preset(
@@ -105,8 +101,8 @@ services:
   
   nginx:
     image: nginx:alpine
-    ports:
-      - "${PORT:-8080}:80"
+    expose:
+      - "80"
     volumes:
       - ./app:/var/www
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
@@ -115,10 +111,9 @@ services:
     restart: unless-stopped
 """,
     default_env_vars={
-        "PORT": "8080",
         "APP_ENV": "production"
     },
-    tags=["php", "laravel", "framework"]
+    tags=["php", "laravel", "framework", "traefik"]
 )
 
 BACKEND_PRESETS = [NODEJS_EXPRESS, PYTHON_FASTAPI, PYTHON_FLASK, PHP_LARAVEL]

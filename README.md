@@ -137,17 +137,20 @@ sudo ./docklite setup-ssh
 
 ### Веб-интерфейс
 
-После запуска системы, веб-интерфейс будет доступен по адресу:
+После запуска системы, веб-интерфейс будет доступен по адресу (через Traefik):
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost/api
+- **API Docs**: http://localhost/docs
+- **Traefik Dashboard**: http://localhost:8888
+
+**Traefik** автоматически маршрутизирует запросы к правильным сервисам без необходимости указывать порты. Подробнее: [TRAEFIK.md](./TRAEFIK.md)
 
 ### Первый вход (Initial Setup)
 
 При первом открытии UI вы увидите экран **"Initial Setup"**:
 
-1. Откройте frontend (http://localhost:5173)
+1. Откройте frontend (http://localhost)
 2. Увидите форму "Create Admin Account"
 3. Заполните:
    - **Username**: ваш логин (мин. 3 символа)
@@ -192,18 +195,21 @@ sudo usermod -aG docker newuser
 6. Заполните:
    - **Name**: Имя проекта
    - **Domain**: Домен проекта (например, example.com)
-   - **Port**: Порт (предзаполнен автоматически)
 7. Нажмите "Create"
+
+**Traefik автоматически настроит роутинг** - проект будет доступен по указанному домену через порт 80.
 
 #### Custom docker-compose
 
 1. Нажмите "New Project"
 2. Выберите вкладку "Custom"
 3. Вставьте свой docker-compose.yml
-4. Заполните Name, Domain, Port
+4. Заполните Name и Domain
 5. Нажмите "Create"
 
 **Доступные пресеты**: 14 шаблонов (см. [PRESETS.md](./PRESETS.md))
+
+**Примечание**: Traefik labels автоматически добавляются к вашему `docker-compose.yml`, обеспечивая domain-based routing без необходимости управления портами.
 
 ### Деплой проекта на сервер
 

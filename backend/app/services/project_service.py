@@ -13,6 +13,7 @@ from app.validators import validate_docker_compose
 from app.utils.formatters import generate_slug_from_domain
 from app.constants.project_constants import ProjectStatus, DEFAULT_ENV_VARS
 from app.constants.messages import ErrorMessages
+from app.services.traefik_service import TraefikService
 
 
 class ProjectService:
@@ -74,6 +75,20 @@ class ProjectService:
         slug = generate_slug_from_domain(project_data.domain, new_project.id)
         new_project.slug = slug
         
+        # Inject Traefik labels into compose content
+        modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
+            project_data.compose_content,
+            project_data.domain,
+            slug
+        )
+        
+        if traefik_error:
+            await self.db.rollback()
+            return None, f"Failed to inject Traefik labels: {traefik_error}"
+        
+        # Update compose_content with Traefik labels
+        new_project.compose_content = modified_compose
+        
         await self.db.commit()
         await self.db.refresh(new_project)
         
@@ -82,9 +97,9 @@ class ProjectService:
         project_dir = Path(owner_home) / "projects" / slug
         project_dir.mkdir(parents=True, exist_ok=True)
         
-        # Write docker-compose.yml
+        # Write docker-compose.yml with Traefik labels
         compose_file = project_dir / "docker-compose.yml"
-        compose_file.write_text(project_data.compose_content)
+        compose_file.write_text(modified_compose)
         
         # Write .env file (always create, even if empty)
         env_file = project_dir / ".env"
@@ -133,21 +148,44 @@ class ProjectService:
         
         project_path = await self.get_project_path(project)
         
+        compose_updated = False
+        domain_updated = False
+        
         # Validate compose content if provided
         if project_data.compose_content:
             is_valid, error = await self.validate_compose_content(project_data.compose_content)
             if not is_valid:
                 return None, f"{ErrorMessages.INVALID_COMPOSE}: {error}"
-            project.compose_content = project_data.compose_content
-            
-            # Update compose file
-            compose_file = project_path / "docker-compose.yml"
-            compose_file.write_text(project_data.compose_content)
+            compose_updated = True
         
         # Update domain if provided
         if project_data.domain and project_data.domain != project.domain:
             if not await self.check_domain_unique(project_data.domain, project_id):
                 return None, ErrorMessages.PROJECT_EXISTS
+            domain_updated = True
+        
+        # If compose or domain changed, re-inject Traefik labels
+        if compose_updated or domain_updated:
+            new_compose = project_data.compose_content if compose_updated else project.compose_content
+            new_domain = project_data.domain if domain_updated else project.domain
+            
+            modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
+                new_compose,
+                new_domain,
+                project.slug
+            )
+            
+            if traefik_error:
+                return None, f"Failed to inject Traefik labels: {traefik_error}"
+            
+            project.compose_content = modified_compose
+            
+            # Update compose file
+            compose_file = project_path / "docker-compose.yml"
+            compose_file.write_text(modified_compose)
+        
+        # Update domain in DB
+        if domain_updated:
             project.domain = project_data.domain
         
         # Update name if provided

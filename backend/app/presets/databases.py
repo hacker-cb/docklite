@@ -13,8 +13,6 @@ POSTGRESQL = Preset(
 services:
   postgres:
     image: postgres:15-alpine
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-mydb}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
@@ -25,8 +23,8 @@ services:
   
   pgadmin:
     image: dpage/pgadmin4:latest
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
+    expose:
+      - "80"
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@admin.com}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
@@ -38,15 +36,13 @@ volumes:
   postgres-data:
 """,
     default_env_vars={
-        "POSTGRES_PORT": "5432",
         "POSTGRES_DB": "mydb",
         "POSTGRES_USER": "admin",
         "POSTGRES_PASSWORD": "changeme123",
-        "PGADMIN_PORT": "5050",
         "PGADMIN_EMAIL": "admin@admin.com",
         "PGADMIN_PASSWORD": "admin123"
     },
-    tags=["postgresql", "database", "pgadmin"]
+    tags=["postgresql", "database", "pgadmin", "traefik"]
 )
 
 MYSQL = Preset(
@@ -60,8 +56,6 @@ MYSQL = Preset(
 services:
   mysql:
     image: mysql:8.0
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpass}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-mydb}
@@ -73,8 +67,8 @@ services:
   
   phpmyadmin:
     image: phpmyadmin:latest
-    ports:
-      - "${PHPMYADMIN_PORT:-8081}:80"
+    expose:
+      - "80"
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306
@@ -86,14 +80,12 @@ volumes:
   mysql-data:
 """,
     default_env_vars={
-        "MYSQL_PORT": "3306",
         "MYSQL_ROOT_PASSWORD": "rootpass123",
         "MYSQL_DATABASE": "mydb",
         "MYSQL_USER": "admin",
-        "MYSQL_PASSWORD": "changeme123",
-        "PHPMYADMIN_PORT": "8081"
+        "MYSQL_PASSWORD": "changeme123"
     },
-    tags=["mysql", "database", "phpmyadmin"]
+    tags=["mysql", "database", "phpmyadmin", "traefik"]
 )
 
 MONGODB = Preset(
@@ -107,8 +99,6 @@ MONGODB = Preset(
 services:
   mongodb:
     image: mongo:7
-    ports:
-      - "${MONGO_PORT:-27017}:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-changeme}
@@ -118,8 +108,8 @@ services:
   
   mongo-express:
     image: mongo-express:latest
-    ports:
-      - "${MONGO_EXPRESS_PORT:-8082}:8081"
+    expose:
+      - "8081"
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_USER:-admin}
       - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD:-changeme}
@@ -132,12 +122,10 @@ volumes:
   mongo-data:
 """,
     default_env_vars={
-        "MONGO_PORT": "27017",
         "MONGO_USER": "admin",
-        "MONGO_PASSWORD": "changeme123",
-        "MONGO_EXPRESS_PORT": "8082"
+        "MONGO_PASSWORD": "changeme123"
     },
-    tags=["mongodb", "nosql", "mongo-express"]
+    tags=["mongodb", "nosql", "mongo-express", "traefik"]
 )
 
 REDIS = Preset(
@@ -151,8 +139,8 @@ REDIS = Preset(
 services:
   redis:
     image: redis:alpine
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    expose:
+      - "6379"
     command: redis-server --requirepass ${REDIS_PASSWORD:-changeme}
     volumes:
       - redis-data:/data
@@ -162,7 +150,6 @@ volumes:
   redis-data:
 """,
     default_env_vars={
-        "REDIS_PORT": "6379",
         "REDIS_PASSWORD": "changeme123"
     },
     tags=["redis", "cache", "queue"]

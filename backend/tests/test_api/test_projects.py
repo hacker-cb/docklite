@@ -19,7 +19,14 @@ class TestProjectsCRUD:
         
         assert data["name"] == sample_project_data["name"]
         assert data["domain"] == sample_project_data["domain"]
-        assert data["compose_content"] == sample_project_data["compose_content"]
+        
+        # Compose content should be modified to include Traefik labels
+        compose_content = data["compose_content"]
+        assert "traefik.enable=true" in compose_content
+        assert "traefik.http.routers" in compose_content
+        assert "docklite-network" in compose_content
+        assert "external: true" in compose_content
+        
         assert data["status"] == "created"
         assert "id" in data
         assert "created_at" in data

@@ -13,8 +13,8 @@ WORDPRESS = Preset(
 services:
   wordpress:
     image: wordpress:latest
-    ports:
-      - "${PORT:-8080}:80"
+    expose:
+      - "80"
     environment:
       - WORDPRESS_DB_HOST=db
       - WORDPRESS_DB_USER=${DB_USER:-wordpress}
@@ -42,13 +42,12 @@ volumes:
   db-data:
 """,
     default_env_vars={
-        "PORT": "8080",
         "DB_NAME": "wordpress",
         "DB_USER": "wordpress",
         "DB_PASSWORD": "changeme123",
         "DB_ROOT_PASSWORD": "rootpass123"
     },
-    tags=["wordpress", "cms", "php", "mysql"]
+    tags=["wordpress", "cms", "php", "mysql", "traefik"]
 )
 
 GHOST = Preset(
@@ -62,10 +61,10 @@ GHOST = Preset(
 services:
   ghost:
     image: ghost:alpine
-    ports:
-      - "${PORT:-2368}:2368"
+    expose:
+      - "2368"
     environment:
-      - url=http://localhost:${PORT:-2368}
+      - url=${GHOST_URL:-http://localhost}
       - database__client=mysql
       - database__connection__host=db
       - database__connection__user=${DB_USER:-ghost}
@@ -93,13 +92,13 @@ volumes:
   db-data:
 """,
     default_env_vars={
-        "PORT": "2368",
+        "GHOST_URL": "http://localhost",
         "DB_NAME": "ghost",
         "DB_USER": "ghost",
         "DB_PASSWORD": "changeme123",
         "DB_ROOT_PASSWORD": "rootpass123"
     },
-    tags=["ghost", "blog", "cms", "nodejs"]
+    tags=["ghost", "blog", "cms", "nodejs", "traefik"]
 )
 
 STRAPI = Preset(
@@ -113,8 +112,8 @@ STRAPI = Preset(
 services:
   strapi:
     image: strapi/strapi:latest
-    ports:
-      - "${PORT:-1337}:1337"
+    expose:
+      - "1337"
     environment:
       - DATABASE_CLIENT=postgres
       - DATABASE_HOST=db
@@ -143,12 +142,11 @@ volumes:
   db-data:
 """,
     default_env_vars={
-        "PORT": "1337",
         "DB_NAME": "strapi",
         "DB_USER": "strapi",
         "DB_PASSWORD": "changeme123"
     },
-    tags=["strapi", "headless-cms", "nodejs", "api"]
+    tags=["strapi", "headless-cms", "nodejs", "api", "traefik"]
 )
 
 CMS_PRESETS = [WORDPRESS, GHOST, STRAPI]

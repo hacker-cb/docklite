@@ -1,11 +1,38 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: traefik:v3.0
+    container_name: docklite-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=docklite-network"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8888:8080"  # Traefik Dashboard (mapped to 8888 to avoid conflicts)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docklite-network
+    restart: unless-stopped
+
   backend:
     build: ./backend
     container_name: docklite-backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docklite-backend.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`)"
+      - "traefik.http.routers.docklite-backend.entrypoints=web"
+      - "traefik.http.services.docklite-backend.loadbalancer.server.port=8000"
     volumes:
       - ./backend:/app
       - ${PROJECTS_DIR:-/home/docklite/projects}:${PROJECTS_DIR:-/home/docklite/projects}
@@ -23,14 +50,23 @@ services:
     restart: unless-stopped
     networks:
       - docklite-network
+    depends_on:
+      - traefik
 
   frontend:
     build: ./frontend
     container_name: docklite-frontend
-    ports:
-      - "5173:80"
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docklite-frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.docklite-frontend.entrypoints=web"
+      - "traefik.http.routers.docklite-frontend.priority=1"
+      - "traefik.http.services.docklite-frontend.loadbalancer.server.port=80"
     depends_on:
       - backend
+      - traefik
     restart: unless-stopped
     networks:
       - docklite-network
@@ -40,5 +76,7 @@ volumes:
 
 networks:
   docklite-network:
+    name: docklite-network
     driver: bridge
+    external: false
 

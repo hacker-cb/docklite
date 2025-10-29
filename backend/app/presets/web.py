@@ -13,14 +13,12 @@ HELLO_WORLD = Preset(
 services:
   web:
     image: nginx:alpine
-    ports:
-      - "${PORT:-8080}:80"
+    expose:
+      - "80"
     restart: unless-stopped
 """,
-    default_env_vars={
-        "PORT": "8080"
-    },
-    tags=["test", "simple", "nginx", "hello"]
+    default_env_vars={},
+    tags=["test", "simple", "nginx", "hello", "traefik"]
 )
 
 NGINX_STATIC = Preset(
@@ -34,16 +32,14 @@ NGINX_STATIC = Preset(
 services:
   web:
     image: nginx:alpine
-    ports:
-      - "${PORT:-80}:80"
+    expose:
+      - "80"
     volumes:
       - ./html:/usr/share/nginx/html:ro
     restart: unless-stopped
 """,
-    default_env_vars={
-        "PORT": "8080"
-    },
-    tags=["nginx", "static", "simple"]
+    default_env_vars={},
+    tags=["nginx", "static", "simple", "traefik"]
 )
 
 APACHE_STATIC = Preset(
@@ -57,16 +53,14 @@ APACHE_STATIC = Preset(
 services:
   web:
     image: httpd:alpine
-    ports:
-      - "${PORT:-80}:80"
+    expose:
+      - "80"
     volumes:
       - ./html:/usr/local/apache2/htdocs:ro
     restart: unless-stopped
 """,
-    default_env_vars={
-        "PORT": "8081"
-    },
-    tags=["apache", "static", "simple"]
+    default_env_vars={},
+    tags=["apache", "static", "simple", "traefik"]
 )
 
 NGINX_PROXY = Preset(
@@ -80,17 +74,16 @@ NGINX_PROXY = Preset(
 services:
   proxy:
     image: nginx:alpine
-    ports:
-      - "${PORT:-80}:80"
+    expose:
+      - "80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
 """,
     default_env_vars={
-        "PORT": "80",
         "BACKEND_URL": "http://backend:3000"
     },
-    tags=["nginx", "proxy", "reverse-proxy"]
+    tags=["nginx", "proxy", "reverse-proxy", "traefik"]
 )
 
 WEB_PRESETS = [HELLO_WORLD, NGINX_STATIC, APACHE_STATIC, NGINX_PROXY]
