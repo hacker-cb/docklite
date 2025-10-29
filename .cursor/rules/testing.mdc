@@ -126,17 +126,29 @@ Must test:
 
 **MANDATORY:** After ANY code changes (new features, refactoring, bug fixes), you MUST:
 
-1. **Backend:** Run all tests
+1. **All tests:**
    ```bash
-   sg docker -c "docker-compose run --rm backend pytest -v"
+   ./docklite test
    ```
-   Expected: 150 tests passing
+   Expected: 157 backend + 120+ frontend tests passing
 
-2. **Frontend:** Run all tests
+2. **Backend only** (if only backend changed):
    ```bash
-   cd frontend && npm test
+   ./docklite test-backend
    ```
+   Expected: 157 tests passing
 
-3. **Fix any failing tests** before proceeding
+3. **Frontend only** (if only frontend changed):
+   ```bash
+   ./docklite test-frontend
+   ```
+   Expected: 120+ tests passing
+
+4. **Fix any failing tests** before proceeding
 
 This ensures no regressions and maintains code quality.
+
+**Note:** You can also use direct docker-compose commands if needed:
+```bash
+sg docker -c "docker-compose run --rm backend pytest -v"
+```

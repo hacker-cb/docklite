@@ -100,13 +100,7 @@ cd /home/pavel
 # Если репозиторий существует, то git clone не нужен
 ```
 
-2. **Создать директорию для проектов**:
-
-```bash
-mkdir -p /home/pavel/docklite-projects
-```
-
-3. **Настроить переменные окружения**:
+2. **Настроить переменные окружения**:
 
 ```bash
 cd /home/pavel/docklite
@@ -114,17 +108,29 @@ cp .env.example .env
 # Отредактируйте .env файл и установите SECRET_KEY
 ```
 
-4. **Запустить систему**:
+3. **Создать системного пользователя для деплоя**:
 
 ```bash
 cd /home/pavel/docklite
-docker-compose up -d --build
+sudo ./docklite setup-user
 ```
 
-5. **Проверить статус**:
+4. **Настроить SSH (для localhost)**:
 
 ```bash
-docker-compose ps
+sudo ./docklite setup-ssh
+```
+
+5. **Запустить систему**:
+
+```bash
+./docklite start
+```
+
+6. **Проверить статус**:
+
+```bash
+./docklite status
 ```
 
 ## Использование
@@ -155,14 +161,23 @@ docker-compose ps
 
 ### Дополнительные пользователи
 
-Для создания дополнительных пользователей используйте CLI:
+Для создания дополнительных пользователей:
 
+1. Войдите как админ
+2. Откройте раздел "Users"
+3. Нажмите "New User"
+4. Заполните:
+   - **Username**: имя пользователя
+   - **Email**: email (опционально)
+   - **System User**: Linux user для SSH (например, "docklite")
+   - **Password**: пароль (мин. 6 символов)
+   - **Admin**: установите галочку если нужны права админа
+5. Нажмите "Create"
+
+**Важно:** System User должен существовать в Linux! Для создания нового:
 ```bash
-# Создать обычного пользователя
-docker exec -it docklite-backend python create_user.py username password email@example.com
-
-# Создать админа
-docker exec -it docklite-backend python create_user.py username password email@example.com --admin
+sudo useradd -m -s /bin/bash newuser
+sudo usermod -aG docker newuser
 ```
 
 ### Создание проекта
@@ -299,69 +314,66 @@ alembic downgrade -1
 
 ## Управление
 
-### Логи
+### Quick Commands
 
 ```bash
-# Все логи
-docker-compose logs -f
-
-# Логи backend
-docker-compose logs -f backend
-
-# Логи frontend
-docker-compose logs -f frontend
+# System management
+./docklite start            # Start DockLite
+./docklite stop             # Stop DockLite
+./docklite restart          # Restart system
+./docklite rebuild          # Rebuild and restart
+./docklite status           # Show status
+./docklite logs             # View all logs
+./docklite logs backend     # Backend logs only
 ```
 
-### Остановка
+### Advanced Operations
 
 ```bash
-docker-compose down
+# Rebuild without cache
+./docklite rebuild --no-cache
+
+# Stop and remove volumes
+./docklite stop --volumes
+
+# Backup before updates
+./docklite backup
+
+# Clean unused resources
+./docklite clean --all
 ```
 
-### Перезапуск
-
-```bash
-docker-compose restart
-```
-
-### Обновление
-
-```bash
-# Быстрый способ
-./rebuild.sh
-
-# Или вручную
-docker-compose down
-git pull  # если используется git
-docker-compose up -d --build
-```
+**Full documentation:** [scripts/README.md](mdc:scripts/README.md)
 
 ## Тестирование
 
 DockLite имеет комплексное покрытие тестами:
-- **Backend**: 78 тестов (pytest) - API, авторизация, user management, валидация
-- **Frontend**: 28 тестов (vitest) - формы, auth, структура данных
-- **Total**: 106 тестов
-- **Coverage**: ~94%
+- **Backend**: 157 тестов (pytest) - API, Services, Validators, Utils, Integration
+- **Frontend**: 120+ тестов (vitest) - Components, Views, Composables, Utils, Router
+- **Total**: 270+ тестов
+- **Coverage**: ~95%
 
 ### Запуск тестов
 
 ```bash
 # Все тесты сразу
-./run-tests.sh
+./docklite test
 
 # Только backend
-cd backend && pytest -v
+./docklite test-backend
 
 # Только frontend
-cd frontend && npm test
+./docklite test-frontend
 
-# С покрытием
-cd backend && pytest --cov=app --cov-report=html
-cd frontend && npm run test:coverage
+# С опциями
+./docklite test-backend -v       # Verbose output
+./docklite test-backend -k auth  # Auth tests only
+./docklite test-backend --cov    # With coverage report
+./docklite test-frontend --watch # Watch mode
+./docklite test-frontend --ui    # Interactive UI
 ```
 
-Подробная документация: [TESTS.md](./TESTS.md)
+**Подробнее:** [scripts/README.md](mdc:scripts/README.md)
 
 ## Текущий статус (Фаза 1)
 

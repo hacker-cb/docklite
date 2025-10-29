@@ -4,7 +4,9 @@ description: Docker commands and container management
 
 # Docker Commands for DockLite
 
-## Common Commands
+## DockLite CLI Commands
+
+**Recommended:** Use the DockLite CLI for all operations.
 
 ### Start/Stop/Restart
 
@@ -12,34 +14,30 @@ description: Docker commands and container management
 cd /home/pavel/docklite
 
 # Start
-./start.sh
-# or
-sg docker -c "docker-compose up -d"
+./docklite start
 
 # Stop
-./stop.sh
-# or
-sg docker -c "docker-compose down"
+./docklite stop
+
+# Restart
+./docklite restart
 
 # Rebuild
-./rebuild.sh
-# or
-sg docker -c "docker-compose down && docker-compose up -d --build"
+./docklite rebuild
 
-# Restart single service
-sg docker -c "docker-compose restart backend"
-sg docker -c "docker-compose restart frontend"
+# Status
+./docklite status
 ```
 
 ### Logs
 
 ```bash
 # All logs
-sg docker -c "docker logs docklite-backend"
-sg docker -c "docker logs docklite-frontend"
+./docklite logs
 
-# Follow logs
-sg docker -c "docker logs -f docklite-backend"
+# Specific service
+./docklite logs backend
+./docklite logs frontend
 ```
 
 ### Execute Commands
@@ -48,25 +46,48 @@ sg docker -c "docker logs -f docklite-backend"
 # Enter container
 sg docker -c "docker exec -it docklite-backend sh"
 
-# Run command
-sg docker -c "docker exec docklite-backend python create_user.py"
-
 # Run migrations
-sg docker -c "docker exec docklite-backend alembic upgrade head"
+./docklite init-db
+
+# Database shell
+sg docker -c "docker exec -it docklite-backend sqlite3 /data/docklite.db"
 ```
 
 ### Tests
 
 ```bash
-# Run backend tests
-sg docker -c "docker-compose run --rm backend pytest -v"
+# All tests
+./docklite test
 
-# With coverage
-sg docker -c "docker-compose run --rm backend pytest --cov=app --cov-report=term"
+# Backend only
+./docklite test-backend
 
-# Specific test
-sg docker -c "docker-compose run --rm backend pytest tests/test_api/test_auth.py -v"
+# Frontend only
+./docklite test-frontend
+
+# With options
+./docklite test-backend -v              # Verbose
+./docklite test-backend -k test_auth    # Specific tests
+./docklite test-backend --cov           # With coverage
 ```
+
+### Advanced
+
+```bash
+# Rebuild without cache
+./docklite rebuild --no-cache
+
+# Stop and remove volumes (WARNING: deletes data!)
+./docklite stop --volumes
+
+# Backup system
+./docklite backup
+
+# Clean unused resources
+./docklite clean --all
+```
+
+**Full CLI documentation:** [scripts/README.md](mdc:../scripts/README.md)
 
 ## Important Notes
 

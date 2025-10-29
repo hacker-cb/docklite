@@ -30,8 +30,11 @@ dist/
 *.swp
 *.swo
 
-# Environment
+# DockLite specific
+backend-data/
+backups/
 .env
+.env.backup*
 
 # Logs
 *.log

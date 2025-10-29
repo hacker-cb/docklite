@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+.vite/
+dist/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment (except .env.example)
+.env
+.env.backup*
+
+# Database
+*.db
+*.sqlite*
+backend-data/
+
+# Logs
+*.log
+
+# Backups
+backups/
+
+# Tests
+*/tests/
+test_*.py
+*_test.py
+*.spec.js
+*.test.js
+
+# OS
+.DS_Store
+Thumbs.db
