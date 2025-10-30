@@ -2,6 +2,7 @@
 Base exceptions
 """
 
+from typing import Optional
 from fastapi import status
 
 
@@ -12,7 +13,7 @@ class DockLiteException(Exception):
         self,
         message: str,
         status_code: int = status.HTTP_400_BAD_REQUEST,
-        detail: dict = None,
+        detail: Optional[dict] = None,
     ):
         self.message = message
         self.status_code = status_code
@@ -37,7 +38,7 @@ class AlreadyExistsError(DockLiteException):
 class ValidationError(DockLiteException):
     """Validation error exception"""
 
-    def __init__(self, message: str, field: str = None):
+    def __init__(self, message: str, field: Optional[str] = None):
         detail = {"field": field} if field else {}
         super().__init__(
             message=message,

@@ -2,13 +2,14 @@
 Project exceptions
 """
 
+from typing import Optional
 from .base import NotFoundError, AlreadyExistsError, ValidationError
 
 
 class ProjectNotFoundError(NotFoundError):
     """Project not found exception"""
 
-    def __init__(self, project_id: int = None):
+    def __init__(self, project_id: Optional[int] = None):
         message = (
             f"Project {project_id} not found" if project_id else "Project not found"
         )
@@ -18,7 +19,7 @@ class ProjectNotFoundError(NotFoundError):
 class ProjectExistsError(AlreadyExistsError):
     """Project already exists exception"""
 
-    def __init__(self, domain: str = None):
+    def __init__(self, domain: Optional[str] = None):
         message = (
             f"Project with domain '{domain}' already exists"
             if domain
@@ -30,7 +31,7 @@ class ProjectExistsError(AlreadyExistsError):
 class InvalidComposeError(ValidationError):
     """Invalid docker-compose content exception"""
 
-    def __init__(self, details: str = None):
+    def __init__(self, details: Optional[str] = None):
         message = (
             f"Invalid docker-compose.yml: {details}"
             if details

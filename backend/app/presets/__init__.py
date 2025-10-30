@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -12,8 +13,8 @@ class Preset:
     icon: str
     compose_content: str
     default_env_vars: dict
-    tags: list = None
+    tags: Optional[list] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.tags is None:
             self.tags = []

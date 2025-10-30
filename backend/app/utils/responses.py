@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 
 def success_response(
-    data: Any = None, message: str = None, status_code: int = 200
+    data: Any = None, message: Optional[str] = None, status_code: int = 200
 ) -> dict:
     """
     Create a standardized success response

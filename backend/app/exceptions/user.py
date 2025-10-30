@@ -2,13 +2,14 @@
 User exceptions
 """
 
+from typing import Optional
 from .base import NotFoundError, AlreadyExistsError
 
 
 class UserNotFoundError(NotFoundError):
     """User not found exception"""
 
-    def __init__(self, user_id: int = None, username: str = None):
+    def __init__(self, user_id: Optional[int] = None, username: Optional[str] = None):
         if user_id:
             message = f"User {user_id} not found"
         elif username:

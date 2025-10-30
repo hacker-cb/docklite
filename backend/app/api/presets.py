@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.presets.registry import (
     get_all_presets,
     get_preset_by_id,
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/presets", tags=["presets"])
 
 
 @router.get("", response_model=List[Dict[str, Any]])
-async def list_presets(category: str = None):
+async def list_presets(category: Optional[str] = None) -> List[Dict[str, Any]]:
     """Get all presets or filter by category"""
     if category and category != "all":
         return get_presets_by_category(category)
@@ -19,13 +19,13 @@ async def list_presets(category: str = None):
 
 
 @router.get("/categories", response_model=List[Dict[str, Any]])
-async def list_categories():
+async def list_categories() -> List[Dict[str, Any]]:
     """Get all available categories"""
     return get_categories()
 
 
 @router.get("/{preset_id}")
-async def get_preset(preset_id: str):
+async def get_preset(preset_id: str) -> Dict[str, Any]:
     """Get preset details including compose content and env vars"""
     preset = get_preset_by_id(preset_id)
 

@@ -27,7 +27,7 @@ def check_is_admin(current_user: User) -> None:
 async def get_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> list[UserResponse]:
     """Get all users (admin only)"""
     check_is_admin(current_user)
 
@@ -42,15 +42,15 @@ async def create_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> UserResponse:
     """Create a new user (admin only)"""
     check_is_admin(current_user)
 
     auth_service = AuthService(db)
     user, error = await auth_service.create_user(user_data)
 
-    if error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+    if error or not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error or "Failed to create user")
 
     return format_user_response(user)
 
@@ -60,7 +60,7 @@ async def get_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> UserResponse:
     """Get user by ID (admin only)"""
     check_is_admin(current_user)
 
@@ -78,11 +78,11 @@ async def get_user(
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
-    is_active: bool = None,
-    is_admin: bool = None,
+    is_active: Optional[bool] = None,
+    is_admin: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> UserResponse:
     """Update user (admin only)"""
     check_is_admin(current_user)
 
@@ -118,7 +118,7 @@ async def delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> None:
     """Delete user (admin only)"""
     check_is_admin(current_user)
 
@@ -149,7 +149,7 @@ async def change_password(
     new_password: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Change user password (admin or self)"""
     # Admin can change any password, user can change only own
     if user_id != current_user.id:

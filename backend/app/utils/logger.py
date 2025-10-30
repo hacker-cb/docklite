@@ -31,7 +31,7 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-def log_request(request: Request, logger: Optional[logging.Logger] = None):
+def log_request(request: Request, logger: Optional[logging.Logger] = None) -> None:
     """
     Log incoming request
 
@@ -49,8 +49,8 @@ def log_request(request: Request, logger: Optional[logging.Logger] = None):
 
 
 def log_error(
-    error: Exception, context: str = None, logger: Optional[logging.Logger] = None
-):
+    error: Exception, context: Optional[str] = None, logger: Optional[logging.Logger] = None
+) -> None:
     """
     Log error with context
 
