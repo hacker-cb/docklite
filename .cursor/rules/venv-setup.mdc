@@ -261,18 +261,45 @@ deactivate
 
 ## CI/CD Integration
 
-### GitHub Actions
+### Automated Testing
+
+**Workflow:** `.github/workflows/test-setup-dev.yml`
+
+DockLite has automated CI/CD pipeline that tests `setup-dev` on every push:
+
+✅ **Platforms:**
+- Linux (Ubuntu Latest)
+- macOS (Latest)
+
+✅ **Python Versions:**
+- Python 3.8, 3.9, 3.10, 3.11, 3.12
+
+✅ **Checks:**
+- Creates `.venv/` successfully
+- Installs all dependencies (typer, rich, dotenv, yaml)
+- Creates `.env` from template
+- CLI commands work (`./docklite version`, `--help`)
+- Idempotency (can run setup-dev multiple times)
+- System Python cleanliness (macOS)
+
+**Total time:** ~30 seconds for all checks
+
+**Documentation:** [docs/CI_CD.md](mdc:docs/CI_CD.md)
+
+### GitHub Actions Usage
 
 ```yaml
-- name: Setup DockLite CLI
-  run: |
-    python3 -m venv .venv
-    .venv/bin/pip install -r scripts/requirements.txt
-    cp .env.example .env
+# In your workflow
+- name: Setup DockLite
+  run: ./docklite setup-dev
 
 - name: Test CLI
-  run: ./docklite --version
+  run: |
+    ./docklite version
+    ./docklite --help
 ```
+
+The `setup-dev` command works without any pre-installed dependencies!
 
 ### Docker (Development)
 

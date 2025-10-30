@@ -242,6 +242,30 @@ Expected: All tests passing ✅ (240 backend, 120+ frontend)
 
 **Note:** CLI commands use `.venv/` automatically - tests run in containers.
 
+## CI/CD Pipeline
+
+**Automated Testing:** GitHub Actions tests `setup-dev` on every push
+
+**Workflow:** `.github/workflows/test-setup-dev.yml`
+
+✅ **Tested Platforms:**
+- Linux (Ubuntu Latest)
+- macOS (Latest)
+- Python 3.8, 3.9, 3.10, 3.11, 3.12
+
+✅ **Validates:**
+- Virtual environment creation
+- Dependency installation
+- CLI functionality
+- Cross-platform compatibility
+- System Python cleanliness
+
+**Status:** ![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
+
+**Time:** ~30 seconds for complete validation
+
+**Documentation:** [docs/CI_CD.md](mdc:docs/CI_CD.md)
+
 ## macOS Development
 
 DockLite fully supports development on macOS. See [macos-compatibility.mdc](mdc:.cursor/rules/macos-compatibility.mdc) for details.

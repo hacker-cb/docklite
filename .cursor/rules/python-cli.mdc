@@ -84,11 +84,23 @@ PyYAML>=6.0             # docker-compose.yml parsing
 ### How It Works
 
 ```python
-# In ./docklite wrapper
+# In ./docklite wrapper (scripts/docklite)
+
+# Special case: setup-dev runs without dependencies
+if command == 'setup-dev':
+    # Built-in implementation using only stdlib
+    # Creates venv, installs deps, no typer/rich needed
+    subprocess.run([sys.executable, '-m', 'venv', '.venv'])
+    subprocess.run(['.venv/bin/pip', 'install', '-r', 'requirements.txt'])
+    sys.exit(0)
+
+# For all other commands: auto-activate venv
 if not in_venv and venv_exists:
     # Re-execute with venv python
     os.execv('.venv/bin/python', ['python'] + sys.argv)
 ```
+
+**Key innovation:** `setup-dev` is built into the wrapper and works without ANY pre-installed dependencies. This solves the "chicken-and-egg" problem in CI/CD.
 
 Users just run `./docklite <command>` - venv activation is transparent!
 
