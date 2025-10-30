@@ -51,6 +51,12 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/api/health")
+async def api_health_check():
+    """API health check endpoint (for E2E tests)"""
+    return {"status": "healthy"}
+
+
 # Static files for frontend (will be uncommented when frontend is ready)
 # frontend_path = Path(__file__).parent.parent.parent / "frontend" / "dist"
 # if frontend_path.exists():
