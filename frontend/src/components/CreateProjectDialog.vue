@@ -79,7 +79,7 @@
       <div class="form-group">
         <label>Domain *</label>
         <InputText v-model="formData.domain" class="w-full" placeholder="example.com" />
-        <small class="form-hint">Проект будет доступен через virtual host по этому домену</small>
+        <small class="form-hint">Проект будет доступен через Traefik по этому домену</small>
       </div>
     </div>
 

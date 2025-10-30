@@ -52,13 +52,16 @@ Location: `backend/app/presets/`
 - **cms:** WordPress, Ghost, Strapi
 
 Each preset includes:
-- `compose_content` - docker-compose.yml template
+- `compose_content` - docker-compose.yml template (Traefik-ready)
 - `default_env_vars` - pre-filled environment variables
 - Variable substitution: `${PORT}`, `${DB_PASSWORD}`, etc.
+- Uses `expose:` instead of `ports:` for Traefik routing
 
 ## Important Notes
 
-- Port field is NOT used (will use Nginx virtual hosts in Phase 5)
-- Projects identified by integer ID, not name
+- **Traefik routing:** Projects use domain-based routing via Traefik labels (auto-injected)
+- **No manual ports:** Traefik handles all routing, labels injected by TraefikService
+- Projects identified by slug (e.g., `example-com-a7b2`), not numeric ID
 - Docker socket mounted to backend: `/var/run/docker.sock`
 - Backend needs access to projects directory
+- All projects connect to shared `docklite-network`

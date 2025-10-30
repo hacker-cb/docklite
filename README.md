@@ -82,8 +82,7 @@ DockLite использует **multi-tenant** архитектуру, где к
 ~/docklite/                     # Система DockLite
 ├── backend/                    # FastAPI backend
 ├── frontend/                   # Vue.js 3 + PrimeVue frontend
-├── nginx/                      # Nginx конфигурация
-└── docker-compose.yml
+└── docker-compose.yml          # Traefik v3 + backend + frontend
 
 /home/{system_user}/projects/   # Проекты пользователя
 ├── example-com-a7b2/          # Slug-based путь

@@ -489,19 +489,22 @@ sudo usermod -aG docker newuser
 
 ---
 
-## Future Roadmap
+## Current Status & Roadmap
 
-### Phase 4: Nginx & Virtual Hosts
-- Nginx reverse proxy on port 80/443
-- Auto-generate nginx configs per project
+### ✅ Phase 4: Traefik Integration (COMPLETE)
+- Traefik v3 reverse proxy on port 80/443
+- Automatic service discovery via Docker labels
 - Domain-based routing (no ports!)
-- Auto-reload nginx on changes
+- Auto-inject Traefik labels on project create/update
+- Shared `docklite-network` for all services
+- Admin-only dashboard with ForwardAuth
 
-### Phase 5: SSL/HTTPS
+### Phase 5: SSL/HTTPS (Next - 90% Ready)
 - Let's Encrypt integration
 - Automatic certificate generation
-- Auto-renewal with certbot
+- Auto-renewal with Traefik built-in resolver
 - HTTPS by default
+- HTTP → HTTPS redirect
 
 ### Phase 6: Logs Management
 - View container logs in UI

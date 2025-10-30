@@ -123,12 +123,13 @@ Only use direct docker commands for:
 ## Container Architecture
 
 - `docklite-backend` - FastAPI app (port 8000)
-- `docklite-frontend` - Nginx serving Vue.js build (port 5173)
-- Shared network: `docklite_docklite-network`
+- `docklite-frontend` - Vue.js SPA served by nginx static server (port 5173)
+- `docklite-traefik` - Traefik v3 reverse proxy (port 80/443) for domain routing
+- Shared network: `docklite-network`
 - Volumes:
   - `docklite-data` - SQLite database
   - `/home/docklite/projects` - user projects
-  - `/var/run/docker.sock` - Docker socket (for Phase 3)
+  - `/var/run/docker.sock` - Docker socket (for container management)
 
 ## Database
 
