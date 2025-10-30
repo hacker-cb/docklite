@@ -26,7 +26,7 @@ async def create_project(
 ) -> dict:
     """Create a new project (owned by current user)"""
     service = ProjectService(db)
-    new_project, error = await service.create_project(project, owner_id=current_user.id)
+    new_project, error = await service.create_project(project, owner_id=int(current_user.id))
 
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
@@ -38,7 +38,7 @@ async def create_project(
 async def get_projects(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Get all projects (filtered by ownership for non-admin)"""
     service = ProjectService(db)
     projects = await service.get_all_projects(
@@ -56,7 +56,7 @@ async def get_project(
     project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Get project by ID (with ownership check)"""
     service = ProjectService(db)
     project = await service.get_project(
@@ -78,7 +78,7 @@ async def update_project(
     project: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Update project (with ownership check)"""
     service = ProjectService(db)
     updated_project, error = await service.update_project(
@@ -99,7 +99,7 @@ async def delete_project(
     project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> None:
     """Delete project (with ownership check)"""
     service = ProjectService(db)
     success, error = await service.delete_project(
