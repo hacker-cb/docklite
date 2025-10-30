@@ -122,7 +122,7 @@ async def delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> None:
+):
     """Delete user (admin only)"""
     check_is_admin(current_user)
 
@@ -143,8 +143,6 @@ async def delete_user(
 
     await db.delete(user)
     await db.commit()
-
-    return None
 
 
 @router.put("/{user_id}/password")

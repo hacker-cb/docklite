@@ -119,13 +119,13 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 from app.core.database import AsyncSessionLocal
 from app.models import user, project  # Import all models
 from app.models.user import User
-from app.core.security import get_password_hash
+from app.services.auth_service import AuthService
 
 async def create_user():
     async with AsyncSessionLocal() as session:
         new_user = User(
             username="{username}",
-            hashed_password=get_password_hash("{password}"),
+            password_hash=AuthService.get_password_hash("{password}"),
             is_admin={admin_flag},
             email={email_arg},
             system_user="{system_user}"
