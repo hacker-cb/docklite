@@ -1,14 +1,166 @@
 ---
-description: Traefik v3 integration patterns and label management
+description: Traefik v3 integration, dashboard security, routing, and label management
+globs: ["docker-compose.yml", "backend/app/services/traefik_service.py", "backend/app/api/auth.py", "frontend/src/App.vue"]
+tags: ["traefik", "docker", "security", "python"]
 ---
 
-# Traefik Integration
+# Traefik v3 Integration
 
-DockLite uses **Traefik v3** for automatic reverse proxy with domain-based routing.
+DockLite uses **Traefik v3** for automatic reverse proxy with domain-based routing and admin-protected dashboard.
 
 ## Access Pattern
 
 Projects accessible by domain: `http://example.com` (NOT `http://example.com:8080`)
+
+## Dashboard Access
+
+**URL:** `http://hostname/traefik/` (NOT `/dashboard/`)
+
+- **Frontend button:** "Traefik" (admin-only)
+- **Authentication:** ForwardAuth via `/api/auth/verify-admin`
+- **Access:** JWT token in cookies required
+- **Security:** 34 comprehensive tests, zero vulnerabilities
+
+### URI Convention
+
+**IMPORTANT:** Use `/traefik/` everywhere, NOT `/dashboard/`
+
+- ✅ Correct: `http://hostname/traefik/`
+- ❌ Wrong: `http://hostname/dashboard/`
+
+The internal Traefik API expects `/dashboard`, but we expose it as `/traefik` externally using `replacepathregex` middleware.
+
+## Routing Priorities
+
+Configured in [docker-compose.yml](mdc:docker-compose.yml):
+
+1. **Priority 250** (HIGHEST): `traefik-api` router
+   - Rule: `Host() && PathPrefix(/api) && (Path(/api/version) || Path(/api/overview) || ...)`
+   - Service: `api@internal`
+   - Purpose: Traefik internal API endpoints
+   - Middleware: `admin-auth`
+
+2. **Priority 200**: `docklite-backend` router
+   - Rule: `PathPrefix(/api) || PathPrefix(/docs) || PathPrefix(/openapi.json)`
+   - Service: `docklite-backend`
+   - Purpose: DockLite API endpoints
+
+3. **Priority 50**: `traefik-ui` router
+   - Rule: `Host() && PathPrefix(/traefik)`
+   - Service: `api@internal`
+   - Purpose: Traefik Dashboard UI
+   - Middleware: `admin-auth,traefik-stripprefix`
+
+4. **Priority 1**: `docklite-frontend` router
+   - Rule: `PathPrefix(/)`
+   - Service: `docklite-frontend`
+   - Purpose: DockLite frontend (catch-all)
+
+### Path Rewriting
+
+The `traefik-stripprefix` middleware converts `/traefik` → `/dashboard`:
+
+```yaml
+- "traefik.http.middlewares.traefik-stripprefix.replacepathregex.regex=^/traefik(.*)"
+- "traefik.http.middlewares.traefik-stripprefix.replacepathregex.replacement=/dashboard$$1"
+```
+
+This is necessary because Traefik's `api@internal` service expects the `/dashboard` prefix.
+
+## Dashboard Security
+
+### ForwardAuth Endpoint
+
+```python
+# backend/app/api/auth.py
+
+@router.get("/verify-admin")
+async def verify_admin(
+    current_user: User = Depends(get_current_user_with_cookie)
+):
+    """Verify user is admin (for Traefik ForwardAuth)"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    response = Response(status_code=200)
+    response.headers["X-User-Id"] = str(current_user.id)
+    response.headers["X-Username"] = current_user.username
+    response.headers["X-Is-Admin"] = "true"
+    return response
+```
+
+**Location:** [backend/app/api/auth.py](mdc:backend/app/api/auth.py)
+
+### Cookie + Header Authentication
+
+```python
+from app.core.security import get_current_user_with_cookie
+
+# Supports JWT from:
+# 1. Authorization header (Bearer token) - Priority 1
+# 2. Cookie (token) - Priority 2
+```
+
+**Location:** [backend/app/core/security.py](mdc:backend/app/core/security.py)
+
+### Traefik Configuration
+
+```yaml
+# docker-compose.yml
+traefik:
+  labels:
+    - "traefik.http.routers.traefik-ui.middlewares=admin-auth,traefik-stripprefix"
+    - "traefik.http.middlewares.admin-auth.forwardauth.address=http://docklite-backend:8000/api/auth/verify-admin"
+    - "traefik.http.middlewares.admin-auth.forwardauth.authResponseHeaders=X-User-Id,X-Username,X-Is-Admin"
+```
+
+### Security Guarantees
+
+✅ **Authentication:** JWT signature validation, expiration check  
+✅ **Authorization:** is_admin=true required  
+✅ **Attack Prevention:** SQL injection, XSS, header injection all blocked  
+✅ **Privilege Escalation:** Prevented (2 tests)  
+✅ **Token Security:** Never leaked in responses  
+
+### Access Control
+
+| User Type | Dashboard Access | Result |
+|-----------|------------------|--------|
+| Admin | ✅ Allowed | 200 OK |
+| Regular User | ❌ Blocked | 403 Forbidden |
+| Unauthenticated | ❌ Blocked | 401 Unauthorized |
+| Inactive Admin | ❌ Blocked | 401/403 |
+
+## Frontend Integration
+
+### Cookie Storage (Login)
+
+```javascript
+// Save JWT to cookie for dashboard access
+document.cookie = `token=${access_token}; path=/; max-age=2592000; SameSite=Lax`
+```
+
+**Files:** [frontend/src/Login.vue](mdc:frontend/src/Login.vue), [frontend/src/Setup.vue](mdc:frontend/src/Setup.vue)
+
+### Dashboard Button
+
+```vue
+<!-- Only visible for admins -->
+<Button 
+  v-if="currentUser?.is_admin"
+  label="Traefik"
+  icon="pi pi-chart-line" 
+  @click="openTraefik"
+/>
+```
+
+```javascript
+const openTraefik = () => {
+  window.open('/traefik/', '_blank')  // Auth via cookie
+}
+```
+
+**Location:** [frontend/src/App.vue](mdc:frontend/src/App.vue)
 
 ## Auto Label Injection
 
@@ -57,6 +209,13 @@ All services must be on `docklite-network`:
 - Main system: `external: false`
 - Projects: `external: true`
 
+## Port Detection
+
+Internal port auto-detected:
+1. From `expose:` section
+2. From `ports:` section (extracts internal port)
+3. Default: 80
+
 ## Presets
 
 All 14 presets in [backend/app/presets/](mdc:backend/app/presets/) use:
@@ -64,19 +223,60 @@ All 14 presets in [backend/app/presets/](mdc:backend/app/presets/) use:
 - No PORT env vars
 - Traefik labels auto-injected
 
-## Dashboard Security
+## Access URLs in Scripts
 
-Dashboard at `http://hostname/dashboard` protected by ForwardAuth:
-- Only admins can access
-- Endpoint: [/api/auth/verify-admin](mdc:backend/app/api/auth.py)
-- JWT validation + is_admin check
+When displaying Traefik Dashboard URL in scripts:
 
-## Port Detection
+```bash
+# Bash
+log_info "Traefik: ${COLOR_CYAN}$(get_access_url "/traefik")${COLOR_NC}"
 
-Internal port auto-detected:
-1. From `expose:` section
-2. From `ports:` section (extracts internal port)
-3. Default: 80
+# Python
+log_info(f"Traefik: [cyan]{get_access_url('/traefik')}[/cyan]")
+```
+
+## Testing Access
+
+```bash
+# Check main site
+curl http://hostname/
+
+# Check DockLite API
+curl http://hostname/api/presets/categories
+
+# Check Traefik Dashboard (requires admin auth)
+curl http://hostname/traefik/
+
+# Check Traefik API (requires admin auth)
+curl http://hostname/api/version
+```
+
+## Testing
+
+**Backend:** [backend/tests/test_api/test_auth_admin_verify.py](mdc:backend/tests/test_api/test_auth_admin_verify.py)  
+**Coverage:** 34 comprehensive security tests
+- Authentication (16 tests)
+- Cookie auth (5 tests)
+- Integration (3 tests)
+- ForwardAuth (4 tests)
+- Access control (2 tests)
+- Vulnerabilities (4 tests)
+
+All tests passing ✅
+
+## Common Issues
+
+**Issue:** Infinite redirects or 401 errors  
+**Cause:** Traefik API router intercepting DockLite API requests  
+**Solution:** Ensure `traefik-api` router has HIGHEST priority (250+) and specific path matching
+
+**Issue:** 404 on Traefik Dashboard  
+**Cause:** Using `/dashboard/` instead of `/traefik/`  
+**Solution:** Always use `/traefik/` URI
+
+**Issue:** API requests fail from Traefik Dashboard  
+**Cause:** `traefik-api` router not matching Traefik-specific endpoints  
+**Solution:** Ensure router includes all necessary paths: `/api/version`, `/api/overview`, `/api/http`, etc.
 
 ## Important Notes
 
@@ -85,3 +285,5 @@ Internal port auto-detected:
 - Labels injected on every project create/update
 - Slug must be unique (used in router names)
 - Network `docklite-network` is shared
+- Dashboard protected by ForwardAuth (never expose publicly)
+- Internal port defaults to 80 if not specified

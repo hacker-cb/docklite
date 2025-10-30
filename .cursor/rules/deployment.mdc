@@ -1,5 +1,7 @@
 ---
 description: Deployment and SSH access patterns
+globs: ["backend/app/api/deployment.py", "backend/app/presets/**/*.py", "scripts/deployment/*.sh"]
+tags: ["deployment", "ssh", "python", "bash"]
 ---
 
 # Deployment Architecture

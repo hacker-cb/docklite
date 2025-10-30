@@ -1,5 +1,7 @@
 ---
-globs: *.py
+description: Python typing standards with modern syntax (Python 3.8+)
+globs: ["**/*.py"]
+tags: ["python", "typing"]
 alwaysApply: false
 ---
 # Python Typing Standards

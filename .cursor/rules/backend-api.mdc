@@ -1,6 +1,7 @@
 ---
-globs: backend/app/**/*.py
 description: Backend API endpoint patterns and conventions
+globs: ["backend/app/api/**/*.py", "backend/app/constants/*.py", "backend/app/utils/*.py", "backend/app/validators/*.py"]
+tags: ["python", "fastapi", "backend"]
 ---
 
 # Backend API Conventions

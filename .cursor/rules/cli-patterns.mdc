@@ -1,5 +1,7 @@
 ---
 description: DockLite CLI patterns and hostname functions usage
+globs: ["scripts/**/*.sh", "scripts/lib/*.sh"]
+tags: ["bash", "cli"]
 ---
 
 # CLI Patterns

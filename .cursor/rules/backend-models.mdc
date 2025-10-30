@@ -1,6 +1,7 @@
 ---
-globs: backend/app/models/*.py,backend/app/services/*.py
 description: Database models and services patterns
+globs: ["backend/app/models/*.py", "backend/app/services/*.py"]
+tags: ["python", "sqlalchemy", "backend"]
 ---
 
 # Backend Models & Services

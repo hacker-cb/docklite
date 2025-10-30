@@ -1,5 +1,7 @@
 ---
 description: Docker containers management module - API endpoints, UI components, and patterns
+globs: ["backend/app/api/containers.py", "backend/app/services/docker_service.py", "frontend/src/views/ContainersView.vue"]
+tags: ["docker", "python", "vue"]
 ---
 
 # Containers Management Module

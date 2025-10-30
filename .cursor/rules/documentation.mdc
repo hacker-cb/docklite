@@ -1,5 +1,8 @@
 ---
 description: Documentation structure and maintenance rules
+globs: ["*.md", "docs/**/*.md", ".cursor/rules/*.mdc"]
+tags: ["documentation"]
+alwaysApply: true
 ---
 
 # Documentation Guidelines

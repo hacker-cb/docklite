@@ -1,8 +1,11 @@
 ---
+description: URL conventions, hostname detection system with priority logic (Python and Bash)
+globs: ["scripts/**/*.sh", "scripts/**/*.py", "backend/app/utils/hostname.py"]
+tags: ["python", "bash", "configuration"]
 alwaysApply: true
 ---
 
-# DockLite Access URLs
+# DockLite Access URLs & Hostname System
 
 ## Production URLs
 
@@ -30,23 +33,82 @@ alwaysApply: true
 - **Internal (Traefik expects):** `/dashboard/`
 - **Conversion:** Done via `traefik-stripprefix` middleware in [docker-compose.yml](mdc:docker-compose.yml)
 
+## Hostname Detection System
+
+Unified hostname detection across Python and Bash with same priority logic.
+
+### Priority Chain
+
+```
+1. HOSTNAME in .env (explicit config) ← Highest priority
+2. System hostname (socket.gethostname() / hostname command)
+3. Fallback parameter (e.g., HTTP Host header)
+4. "localhost" (default)
+```
+
+### Validation Rules
+
+**Valid hostnames:**
+- example.com
+- subdomain.example.com
+- artem.sokolov.me
+
+**Invalid (skipped to next priority):**
+- localhost (too generic)
+- 192.168.1.1 (raw IP address)
+- (empty string)
+
+## Configuration
+
+### Priority 1: Config (Recommended for Production)
+
+```bash
+# .env
+HOSTNAME=docklite.example.com
+TRAEFIK_DASHBOARD_HOST=docklite.example.com
+```
+
+See: [.env](mdc:.env)
+
+### Priority 2: System Hostname
+
+```bash
+sudo hostnamectl set-hostname artem.sokolov.me
+# Auto-detected by hostname functions
+```
+
+### Priority 3: Auto-detect (Default)
+
+No config needed - falls back to localhost
+
 ## Dynamic URL Generation
 
 **ALWAYS use hostname functions, NEVER hardcode URLs:**
 
-### Bash Scripts
+### Python Backend
 
-```bash
-# Load hostname functions
-source "$SCRIPT_DIR/lib/common.sh"
+```python
+from app.utils.hostname import get_server_hostname, get_access_url
 
-# Get URLs
-get_access_url                # http://artem.sokolov.me
-get_access_url "/api"         # http://artem.sokolov.me/api
-get_access_url "/traefik"     # http://artem.sokolov.me/traefik
+# Get hostname
+hostname = get_server_hostname(fallback="localhost")
+# Returns: config value OR system hostname OR fallback OR "localhost"
+
+# Build URLs
+frontend_url = get_access_url()
+# http://artem.sokolov.me
+
+api_url = get_access_url(path="/api")
+# http://artem.sokolov.me/api
+
+dashboard_url = get_access_url(path="/traefik", port=None)
+# http://artem.sokolov.me/traefik
+
+custom_port = get_access_url(path="", port=8888)
+# http://artem.sokolov.me:8888
 ```
 
-See: [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
+**Location:** [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py)
 
 ### Python CLI
 
@@ -59,38 +121,33 @@ get_access_url('/api')        # http://artem.sokolov.me/api
 get_access_url('/traefik')    # http://artem.sokolov.me/traefik
 ```
 
-See: [scripts/cli/utils/hostname.py](mdc:scripts/cli/utils/hostname.py)
+**Location:** [scripts/cli/utils/hostname.py](mdc:scripts/cli/utils/hostname.py)
 
-### Backend Python
-
-```python
-from app.utils.hostname import get_server_hostname, get_access_url
-
-# Get URLs
-get_access_url()              # http://artem.sokolov.me
-get_access_url('/api')        # http://artem.sokolov.me/api
-get_access_url('/traefik')    # http://artem.sokolov.me/traefik
-```
-
-See: [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py)
-
-## Hostname Configuration
-
-**Priority order:**
-
-1. `HOSTNAME` in `.env` file (highest priority)
-2. System hostname (`hostname` command)
-3. `localhost` (fallback)
-
-### .env File
+### Bash Scripts
 
 ```bash
-# DockLite Configuration
-HOSTNAME=artem.sokolov.me
-TRAEFIK_DASHBOARD_HOST=artem.sokolov.me
+# Load hostname functions
+source "$SCRIPT_DIR/lib/common.sh"
+
+# Get hostname
+hostname=$(get_hostname)
+
+# Build URLs
+frontend=$(get_access_url)                    # http://artem.sokolov.me
+api=$(get_access_url "/api")                  # http://artem.sokolov.me/api
+traefik=$(get_access_url "/traefik")          # http://artem.sokolov.me/traefik
+custom=$(get_access_url "" "8888")            # http://artem.sokolov.me:8888
+https=$(get_access_url "/secure" "" "https")  # https://artem.sokolov.me/secure
 ```
 
-See: [.env](mdc:.env)
+**Location:** [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
+
+### URL Features
+
+- Automatically hides default ports (80, 443)
+- Adds leading slash to paths if missing
+- Supports http/https protocols
+- Consistent Python + Bash behavior
 
 ## CLI Output Examples
 
@@ -110,30 +167,34 @@ Traefik:   http://artem.sokolov.me/traefik (admin only)
 - [scripts/cli/commands/development.py](mdc:scripts/cli/commands/development.py)
 - [scripts/cli/commands/maintenance.py](mdc:scripts/cli/commands/maintenance.py)
 
-## Test User Credentials
+## Best Practices
 
-For testing and automation:
+### ✅ ALWAYS in Scripts
 
-- **Username:** `cursor`
-- **Password:** `CursorAI_Test2024!`
-- **Role:** Admin
-- **Create:** `./docklite add-user cursor -p "CursorAI_Test2024!" --admin`
-
-## Common Mistakes to Avoid
-
-❌ **DON'T:**
-```python
-# Hardcoded URL
-url = "http://localhost/dashboard"
-
-# Wrong path
-window.open('/dashboard/', '_blank')
-
-# Hardcoded hostname
-base_url = "http://artem.sokolov.me"
+Use hostname functions:
+```bash
+log_info "Frontend: $(get_access_url)"
+log_info "API: $(get_access_url "/api")"
+log_info "Traefik: $(get_access_url "/traefik")"
 ```
 
-✅ **DO:**
+### ❌ NEVER hardcode
+
+```bash
+log_info "Frontend: http://localhost:5173"  # Wrong!
+log_info "API: http://localhost:8000"       # Wrong!
+```
+
+```python
+# Hardcoded URL
+url = "http://localhost/dashboard"  # Wrong!
+
+# Hardcoded hostname
+base_url = "http://artem.sokolov.me"  # Wrong!
+```
+
+### ✅ DO instead
+
 ```python
 # Dynamic URL generation
 url = get_access_url("/traefik")
@@ -144,3 +205,19 @@ window.open('/traefik/', '_blank')
 # Dynamic hostname
 base_url = get_access_url()
 ```
+
+## Testing
+
+**Python tests:** `backend/tests/test_utils/test_hostname.py` (20 tests)  
+**Bash tests:** `scripts/lib/test_hostname.sh` (6 tests)
+
+All priority levels tested and validated.
+
+## Test User Credentials
+
+For testing and automation:
+
+- **Username:** `cursor`
+- **Password:** `CursorAI_Test2024!`
+- **Role:** Admin
+- **Create:** `./docklite add-user cursor -p "CursorAI_Test2024!" --admin`

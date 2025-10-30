@@ -1,5 +1,7 @@
 ---
 description: Multi-tenancy architecture and ownership patterns
+globs: ["backend/app/models/user.py", "backend/app/models/project.py", "backend/app/services/project_service.py", "backend/app/api/projects.py"]
+tags: ["python", "backend", "security"]
 ---
 
 # DockLite Multi-Tenancy

@@ -1,5 +1,7 @@
 ---
 description: Docker commands and container management
+globs: ["docker-compose.yml", "backend/Dockerfile", "frontend/Dockerfile"]
+tags: ["docker"]
 ---
 
 # Docker Commands for DockLite
