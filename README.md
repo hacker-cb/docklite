@@ -3,6 +3,7 @@
 ![CI](https://github.com/hacker-cb/docklite/workflows/CI/badge.svg)
 ![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
 ![E2E Tests](https://github.com/hacker-cb/docklite/actions/workflows/test-e2e.yml/badge.svg)
+![Integration Tests](https://github.com/hacker-cb/docklite/actions/workflows/test-integration.yml/badge.svg)
 ![Type Check](https://github.com/hacker-cb/docklite/actions/workflows/type-check.yml/badge.svg)
 [![codecov](https://codecov.io/gh/hacker-cb/docklite/branch/main/graph/badge.svg)](https://codecov.io/gh/hacker-cb/docklite)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
@@ -106,7 +107,7 @@ DockLite использует **multi-tenant** архитектуру, где к
 - **Database**: SQLite (с возможностью миграции на PostgreSQL)
 - **Reverse Proxy**: Traefik v3
 - **Deployment**: Docker, docker-compose
-- **Testing**: Pytest (240 tests), Vitest (120+ tests), Playwright (24 E2E tests)
+- **Testing**: Pytest (244 tests), Vitest (120+ tests), Playwright (24 E2E tests), Integration (4 tests)
 
 ## Установка
 
@@ -491,10 +492,11 @@ DockLite использует логическую группировку ком
 ## Тестирование
 
 DockLite имеет комплексное покрытие тестами на всех уровнях:
-- **Backend**: 240 тестов (pytest) - API, Services, Validators, Utils
+- **Backend**: 244 тестов (pytest) - API, Services, Validators, Utils, Integration
 - **Frontend Unit**: 120+ тестов (vitest) - Components, Views, Composables, Utils, Router
 - **E2E**: 24 теста (playwright) - User flows, authentication, multi-tenancy
-- **Total**: 380+ тестов
+- **Integration**: 4 теста (pytest) - Real project deployment via Traefik
+- **Total**: 392+ тестов
 - **Coverage**: ~95%
 
 ### Запуск тестов
@@ -503,7 +505,7 @@ DockLite имеет комплексное покрытие тестами на 
 # Все тесты сразу (backend + frontend unit)
 ./docklite test
 
-# Только backend (240 tests)
+# Только backend (244 tests, includes 4 integration tests)
 ./docklite test-backend
 
 # Только frontend unit (120+ tests)

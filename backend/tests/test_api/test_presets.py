@@ -119,5 +119,5 @@ class TestPresets:
             assert isinstance(preset["tags"], list)
             
             # Verify category is valid
-            assert preset["category"] in ["web", "backend", "database", "cms"]
+            assert preset["category"] in ["web", "backend", "database", "cms", "examples"]
 

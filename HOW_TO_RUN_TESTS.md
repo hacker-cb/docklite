@@ -110,6 +110,98 @@ npm test -- composables/useProjects.test.js
 npm test -- views/ContainersView.test.js
 ```
 
+## 🚀 Integration Tests (4 tests)
+
+Integration tests deploy actual projects from example presets and verify they are accessible via Traefik routing. These tests validate the complete deployment workflow.
+
+### Prerequisites
+
+DockLite must be running with Traefik:
+```bash
+./docklite start
+```
+
+### Run Integration Tests
+
+**Via CLI wrapper:**
+```bash
+cd backend
+pytest tests/test_integration/test_deployment/ -v
+```
+
+**Via Docker Compose:**
+```bash
+docker compose exec backend pytest tests/test_integration/test_deployment/ -v
+```
+
+### What is Tested
+
+**Flask Hello World (test_flask_hello_world_deployment):**
+- ✅ Deploy single-service Flask app
+- ✅ Access via Traefik domain (flask-test.localhost)
+- ✅ Verify JSON responses: `/`, `/health`
+- ✅ Verify port 5000 routing
+
+**FastAPI Hello World (test_fastapi_hello_world_deployment):**
+- ✅ Deploy single-service FastAPI app
+- ✅ Access via Traefik domain (fastapi-test.localhost)
+- ✅ Verify JSON responses: `/`, `/health`
+- ✅ Verify OpenAPI docs: `/docs`, `/openapi.json`
+- ✅ Verify port 8000 routing
+
+**Express Hello World (test_express_hello_world_deployment):**
+- ✅ Deploy single-service Express app
+- ✅ Access via Traefik domain (express-test.localhost)
+- ✅ Verify JSON responses: `/`, `/health`, `/info`
+- ✅ Verify Express headers
+- ✅ Verify port 3000 routing
+
+**Full Stack Hello World (test_fullstack_hello_world_deployment):**
+- ✅ Deploy multi-service app (Nginx + Flask)
+- ✅ Access frontend via Traefik domain (fullstack-test.localhost)
+- ✅ Verify HTML frontend served by Nginx
+- ✅ Verify backend API via `/api/*` proxy routing
+- ✅ Verify internal service communication
+- ✅ Verify both containers running
+
+### Test Flow
+
+Each test follows this pattern:
+1. Copy example files to project directory
+2. Create project via API
+3. Deploy containers via docker compose
+4. Wait for container health (retry logic, 30s timeout)
+5. Make HTTP requests via Traefik domain
+6. Verify responses
+7. Cleanup: stop containers, delete project
+
+### Expected Runtime
+
+- ~3-4 minutes total for all 4 tests
+- Container startup is the main bottleneck
+- Tests run sequentially with cleanup between each
+
+### Troubleshooting
+
+**Containers fail to start:**
+```bash
+# Check Docker
+docker ps
+
+# Check Traefik
+docker compose logs traefik
+
+# Check network
+docker network ls | grep docklite
+```
+
+**Tests timeout:**
+```bash
+# Increase timeout in test file
+# Or check if ports are already in use
+docker ps -a
+```
+
 ## 🌐 E2E Tests (24 tests)
 
 E2E tests validate complete user flows through a real browser using Playwright.
