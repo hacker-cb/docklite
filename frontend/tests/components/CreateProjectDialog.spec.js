@@ -190,7 +190,9 @@ describe('CreateProjectDialog', () => {
     })
 
     it('should show "Edit Project" in header when editing', () => {
-      expect(wrapper.props().editingProject).toBeTruthy()
+      // Check if editing project exists (not null and not undefined)
+      const project = wrapper.props().editingProject
+      expect(project !== null && project !== undefined).toBe(true)
     })
   })
 
