@@ -60,7 +60,7 @@ class TestAdminVerification:
         from app.services.auth_service import AuthService
         from datetime import timedelta
         
-        auth_service: AuthService = AuthService(None)  # type: ignore
+        auth_service: AuthService = AuthService(None)  # Mock for testing
         expired_token = auth_service.create_access_token(
             data={"sub": "admin"},
             expires_delta=timedelta(seconds=-1)  # Already expired
