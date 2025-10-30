@@ -260,6 +260,7 @@ class TestStartContainer:
         success, error = service.start_container("nonexistent")
         
         assert success is False
+        assert error is not None
         assert "container not found" in error
 
     @patch('subprocess.run')
@@ -273,6 +274,7 @@ class TestStartContainer:
         success, error = service.start_container("mycontainer")
         
         assert success is False
+        assert error is not None
         assert "Docker error" in error
 
 
@@ -323,6 +325,7 @@ class TestStopContainer:
         success, error = service.stop_container("mycontainer")
         
         assert success is False
+        assert error is not None
         assert "cannot stop" in error
 
 
@@ -403,6 +406,7 @@ class TestRemoveContainer:
         success, error = service.remove_container("mycontainer")
         
         assert success is False
+        assert error is not None
         assert "container is running" in error
 
 
@@ -424,6 +428,7 @@ class TestGetContainerLogs:
         logs, error = service.get_container_logs("mycontainer")
         
         assert error is None
+        assert logs is not None
         assert "log line 1" in logs
         assert "log line 2" in logs
 
@@ -467,6 +472,7 @@ class TestGetContainerLogs:
         logs, error = service.get_container_logs("nonexistent")
         
         assert logs is None
+        assert error is not None
         assert "container not found" in error
 
 
@@ -491,6 +497,7 @@ class TestGetContainerStats:
         stats, error = service.get_container_stats("mycontainer")
         
         assert error is None
+        assert stats is not None
         assert stats["cpu_percent"] == 15.5
         assert stats["memory_usage"] == "100MiB"
         assert stats["memory_limit"] == "2GiB"
@@ -508,6 +515,7 @@ class TestGetContainerStats:
         stats, error = service.get_container_stats("mycontainer")
         
         assert stats is None
+        assert error is not None
         assert "No stats available" in error
 
     @patch('subprocess.run')
