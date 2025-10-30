@@ -24,12 +24,14 @@ class AuthService:
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify a password against hash"""
-        return pwd_context.verify(plain_password, hashed_password)
+        result = pwd_context.verify(plain_password, hashed_password)
+        return bool(result)
 
     @staticmethod
     def get_password_hash(password: str) -> str:
         """Hash a password"""
-        return pwd_context.hash(password)
+        result = pwd_context.hash(password)
+        return str(result)
 
     @staticmethod
     def create_access_token(
@@ -49,7 +51,7 @@ class AuthService:
         encoded_jwt = jwt.encode(
             to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
         )
-        return encoded_jwt
+        return str(encoded_jwt)
 
     @staticmethod
     def decode_token(token: str) -> Optional[TokenData]:
@@ -116,7 +118,7 @@ class AuthService:
         if not user:
             return None
 
-        if not self.verify_password(password, user.password_hash):
+        if not self.verify_password(password, str(user.password_hash)):
             return None
 
         if not user.is_active:

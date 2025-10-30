@@ -41,8 +41,8 @@ async def list_all_users():
             print(f"{username}:{role}")
 
 
-async def reset_password(username: str, new_password: str) -> None:
-    """Reset user password."""
+async def reset_password(username: str, new_password: str) -> bool:
+    """Reset user password. Returns True if successful, False otherwise."""
     async with AsyncSessionLocal() as session:
         # Find user
         result = await session.execute(

@@ -19,6 +19,7 @@ class ErrorMessages:
     # Users
     USER_NOT_FOUND = "User not found"
     USERNAME_EXISTS = "Username already exists"
+    EMAIL_EXISTS = "Email already exists"
     CANNOT_MODIFY_SELF = "Cannot modify your own account"
     CANNOT_DELETE_SELF = "Cannot delete your own account"
     PASSWORD_TOO_SHORT = "Password must be at least 6 characters"
