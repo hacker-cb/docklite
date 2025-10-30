@@ -150,7 +150,8 @@ describe('Setup Component', () => {
       
       // Check for setup-success or complete event
       const emitted = wrapper.emitted()
-      expect(emitted['setup-success'] || emitted['complete']).toBeTruthy()
+      const hasEvent = !!(emitted['setup-success'] || emitted['complete'])
+      expect(hasEvent).toBe(true)
     })
   })
 })
