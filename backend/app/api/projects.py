@@ -20,7 +20,7 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
-    project: ProjectCreate,
+    project -> dict: ProjectCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -36,7 +36,7 @@ async def create_project(
 
 @router.get("", response_model=ProjectListResponse)
 async def get_projects(
-    db: AsyncSession = Depends(get_db),
+    db -> list: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Get all projects (filtered by ownership for non-admin)"""
@@ -53,7 +53,7 @@ async def get_projects(
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(
-    project_id: int,
+    project_id -> dict: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -74,7 +74,7 @@ async def get_project(
 
 @router.put("/{project_id}", response_model=ProjectResponse)
 async def update_project(
-    project_id: int,
+    project_id -> dict: int,
     project: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -96,7 +96,7 @@ async def update_project(
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
-    project_id: int,
+    project_id -> None: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -114,7 +114,7 @@ async def delete_project(
 
 @router.get("/{project_id}/env", response_model=Dict[str, str])
 async def get_env_vars(
-    project_id: int,
+    project_id -> dict: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -135,7 +135,7 @@ async def get_env_vars(
 
 @router.put("/{project_id}/env")
 async def update_env_vars(
-    project_id: int,
+    project_id -> dict: int,
     env_vars: Dict[str, str],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),

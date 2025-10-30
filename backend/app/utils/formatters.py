@@ -55,7 +55,7 @@ def format_project_response(project: Project) -> dict:
         "slug": project.slug,
         "owner_id": project.owner_id,
         "compose_content": project.compose_content,
-        "env_vars": json.loads(project.env_vars or "{}"),
+        "env_vars": json.loads(str(project.env_vars) if project.env_vars else "{}"),
         "status": project.status,
         "created_at": project.created_at,
         "updated_at": project.updated_at,

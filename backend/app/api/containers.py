@@ -49,7 +49,7 @@ def check_system_container(container_id: str, operation: ContainerOperation) -> 
 
 @router.get("")
 async def list_containers(
-    all: bool = True, current_user: User = Depends(get_current_active_user)
+    all -> dict: bool = True, current_user: User = Depends(get_current_active_user)
 ):
     """
     Get list of all Docker containers (admin only).
@@ -76,7 +76,7 @@ async def list_containers(
 
 @router.get("/{container_id}")
 async def get_container(
-    container_id: str, current_user: User = Depends(get_current_active_user)
+    container_id -> dict: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Get details of a specific container (admin only).
@@ -112,7 +112,7 @@ async def get_container(
 
 @router.post("/{container_id}/start")
 async def start_container(
-    container_id: str, current_user: User = Depends(get_current_active_user)
+    container_id -> dict: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Start a container (admin only).
@@ -145,7 +145,7 @@ async def start_container(
 
 @router.post("/{container_id}/stop")
 async def stop_container(
-    container_id: str, current_user: User = Depends(get_current_active_user)
+    container_id -> dict: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Stop a container (admin only).
@@ -182,7 +182,7 @@ async def stop_container(
 
 @router.post("/{container_id}/restart")
 async def restart_container(
-    container_id: str, current_user: User = Depends(get_current_active_user)
+    container_id -> dict: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Restart a container (admin only).
@@ -219,7 +219,7 @@ async def restart_container(
 
 @router.delete("/{container_id}")
 async def remove_container(
-    container_id: str,
+    container_id -> dict: str,
     force: bool = False,
     current_user: User = Depends(get_current_active_user),
 ):
@@ -259,7 +259,7 @@ async def remove_container(
 
 @router.get("/{container_id}/logs")
 async def get_container_logs(
-    container_id: str,
+    container_id -> dict: str,
     tail: int = 100,
     current_user: User = Depends(get_current_active_user),
 ):
@@ -295,7 +295,7 @@ async def get_container_logs(
 
 @router.get("/{container_id}/stats")
 async def get_container_stats(
-    container_id: str, current_user: User = Depends(get_current_active_user)
+    container_id -> dict: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Get container resource usage statistics (admin only).

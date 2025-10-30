@@ -234,7 +234,7 @@ async def test_user(db_session: AsyncSession):
     user, error = await service.create_user(user_data)
     assert user is not None
     # Make admin for easier testing
-    user.is_admin = 1
+    setattr(user, 'is_admin', 1)
     await db_session.commit()
     await db_session.refresh(user)
     return user

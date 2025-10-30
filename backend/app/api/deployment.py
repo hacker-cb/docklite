@@ -14,7 +14,7 @@ router = APIRouter(prefix="/deployment", tags=["deployment"])
 
 @router.get("/{project_id}/info")
 async def get_deployment_info(
-    project_id: int,
+    project_id -> dict: int,
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -92,7 +92,7 @@ async def get_ssh_setup_info():
     server_host = get_server_hostname()
 
     return {
-        "deploy_user": deploy_user,
+        "deploy_user" -> dict: deploy_user,
         "projects_dir": settings.PROJECTS_DIR,
         "server": server_host,
         "instructions": {

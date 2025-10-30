@@ -102,10 +102,10 @@ async def update_user(
         )
 
     if is_active is not None:
-        user.is_active = 1 if is_active else 0
+        setattr(user, 'is_active', 1 if is_active else 0)
 
     if is_admin is not None:
-        user.is_admin = 1 if is_admin else 0
+        setattr(user, 'is_admin', 1 if is_admin else 0)
 
     await db.commit()
     await db.refresh(user)
@@ -171,7 +171,7 @@ async def change_password(
 
     # Hash new password
     auth_service = AuthService(db)
-    user.password_hash = auth_service.get_password_hash(new_password)
+    setattr(user, 'password_hash', auth_service.get_password_hash(new_password))
 
     await db.commit()
 
