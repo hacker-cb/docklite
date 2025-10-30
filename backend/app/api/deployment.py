@@ -22,7 +22,7 @@ async def get_deployment_info(
     """Get deployment instructions for a project"""
     service = ProjectService(db)
     project = await service.get_project(
-        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
+        project_id, user_id=int(current_user.id), is_admin=bool(current_user.is_admin)
     )
 
     if not project:
