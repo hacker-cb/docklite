@@ -123,8 +123,7 @@ class ProjectService:
         result = await self.db.execute(select(User).where(User.id == project.owner_id))
         owner = result.scalar_one()
         owner_home = f"/home/{owner.system_user}"
-        project_path: Path = Path(owner_home) / "projects" / project.slug
-        return project_path
+        return Path(owner_home) / "projects" / project.slug  # type: ignore[no-any-return]
 
     async def get_project(
         self, project_id: int, user_id: Optional[int] = None, is_admin: bool = False
@@ -137,8 +136,7 @@ class ProjectService:
             query = query.where(Project.owner_id == user_id)
 
         result = await self.db.execute(query)
-        project: Optional[Project] = result.scalar_one_or_none()  # type: ignore[assignment]
-        return project
+        return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all_projects(
         self, user_id: Optional[int] = None, is_admin: bool = False
