@@ -77,7 +77,7 @@ async def list_containers(
 @router.get("/{container_id}")
 async def get_container(
     container_id: str, current_user: User = Depends(get_current_active_user)
-):
+) -> dict:
     """
     Get details of a specific container (admin only).
 
@@ -113,7 +113,7 @@ async def get_container(
 @router.post("/{container_id}/start")
 async def start_container(
     container_id: str, current_user: User = Depends(get_current_active_user)
-):
+) -> dict:
     """
     Start a container (admin only).
 
@@ -146,7 +146,7 @@ async def start_container(
 @router.post("/{container_id}/stop")
 async def stop_container(
     container_id: str, current_user: User = Depends(get_current_active_user)
-):
+) -> dict:
     """
     Stop a container (admin only).
 
@@ -183,7 +183,7 @@ async def stop_container(
 @router.post("/{container_id}/restart")
 async def restart_container(
     container_id: str, current_user: User = Depends(get_current_active_user)
-):
+) -> dict:
     """
     Restart a container (admin only).
 
@@ -222,7 +222,7 @@ async def remove_container(
     container_id: str,
     force: bool = False,
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """
     Remove a container (admin only).
 
@@ -262,7 +262,7 @@ async def get_container_logs(
     container_id: str,
     tail: int = 100,
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """
     Get container logs (admin only).
 
@@ -296,7 +296,7 @@ async def get_container_logs(
 @router.get("/{container_id}/stats")
 async def get_container_stats(
     container_id: str, current_user: User = Depends(get_current_active_user)
-):
+) -> dict:
     """
     Get container resource usage statistics (admin only).
 
