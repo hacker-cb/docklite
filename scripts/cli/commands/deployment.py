@@ -38,7 +38,7 @@ app = typer.Typer(help="Deployment commands")
 def setup_user(
     user: str = typer.Option("docklite", "--user", "-u", help="Username"),
     directory: Optional[str] = typer.Option(None, "--dir", "-d", help="Projects directory"),
-):
+) -> None:
     """Create system user for deployment."""
     check_root()
     
@@ -178,7 +178,7 @@ For more information, see: {PROJECT_ROOT}/SSH_ACCESS.md
 @app.command(name="setup-ssh")
 def setup_ssh(
     user: str = typer.Option("docklite", "--user", "-u", help="Deploy user"),
-):
+) -> None:
     """Configure SSH for localhost deployment."""
     check_root()
     
@@ -308,6 +308,7 @@ def setup_ssh(
              "-o", "UserKnownHostsFile=/dev/null",
              f"{user}@localhost", "which docker-compose || which docker"],
             capture_output=True,
+            text=True,
             check=False
         )
         if result.returncode == 0:
@@ -344,7 +345,7 @@ def setup_ssh(
 @app.command(name="init-db")
 def init_db(
     reset: bool = typer.Option(False, "--reset", help="Reset database (deletes all data!)")
-):
+) -> None:
     """Initialize database."""
     print_banner("Database Initialization")
     

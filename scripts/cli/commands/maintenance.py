@@ -53,7 +53,7 @@ def add_user(
     is_admin: bool = typer.Option(False, "--admin", "-a", help="Create as admin user"),
     email: Optional[str] = typer.Option(None, "--email", "-e", help="Email address"),
     system_user: str = typer.Option("docklite", "--system-user", "-s", help="Linux system user for projects"),
-):
+) -> None:
     """Add a new user to DockLite."""
     import getpass
     
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 @app.command()
 def backup(
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output directory")
-):
+) -> None:
     """Backup database and configuration."""
     print_banner("DockLite Backup")
     
@@ -274,7 +274,7 @@ Contents:
 def restore(
     backup_file: Path = typer.Argument(..., help="Backup file to restore"),
     no_confirm: bool = typer.Option(False, "--no-confirm", help="Skip confirmation prompt")
-):
+) -> None:
     """Restore from backup."""
     if not backup_file.exists():
         log_error(f"Backup file not found: {backup_file}")
@@ -382,7 +382,7 @@ def clean(
     images: bool = typer.Option(False, "--images", help="Clean unused images only"),
     volumes: bool = typer.Option(False, "--volumes", help="Clean unused volumes only"),
     logs: bool = typer.Option(False, "--logs", help="Clean log files"),
-):
+) -> None:
     """Clean up unused resources."""
     print_banner("DockLite Cleanup")
     
@@ -470,7 +470,7 @@ def clean(
 @app.command()
 def status(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed information")
-):
+) -> None:
     """Show system status."""
     print_banner("DockLite System Status")
     
@@ -560,7 +560,7 @@ def status(
 def reset_password(
     username: str = typer.Argument(..., help="Username"),
     password: Optional[str] = typer.Option(None, "--password", "-p", help="New password (interactive if not provided)")
-):
+) -> None:
     """Reset user password."""
     print_banner("Reset User Password")
     
@@ -663,7 +663,7 @@ def reset_password(
 @app.command(name="list-users")
 def list_users(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed information")
-):
+) -> None:
     """List all users."""
     print_banner("DockLite Users")
     

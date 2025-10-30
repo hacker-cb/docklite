@@ -1,10 +1,12 @@
 """Docker and docker-compose utilities."""
 
+from __future__ import annotations
+
 import subprocess
 import shutil
 import grp
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from .console import log_error
 
 
@@ -22,7 +24,7 @@ def has_docker_group() -> bool:
         return True  # If docker group doesn't exist, assume no group switching needed
 
 
-def get_docker_compose_command() -> List[str]:
+def get_docker_compose_command() -> list[str]:
     """
     Get docker-compose command.
     

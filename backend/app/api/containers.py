@@ -1,11 +1,14 @@
 """API endpoints for Docker containers management."""
 
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.security import get_current_active_user
 from app.models.user import User
 from app.services.docker_service import DockerService
 from app.constants.messages import ErrorMessages
+from app.types import ContainerOperation
 
 
 router = APIRouter(prefix="/containers", tags=["containers"])
@@ -14,7 +17,7 @@ router = APIRouter(prefix="/containers", tags=["containers"])
 SYSTEM_CONTAINERS = ["docklite-backend", "docklite-frontend", "docklite-traefik"]
 
 
-def check_is_admin(current_user: User):
+def check_is_admin(current_user: User) -> None:
     """Check if current user is admin"""
     if not current_user.is_admin:
         raise HTTPException(
@@ -22,7 +25,7 @@ def check_is_admin(current_user: User):
         )
 
 
-def check_system_container(container_id: str, operation: str):
+def check_system_container(container_id: str, operation: ContainerOperation) -> None:
     """
     Check if container is a system container and block dangerous operations.
 

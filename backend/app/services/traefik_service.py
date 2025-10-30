@@ -3,16 +3,18 @@ Traefik labels management service
 Generates and injects Traefik routing labels into docker-compose.yml
 """
 
+from __future__ import annotations
+
 import yaml
 import re
-from typing import List, Optional, Tuple
+from typing import Optional
 
 
 class TraefikService:
     """Service for managing Traefik labels and configuration"""
 
     @staticmethod
-    def generate_labels(domain: str, slug: str, internal_port: int = 80) -> List[str]:
+    def generate_labels(domain: str, slug: str, internal_port: int = 80) -> list[str]:
         """
         Generate Traefik labels for a project
 
@@ -96,7 +98,7 @@ class TraefikService:
         domain: str,
         slug: str,
         force_internal_port: Optional[int] = None,
-    ) -> Tuple[str, Optional[str]]:
+    ) -> tuple[str, Optional[str]]:
         """
         Inject Traefik labels into docker-compose.yml
 
@@ -195,7 +197,7 @@ class TraefikService:
         domain: str,
         slug: str,
         internal_port: Optional[int] = None,
-    ) -> Tuple[str, Optional[str]]:
+    ) -> tuple[str, Optional[str]]:
         """
         Update Traefik labels in existing docker-compose.yml
         (alias for inject_labels_to_compose for consistency)

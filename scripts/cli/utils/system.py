@@ -132,7 +132,7 @@ def create_user(
     return True
 
 
-def add_user_to_group(username: str, group: str):
+def add_user_to_group(username: str, group: str) -> None:
     """
     Add user to group.
     
@@ -152,7 +152,7 @@ def add_user_to_group(username: str, group: str):
     )
 
 
-def set_permissions(path: Path, mode: int, recursive: bool = False):
+def set_permissions(path: Path, mode: int, recursive: bool = False) -> None:
     """
     Set file/directory permissions.
     
@@ -167,7 +167,7 @@ def set_permissions(path: Path, mode: int, recursive: bool = False):
     path.chmod(mode)
 
 
-def set_owner(path: Path, user: str, group: Optional[str] = None, recursive: bool = False):
+def set_owner(path: Path, user: str, group: Optional[str] = None, recursive: bool = False) -> None:
     """
     Set file/directory owner.
     

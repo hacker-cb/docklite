@@ -11,3 +11,7 @@ python-dotenv>=1.0.0    # .env file support
 # Optional for advanced features
 PyYAML>=6.0            # YAML parsing (if needed for docker-compose.yml)
 
+# Type checking
+mypy>=1.11.0          # Static type checker
+types-PyYAML>=6.0.12  # Type stubs for PyYAML
+

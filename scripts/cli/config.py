@@ -1,5 +1,7 @@
 """Configuration and constants for DockLite CLI."""
 
+from __future__ import annotations
+
 import os
 import socket
 from pathlib import Path

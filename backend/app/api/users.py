@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
 
 from app.core.database import get_db
 from app.core.security import get_current_active_user
@@ -14,7 +15,7 @@ from app.utils.formatters import format_user_response
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-def check_is_admin(current_user: User):
+def check_is_admin(current_user: User) -> None:
     """Check if current user is admin"""
     if not current_user.is_admin:
         raise HTTPException(
@@ -22,7 +23,7 @@ def check_is_admin(current_user: User):
         )
 
 
-@router.get("", response_model=List[UserResponse])
+@router.get("", response_model=list[UserResponse])
 async def get_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),

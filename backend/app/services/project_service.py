@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -138,7 +140,7 @@ class ProjectService:
 
     async def get_all_projects(
         self, user_id: Optional[int] = None, is_admin: bool = False
-    ) -> List[Project]:
+    ) -> list[Project]:
         """Get all projects (filtered by owner for non-admin)"""
         query = select(Project)
 
@@ -252,7 +254,7 @@ class ProjectService:
 
     async def get_env_vars(
         self, project_id: int, user_id: Optional[int] = None, is_admin: bool = False
-    ) -> Optional[Dict[str, str]]:
+    ) -> Optional[dict[str, str]]:
         """Get project environment variables"""
         project = await self.get_project(project_id, user_id, is_admin)
         if not project:
@@ -266,7 +268,7 @@ class ProjectService:
     async def update_env_vars(
         self,
         project_id: int,
-        env_vars: Dict[str, str],
+        env_vars: dict[str, str],
         user_id: Optional[int] = None,
         is_admin: bool = False,
     ) -> tuple[bool, Optional[str]]:

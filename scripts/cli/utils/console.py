@@ -1,5 +1,7 @@
 """Console utilities with Rich for beautiful output."""
 
+from __future__ import annotations
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -11,34 +13,34 @@ from typing import Optional
 console = Console()
 
 
-def log_info(message: str):
+def log_info(message: str) -> None:
     """Print info message with icon."""
     console.print(f"ℹ {message}", style="blue")
 
 
-def log_success(message: str):
+def log_success(message: str) -> None:
     """Print success message with icon."""
     console.print(f"✅ {message}", style="green")
 
 
-def log_error(message: str):
+def log_error(message: str) -> None:
     """Print error message with icon to stderr."""
     import sys
     console_err = Console(stderr=True)
     console_err.print(f"❌ {message}", style="red bold")
 
 
-def log_warning(message: str):
+def log_warning(message: str) -> None:
     """Print warning message with icon."""
     console.print(f"⚠️  {message}", style="yellow")
 
 
-def log_step(message: str):
+def log_step(message: str) -> None:
     """Print step message with icon."""
     console.print(f"▶ {message}", style="cyan")
 
 
-def print_banner(title: str):
+def print_banner(title: str) -> None:
     """Print a beautiful banner with title."""
     panel = Panel(
         title,

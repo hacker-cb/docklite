@@ -170,7 +170,7 @@ def setup_dev():
 def start(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before starting"),
     follow: bool = typer.Option(False, "--follow", "-f", help="Follow logs after starting"),
-):
+) -> None:
     """Start DockLite services."""
     print_banner("Starting DockLite Development Environment")
     
@@ -222,7 +222,7 @@ def start(
 @app.command()
 def stop(
     volumes: bool = typer.Option(False, "--volumes", "-v", help="Remove volumes as well")
-):
+) -> None:
     """Stop DockLite services."""
     print_banner("Stopping DockLite")
     
@@ -245,7 +245,7 @@ def stop(
 @app.command()
 def restart(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before restarting")
-):
+) -> None:
     """Restart DockLite services."""
     print_banner("Restarting DockLite")
     
@@ -264,7 +264,7 @@ def restart(
 def rebuild(
     no_cache: bool = typer.Option(False, "--no-cache", help="Build without using cache"),
     follow: bool = typer.Option(False, "--follow", "-f", help="Follow logs after rebuild"),
-):
+) -> None:
     """Rebuild and restart services."""
     print_banner("Rebuilding DockLite")
     
@@ -309,7 +309,7 @@ def rebuild(
 @app.command()
 def logs(
     service: Optional[str] = typer.Argument(None, help="Service name (backend, frontend, traefik)")
-):
+) -> None:
     """Show container logs."""
     args = ["logs", "-f"]
     if service:
@@ -322,7 +322,7 @@ def logs(
 def test(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Minimal output"),
-):
+) -> None:
     """Run all tests (backend + frontend)."""
     print_banner("DockLite Test Suite")
     
@@ -391,8 +391,8 @@ def test(
 
 @app.command(name="test-backend")
 def test_backend(
-    args: List[str] = typer.Argument(None, help="Arguments to pass to pytest")
-):
+    args: list[str] = typer.Argument(None, help="Arguments to pass to pytest")
+) -> None:
     """Run backend tests only."""
     print_banner("Backend Tests (Python/Pytest)")
     
@@ -413,7 +413,7 @@ def test_frontend(
     watch: bool = typer.Option(False, "--watch", "-w", help="Watch mode"),
     ui: bool = typer.Option(False, "--ui", "-u", help="Open UI"),
     coverage: bool = typer.Option(False, "--coverage", help="Show coverage report"),
-):
+) -> None:
     """Run frontend tests only."""
     print_banner("Frontend Tests (Vitest)")
     

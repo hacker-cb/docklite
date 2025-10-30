@@ -2,6 +2,8 @@
 Hostname detection utility with priority logic
 """
 
+from __future__ import annotations
+
 import socket
 from typing import Optional
 from app.core.config import settings

@@ -1,0 +1,111 @@
+name: Type Checking
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'backend/**/*.py'
+      - 'scripts/cli/**/*.py'
+      - 'backend/mypy.ini'
+      - 'scripts/mypy.ini'
+      - '.github/workflows/type-check.yml'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'backend/**/*.py'
+      - 'scripts/cli/**/*.py'
+      - 'backend/mypy.ini'
+      - 'scripts/mypy.ini'
+
+jobs:
+  mypy-backend:
+    name: Type Check Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-backend-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-backend-
+    
+    - name: Install dependencies
+      working-directory: backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run mypy
+      working-directory: backend
+      run: |
+        mypy app tests --config-file mypy.ini
+    
+    - name: Type check summary
+      if: success()
+      run: |
+        echo "✅ Backend type checking passed!"
+
+  mypy-cli:
+    name: Type Check CLI
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-cli-${{ hashFiles('scripts/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-cli-
+    
+    - name: Install dependencies
+      working-directory: scripts
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run mypy
+      working-directory: scripts
+      run: |
+        mypy cli --config-file mypy.ini
+    
+    - name: Type check summary
+      if: success()
+      run: |
+        echo "✅ CLI type checking passed!"
+
+  summary:
+    name: Type Check Summary
+    needs: [mypy-backend, mypy-cli]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check results
+      run: |
+        if [ "${{ needs.mypy-backend.result }}" = "success" ] && [ "${{ needs.mypy-cli.result }}" = "success" ]; then
+          echo "🎉 All type checks passed!"
+          exit 0
+        else
+          echo "❌ Type checking failed. Please fix type errors."
+          exit 1
+        fi
+

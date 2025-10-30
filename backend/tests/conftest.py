@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 import asyncio
 from httpx import AsyncClient
@@ -8,6 +10,7 @@ from app.core.config import settings
 import tempfile
 import shutil
 from pathlib import Path
+from typing import AsyncGenerator, Generator
 
 
 # Test database URL
@@ -27,7 +30,7 @@ TestSessionLocal = async_sessionmaker(
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create an instance of the event loop for the test session"""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -35,7 +38,7 @@ def event_loop():
 
 
 @pytest.fixture(scope="function")
-async def db_session():
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Create a fresh database session for each test"""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -48,9 +51,9 @@ async def db_session():
 
 
 @pytest.fixture(scope="function")
-async def client(db_session):
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create test client with test database"""
-    async def override_get_db():
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
     
     app.dependency_overrides[get_db] = override_get_db
@@ -62,7 +65,7 @@ async def client(db_session):
 
 
 @pytest.fixture(scope="function")
-def temp_projects_dir():
+def temp_projects_dir() -> Generator[str, None, None]:
     """Create temporary directory for test projects"""
     temp_dir = tempfile.mkdtemp()
     original_dir = settings.PROJECTS_DIR
@@ -76,7 +79,7 @@ def temp_projects_dir():
 
 
 @pytest.fixture
-def sample_compose_content():
+def sample_compose_content() -> str:
     """Sample valid docker-compose.yml content"""
     return """version: '3.8'
 
@@ -89,7 +92,7 @@ services:
 
 
 @pytest.fixture
-def sample_project_data(sample_compose_content):
+def sample_project_data(sample_compose_content: str) -> dict:
     """Sample project data for creating projects"""
     return {
         "name": "test-project",
@@ -103,13 +106,13 @@ def sample_project_data(sample_compose_content):
 
 
 @pytest.fixture
-def invalid_compose_content():
+def invalid_compose_content() -> str:
     """Invalid docker-compose.yml content"""
     return """this is not valid yaml: [[["""
 
 
 @pytest.fixture
-def compose_without_services():
+def compose_without_services() -> str:
     """docker-compose.yml without services"""
     return """version: '3.8'
 name: myapp
@@ -117,7 +120,7 @@ name: myapp
 
 
 @pytest.fixture
-async def auth_token(client, db_session):
+async def auth_token(client: AsyncClient, db_session: AsyncSession) -> str:
     """Create a user and return auth token for tests"""
     from app.models.user import User
     from app.services.auth_service import AuthService
@@ -143,13 +146,13 @@ async def auth_token(client, db_session):
 
 
 @pytest.fixture
-def auth_headers(auth_token):
+def auth_headers(auth_token: str) -> dict:
     """Get authorization headers with token"""
     return {"Authorization": f"Bearer {auth_token}"}
 
 
 @pytest.fixture
-async def admin_token(client, db_session):
+async def admin_token(client: AsyncClient, db_session: AsyncSession) -> str:
     """Create an admin user and return auth token for admin tests"""
     from app.models.user import User
     from app.services.auth_service import AuthService
@@ -176,7 +179,7 @@ async def admin_token(client, db_session):
 
 
 @pytest.fixture
-async def user_token(client, db_session):
+async def user_token(client: AsyncClient, db_session: AsyncSession) -> str:
     """Create a regular (non-admin) user and return auth token"""
     from app.models.user import User
     from app.services.auth_service import AuthService
@@ -215,10 +218,11 @@ async def user_token(client, db_session):
 
 
 @pytest.fixture
-async def test_user(db_session):
+async def test_user(db_session: AsyncSession):
     """Create a test user for project ownership"""
     from app.services.auth_service import AuthService
     from app.models.schemas import UserCreate
+    from app.models.user import User
     
     service = AuthService(db_session)
     user_data = UserCreate(
@@ -237,7 +241,12 @@ async def test_user(db_session):
 
 
 @pytest.fixture
-async def test_project(client, sample_project_data, auth_headers, temp_projects_dir):
+async def test_project(
+    client: AsyncClient, 
+    sample_project_data: dict, 
+    auth_headers: dict, 
+    temp_projects_dir: str
+) -> dict:
     """Create a test project and return its data"""
     response = await client.post(
         "/api/projects",

@@ -1,14 +1,16 @@
 """Docker service for managing containers."""
 
+from __future__ import annotations
+
 import subprocess
 import json
-from typing import List, Dict, Optional, Tuple
+from typing import Optional
 
 
 class DockerService:
     """Service for interacting with Docker via CLI."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Docker service."""
         # Test Docker is available
         try:
@@ -22,7 +24,7 @@ class DockerService:
         ) as e:
             raise Exception(f"Docker is not available: {str(e)}")
 
-    def list_all_containers(self, all: bool = True) -> List[Dict]:
+    def list_all_containers(self, all: bool = True) -> list[dict]:
         """
         List all Docker containers.
 
@@ -53,7 +55,7 @@ class DockerService:
         except Exception as e:
             raise Exception(f"Failed to list containers: {str(e)}")
 
-    def get_container(self, container_id: str) -> Optional[Dict]:
+    def get_container(self, container_id: str) -> Optional[dict]:
         """
         Get a specific container by ID or name.
 
@@ -78,7 +80,7 @@ class DockerService:
         except Exception as e:
             raise Exception(f"Failed to get container: {str(e)}")
 
-    def start_container(self, container_id: str) -> Tuple[bool, Optional[str]]:
+    def start_container(self, container_id: str) -> tuple[bool, Optional[str]]:
         """
         Start a container.
 
@@ -107,7 +109,7 @@ class DockerService:
 
     def stop_container(
         self, container_id: str, timeout: int = 10
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Stop a container.
 
@@ -137,7 +139,7 @@ class DockerService:
 
     def restart_container(
         self, container_id: str, timeout: int = 10
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Restart a container.
 
@@ -167,7 +169,7 @@ class DockerService:
 
     def remove_container(
         self, container_id: str, force: bool = False
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Remove a container.
 
@@ -195,7 +197,7 @@ class DockerService:
 
     def get_container_logs(
         self, container_id: str, tail: int = 100, timestamps: bool = True
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[Optional[str], Optional[str]]:
         """
         Get container logs.
 
@@ -224,7 +226,7 @@ class DockerService:
 
     def get_container_stats(
         self, container_id: str
-    ) -> Tuple[Optional[Dict], Optional[str]]:
+    ) -> tuple[Optional[dict], Optional[str]]:
         """
         Get container resource usage statistics.
 
@@ -281,7 +283,7 @@ class DockerService:
         except Exception as e:
             return None, f"Docker error: {str(e)}"
 
-    def _format_container(self, data: Dict) -> Dict:
+    def _format_container(self, data: dict) -> dict:
         """
         Format docker ps JSON output to our format.
 
@@ -332,7 +334,7 @@ class DockerService:
             "labels": {},
         }
 
-    def _format_inspect_data(self, data: Dict) -> Dict:
+    def _format_inspect_data(self, data: dict) -> dict:
         """
         Format docker inspect JSON output to our format.
 
