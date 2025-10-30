@@ -26,7 +26,9 @@ async def create_project(
 ) -> dict:
     """Create a new project (owned by current user)"""
     service = ProjectService(db)
-    new_project, error = await service.create_project(project, owner_id=int(current_user.id))
+    new_project, error = await service.create_project(
+        project, owner_id=int(current_user.id)
+    )
 
     if error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
