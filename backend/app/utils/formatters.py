@@ -4,7 +4,7 @@ Data formatting utilities
 
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 from app.models.project import Project
 from app.models.user import User
 
