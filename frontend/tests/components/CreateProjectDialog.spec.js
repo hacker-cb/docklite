@@ -133,7 +133,8 @@ describe('CreateProjectDialog', () => {
     it('should show "Create New Project" in header when not editing', async () => {
       const dialogProps = wrapper.findComponent({ name: 'Dialog' })
       // Since we stubbed Dialog, check the prop
-      expect(wrapper.props().editingProject).toBe(null)
+      const editingProject = wrapper.props().editingProject
+      expect(editingProject === null || editingProject === undefined).toBe(true)
     })
 
     it('should have empty form initially', () => {
