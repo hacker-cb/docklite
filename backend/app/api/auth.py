@@ -14,7 +14,7 @@ from app.utils.formatters import format_user_response
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)) -> Token:
     """Login and get JWT token"""
     auth_service = AuthService(db)
@@ -35,10 +35,10 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)) -> Tok
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me")
 async def get_current_user_info(
     current_user: User = Depends(get_current_active_user),
-) -> UserResponse:
+) -> dict:
     """Get current user information"""
     return format_user_response(current_user)
 
@@ -58,7 +58,7 @@ async def check_setup_needed(db: AsyncSession = Depends(get_db)) -> dict:
     return {"setup_needed": not has_users, "has_users": has_users}
 
 
-@router.post("/setup", response_model=Token)
+@router.post("/setup")
 async def initial_setup(
     user_data: UserCreate, db: AsyncSession = Depends(get_db)
 ) -> Token:

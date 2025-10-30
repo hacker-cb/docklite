@@ -24,11 +24,11 @@ def check_is_admin(current_user: User) -> None:
         )
 
 
-@router.get("", response_model=list[UserResponse])
+@router.get("")
 async def get_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> list[UserResponse]:
+) -> list[dict]:
     """Get all users (admin only)"""
     check_is_admin(current_user)
 
@@ -38,12 +38,12 @@ async def get_users(
     return [format_user_response(u) for u in users]
 
 
-@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> UserResponse:
+) -> dict:
     """Create a new user (admin only)"""
     check_is_admin(current_user)
 
@@ -59,12 +59,12 @@ async def create_user(
     return format_user_response(user)
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}")
 async def get_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> UserResponse:
+) -> dict:
     """Get user by ID (admin only)"""
     check_is_admin(current_user)
 
@@ -79,14 +79,14 @@ async def get_user(
     return format_user_response(user)
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}")
 async def update_user(
     user_id: int,
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> UserResponse:
+) -> dict:
     """Update user (admin only)"""
     check_is_admin(current_user)
 
