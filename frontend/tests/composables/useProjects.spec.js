@@ -1,19 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useProjects } from '../../src/composables/useProjects'
+import { projectsApi } from '../../src/api'
 
 // Mock API
-const mockProjectsApi = {
-  getAll: vi.fn(),
-  create: vi.fn(),
-  update: vi.fn(),
-  delete: vi.fn(),
-  getById: vi.fn(),
-  getEnv: vi.fn(),
-  updateEnv: vi.fn()
-}
-
 vi.mock('../../src/api', () => ({
-  projectsApi: mockProjectsApi
+  projectsApi: {
+    getAll: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    getById: vi.fn(),
+    getEnv: vi.fn(),
+    updateEnv: vi.fn()
+  }
 }))
 
 describe('useProjects Composable', () => {
@@ -47,7 +46,7 @@ describe('useProjects Composable', () => {
         { id: 1, name: 'project1' },
         { id: 2, name: 'project2' }
       ]
-      mockProjectsApi.getAll.mockResolvedValue({
+      projectsApi.getAll.mockResolvedValue({
         data: { projects: mockProjects }
       })
 
@@ -59,7 +58,7 @@ describe('useProjects Composable', () => {
     })
 
     it('should set loading state during fetch', async () => {
-      mockProjectsApi.getAll.mockImplementation(() => {
+      projectsApi.getAll.mockImplementation(() => {
         expect(composable.loading.value).toBe(true)
         return Promise.resolve({ data: { projects: [] } })
       })
@@ -70,7 +69,7 @@ describe('useProjects Composable', () => {
 
     it('should handle errors', async () => {
       const mockError = new Error('Failed to load')
-      mockProjectsApi.getAll.mockRejectedValue(mockError)
+      projectsApi.getAll.mockRejectedValue(mockError)
 
       await expect(composable.loadProjects()).rejects.toThrow('Failed to load')
       expect(composable.error.value).toBe(mockError)
@@ -83,19 +82,19 @@ describe('useProjects Composable', () => {
       const newProject = { name: 'new-project', domain: 'test.local' }
       const createdProject = { id: 3, ...newProject }
       
-      mockProjectsApi.create.mockResolvedValue({ data: createdProject })
-      mockProjectsApi.getAll.mockResolvedValue({ data: { projects: [createdProject] } })
+      projectsApi.create.mockResolvedValue({ data: createdProject })
+      projectsApi.getAll.mockResolvedValue({ data: { projects: [createdProject] } })
 
       const result = await composable.createProject(newProject)
 
       expect(result).toEqual(createdProject)
-      expect(mockProjectsApi.create).toHaveBeenCalledWith(newProject)
-      expect(mockProjectsApi.getAll).toHaveBeenCalled()
+      expect(projectsApi.create).toHaveBeenCalledWith(newProject)
+      expect(projectsApi.getAll).toHaveBeenCalled()
     })
 
     it('should handle create errors', async () => {
       const mockError = new Error('Create failed')
-      mockProjectsApi.create.mockRejectedValue(mockError)
+      projectsApi.create.mockRejectedValue(mockError)
 
       await expect(composable.createProject({})).rejects.toThrow('Create failed')
       expect(composable.error.value).toBe(mockError)
@@ -107,60 +106,60 @@ describe('useProjects Composable', () => {
       const updatedData = { name: 'updated-name' }
       const updatedProject = { id: 1, ...updatedData }
       
-      mockProjectsApi.update.mockResolvedValue({ data: updatedProject })
-      mockProjectsApi.getAll.mockResolvedValue({ data: { projects: [updatedProject] } })
+      projectsApi.update.mockResolvedValue({ data: updatedProject })
+      projectsApi.getAll.mockResolvedValue({ data: { projects: [updatedProject] } })
 
       await composable.updateProject(1, updatedData)
 
-      expect(mockProjectsApi.update).toHaveBeenCalledWith(1, updatedData)
-      expect(mockProjectsApi.getAll).toHaveBeenCalled()
+      expect(projectsApi.update).toHaveBeenCalledWith(1, updatedData)
+      expect(projectsApi.getAll).toHaveBeenCalled()
     })
   })
 
   describe('deleteProject', () => {
     it('should delete project and reload list', async () => {
-      mockProjectsApi.delete.mockResolvedValue({})
-      mockProjectsApi.getAll.mockResolvedValue({ data: { projects: [] } })
+      projectsApi.delete.mockResolvedValue({})
+      projectsApi.getAll.mockResolvedValue({ data: { projects: [] } })
 
       await composable.deleteProject(1)
 
-      expect(mockProjectsApi.delete).toHaveBeenCalledWith(1)
-      expect(mockProjectsApi.getAll).toHaveBeenCalled()
+      expect(projectsApi.delete).toHaveBeenCalledWith(1)
+      expect(projectsApi.getAll).toHaveBeenCalled()
     })
   })
 
   describe('getProject', () => {
     it('should get project by ID', async () => {
       const project = { id: 1, name: 'test' }
-      mockProjectsApi.getById.mockResolvedValue({ data: project })
+      projectsApi.getById.mockResolvedValue({ data: project })
 
       const result = await composable.getProject(1)
 
       expect(result).toEqual(project)
-      expect(mockProjectsApi.getById).toHaveBeenCalledWith(1)
+      expect(projectsApi.getById).toHaveBeenCalledWith(1)
     })
   })
 
   describe('getEnvVars', () => {
     it('should get environment variables', async () => {
       const envVars = { KEY: 'value' }
-      mockProjectsApi.getEnv.mockResolvedValue({ data: envVars })
+      projectsApi.getEnv.mockResolvedValue({ data: envVars })
 
       const result = await composable.getEnvVars(1)
 
       expect(result).toEqual(envVars)
-      expect(mockProjectsApi.getEnv).toHaveBeenCalledWith(1)
+      expect(projectsApi.getEnv).toHaveBeenCalledWith(1)
     })
   })
 
   describe('updateEnvVars', () => {
     it('should update environment variables', async () => {
       const envVars = { KEY: 'newvalue' }
-      mockProjectsApi.updateEnv.mockResolvedValue({})
+      projectsApi.updateEnv.mockResolvedValue({})
 
       await composable.updateEnvVars(1, envVars)
 
-      expect(mockProjectsApi.updateEnv).toHaveBeenCalledWith(1, envVars)
+      expect(projectsApi.updateEnv).toHaveBeenCalledWith(1, envVars)
     })
   })
 })

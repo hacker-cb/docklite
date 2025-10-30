@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { usePresets } from '../../src/composables/usePresets'
+import { presetsApi } from '../../src/api'
 
 // Mock API
-const mockPresetsApi = {
-  getAll: vi.fn(),
-  getCategories: vi.fn(),
-  getById: vi.fn()
-}
-
 vi.mock('../../src/api', () => ({
-  presetsApi: mockPresetsApi
+  presetsApi: {
+    getAll: vi.fn(),
+    getCategories: vi.fn(),
+    getById: vi.fn()
+  }
 }))
 
 describe('usePresets Composable', () => {
@@ -54,8 +53,8 @@ describe('usePresets Composable', () => {
         { id: 'database', name: 'Databases', count: 1 }
       ]
 
-      mockPresetsApi.getAll.mockResolvedValue({ data: mockPresets })
-      mockPresetsApi.getCategories.mockResolvedValue({ data: mockCategories })
+      presetsApi.getAll.mockResolvedValue({ data: mockPresets })
+      presetsApi.getCategories.mockResolvedValue({ data: mockCategories })
 
       await composable.loadPresets()
 
@@ -66,8 +65,8 @@ describe('usePresets Composable', () => {
 
     it('should handle errors', async () => {
       const mockError = new Error('Load failed')
-      mockPresetsApi.getAll.mockRejectedValue(mockError)
-      mockPresetsApi.getCategories.mockRejectedValue(mockError)
+      presetsApi.getAll.mockRejectedValue(mockError)
+      presetsApi.getCategories.mockRejectedValue(mockError)
 
       await expect(composable.loadPresets()).rejects.toThrow('Load failed')
       expect(composable.error.value).toBe(mockError)
@@ -131,18 +130,18 @@ describe('usePresets Composable', () => {
         id: 'nginx',
         compose_content: 'version: "3.8"'
       }
-      mockPresetsApi.getById.mockResolvedValue({ data: mockDetails })
+      presetsApi.getById.mockResolvedValue({ data: mockDetails })
 
       await composable.selectPreset('nginx')
 
       expect(composable.presetDetails.value).toEqual(mockDetails)
       expect(composable.selectedPreset.value).toEqual({ id: 'nginx', name: 'Nginx', category: 'web' })
-      expect(mockPresetsApi.getById).toHaveBeenCalledWith('nginx')
+      expect(presetsApi.getById).toHaveBeenCalledWith('nginx')
     })
 
     it('should handle errors', async () => {
       const mockError = new Error('Preset not found')
-      mockPresetsApi.getById.mockRejectedValue(mockError)
+      presetsApi.getById.mockRejectedValue(mockError)
 
       await expect(composable.selectPreset('nonexistent')).rejects.toThrow('Preset not found')
       expect(composable.error.value).toBe(mockError)
