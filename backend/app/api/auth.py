@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import get_current_active_user, get_current_user_with_cookie
-from app.models.schemas import UserLogin, Token, UserResponse, UserCreate
+from app.models.schemas import UserLogin, Token, UserCreate
 from app.services.auth_service import AuthService
 from app.models.user import User
 from app.constants.messages import ErrorMessages, SuccessMessages
