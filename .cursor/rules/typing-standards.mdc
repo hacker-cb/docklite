@@ -1,3 +1,7 @@
+---
+globs: *.py
+alwaysApply: false
+---
 # Python Typing Standards
 
 ## 🎯 Обязательные требования

@@ -87,34 +87,38 @@ describe('CreateProjectDialog', () => {
   })
 
   describe('Validation', () => {
-    it('should require name', () => {
+    it('should require name', async () => {
       wrapper.vm.formData.name = ''
       wrapper.vm.formData.domain = 'test.local'
       wrapper.vm.formData.compose_content = 'version: "3.8"'
+      await wrapper.vm.$nextTick()
       
       expect(wrapper.vm.canSave).toBe(false)
     })
 
-    it('should require domain', () => {
+    it('should require domain', async () => {
       wrapper.vm.formData.name = 'test'
       wrapper.vm.formData.domain = ''
       wrapper.vm.formData.compose_content = 'version: "3.8"'
+      await wrapper.vm.$nextTick()
       
       expect(wrapper.vm.canSave).toBe(false)
     })
 
-    it('should require compose content when not editing', () => {
+    it('should require compose content when not editing', async () => {
       wrapper.vm.formData.name = 'test'
       wrapper.vm.formData.domain = 'test.local'
       wrapper.vm.formData.compose_content = ''
+      await wrapper.vm.$nextTick()
       
       expect(wrapper.vm.canSave).toBe(false)
     })
 
-    it('should enable save when all fields valid', () => {
+    it('should enable save when all fields valid', async () => {
       wrapper.vm.formData.name = 'test'
       wrapper.vm.formData.domain = 'test.local'
       wrapper.vm.formData.compose_content = 'version: "3.8"\nservices:\n  web:\n    image: nginx'
+      await wrapper.vm.$nextTick()
       
       expect(wrapper.vm.canSave).toBe(true)
     })
@@ -124,7 +128,7 @@ describe('CreateProjectDialog', () => {
     it('should show "Create New Project" in header when not editing', async () => {
       const dialogProps = wrapper.findComponent({ name: 'Dialog' })
       // Since we stubbed Dialog, check the prop
-      expect(wrapper.props().editingProject).toBeNull()
+      expect(wrapper.props().editingProject).toBe(null)
     })
 
     it('should have empty form initially', () => {
@@ -135,7 +139,7 @@ describe('CreateProjectDialog', () => {
   })
 
   describe('Edit mode', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(CreateProjectDialog, {
         props: {
           modelValue: true,
@@ -156,10 +160,12 @@ describe('CreateProjectDialog', () => {
             Chip: true,
             Button: true,
             InputText: true,
-            Textarea: true
+            Textarea: true,
+            Skeleton: true
           }
         }
       })
+      await wrapper.vm.$nextTick()
     })
 
     it('should populate form with project data', () => {

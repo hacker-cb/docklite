@@ -64,13 +64,16 @@ describe('DeployInfoDialog', () => {
 
   describe('Deployment info loading', () => {
     it('should load deployment info on mount', async () => {
+      await wrapper.vm.$nextTick()
       await flushPromises()
       expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.project_id).toBe(1)
     })
 
     it('should display project information', async () => {
+      await wrapper.vm.$nextTick()
       await flushPromises()
+      expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.domain).toBe('test.local')
       expect(wrapper.vm.deployInfo.project_path).toContain('/home/docklite/projects/1')
     })
