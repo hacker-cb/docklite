@@ -48,6 +48,9 @@ def format_project_response(project: Optional[Project]) -> dict:
     Returns:
         dict: Formatted project data
     """
+    if not project:
+        return {}
+    
     return {
         "id": project.id,
         "name": project.name,
