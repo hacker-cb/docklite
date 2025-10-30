@@ -102,7 +102,7 @@ class TestFormatUserResponse:
             updated_at = datetime(2024, 1, 2, 11, 0, 0)
         
         user = MockUser()
-        result = format_user_response(user)
+        result = format_user_response(user)  # type: ignore[arg-type]
         
         assert result["is_active"] is True
         assert result["is_admin"] is False
@@ -120,7 +120,7 @@ class TestFormatUserResponse:
             updated_at = datetime.now()
         
         user = MockUser()
-        result = format_user_response(user)
+        result = format_user_response(user)  # type: ignore[arg-type]
         
         assert result["is_active"] is False
 
