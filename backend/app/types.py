@@ -18,4 +18,3 @@ HTTPMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 
 # Log levels
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-
