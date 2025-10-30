@@ -117,7 +117,7 @@ async def update_user(
     return format_user_response(user)
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 async def delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
