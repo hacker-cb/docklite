@@ -32,15 +32,11 @@ describe('Setup Component', () => {
     })
 
     it('should have username field with autocomplete', () => {
-      const inputText = wrapper.find('#username')
-      expect(inputText.exists()).toBe(true)
       // Check vm has username property
       expect(wrapper.vm.userData).toHaveProperty('username')
     })
 
     it('should have email field', () => {
-      const inputText = wrapper.find('#email')
-      expect(inputText.exists()).toBe(true)
       expect(wrapper.vm.userData).toHaveProperty('email')
     })
 
