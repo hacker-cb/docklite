@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useContainers } from '../../src/composables/useContainers'
+import { containersApi } from '../../src/api'
 
-// Mock API - must be after imports, before vi.mock
+// Mock API
 vi.mock('../../src/api', () => ({
   containersApi: {
     start: vi.fn(),
