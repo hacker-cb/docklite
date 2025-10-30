@@ -8,7 +8,78 @@ DockLite использует GitHub Actions для автоматическог
 
 ## 📋 Workflows
 
-### 1. Test Development Setup
+### 1. E2E Tests (Playwright)
+
+**Файл:** `.github/workflows/test-e2e.yml`  
+**Статус:** ![E2E Tests](https://github.com/hacker-cb/docklite/actions/workflows/test-e2e.yml/badge.svg)
+
+#### Что проверяет
+
+End-to-end тесты реальных пользовательских сценариев через браузер:
+
+✅ **Authentication (7 tests)**
+- Login/logout flows
+- Admin/user login
+- Invalid credentials
+- Session persistence
+- Protected routes
+
+✅ **Admin User (9 tests)**
+- Access to all views (Projects, Users, Containers, Traefik)
+- System containers visibility and protection
+- Create project/user dialogs
+- Multi-tenant project view
+
+✅ **Non-Admin User (8 tests)**
+- Limited navigation menu
+- See only own projects (multi-tenancy isolation)
+- Cannot access system containers
+- Cannot access admin pages
+
+#### Когда запускается
+
+- ✅ Push в `main` или `dev` ветки
+- ✅ Pull Request в `main` или `dev`
+- ✅ Вручную через GitHub Actions UI
+- ✅ При изменении:
+  - `frontend/**`
+  - `backend/**`
+  - `docker-compose.yml`
+  - workflow файла
+
+#### Workflow Steps
+
+```yaml
+1. Setup Python 3.11 + Node.js 20
+2. Install dependencies (npm + Playwright browsers)
+3. Start DockLite (docker compose up)
+4. Wait for services (health checks with retry)
+5. Create test users (cursor, testuser)
+6. Run 24 Playwright tests
+7. Upload artifacts (reports, videos on failure)
+8. Cleanup (docker compose down)
+```
+
+#### Artifacts
+
+**Playwright Report** (всегда сохраняется, 30 дней):
+- Полный отчет о тестах
+- Screenshots
+- Trace files
+
+**Test Videos** (только при падении, 7 дней):
+- Видео-записи упавших тестов
+- Помогает в отладке
+
+#### Время выполнения
+
+- ⏱️ Setup + services: ~3-4 минуты
+- ⏱️ Tests: ~1-2 минуты (24 tests)
+- ⏱️ Total: ~5-6 минут
+
+---
+
+### 2. Test Development Setup
 
 **Файл:** `.github/workflows/test-setup-dev.yml`  
 **Статус:** ![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
@@ -196,8 +267,11 @@ cp .env.example .env
 ### Coverage
 
 - **Backend:** 95%+ (240 тестов)
-- **Frontend:** 90%+ (120+ тестов)
+- **Frontend Unit:** 85%+ (120+ тестов)
+- **E2E:** 100% (24 теста) - критичные пользовательские сценарии
 - **CLI:** 80%+ (setup-dev workflow)
+
+**Total:** 380+ тестов (backend + frontend unit + E2E)
 
 ### Поддерживаемые платформы
 
@@ -239,7 +313,10 @@ pip3 install --user typer rich  # Загрязняет систему
 # Запустите локальные проверки
 ./docklite setup-dev
 ./docklite version
-./docklite test
+./docklite test           # Unit tests
+
+# Для изменений UI - запустите E2E
+./docklite test-e2e --ui  # Interactive mode
 
 # Только потом коммитьте
 git add .
@@ -252,6 +329,7 @@ git push
 - Проверяйте бейджи в README
 - Смотрите логи при ошибках
 - Не мержите при красных тестах
+- Просматривайте Playwright reports при падении E2E
 
 ### 4. Обновляйте workflow
 
@@ -277,14 +355,21 @@ git push
 
 ## 🎯 Roadmap
 
+### ✅ Реализовано:
+
+- [x] **E2E тесты с Playwright** (24 теста)
+- [x] Автоматическое тестирование setup-dev
+- [x] Тестирование на Linux и macOS
+- [x] Поддержка Python 3.8-3.12
+- [x] Artifacts для отладки (reports, videos)
+
 ### Планируется добавить:
 
 - [ ] Автоматическое развертывание (CD)
-- [ ] Тестирование Docker setup
-- [ ] Интеграционные тесты с реальным Docker
 - [ ] Performance benchmarks
-- [ ] Security scanning
+- [ ] Security scanning (SAST/DAST)
 - [ ] Dependency updates notifications
+- [ ] Cross-browser E2E tests (Firefox, Safari)
 
 ---
 

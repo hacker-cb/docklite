@@ -66,12 +66,12 @@ If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step
 │   │   └── api.js            # Axios API client
 │   ├── tests/                # Vitest tests (120+)
 │   └── Dockerfile
-├── scripts/                   # Production scripts (18 total)
+├── scripts/                   # Production scripts (19 total)
 │   ├── docklite.sh           # Main CLI wrapper
 │   ├── lib/                  # Common functions (hostname, utilities)
-│   ├── development/          # Dev scripts (6)
+│   ├── development/          # Dev scripts (9: +test-e2e)
 │   ├── deployment/           # Setup scripts (3)
-│   ├── maintenance/          # Maintenance (6: +list-users)
+│   ├── maintenance/          # Maintenance (7: list-users, reset-password)
 │   └── completion/           # Bash completion (2)
 └── docker-compose.yml
 
@@ -143,7 +143,7 @@ If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step
 - Docker containers management with system protection
 - Role-based access control (admin/user)
 - Traefik v3 reverse proxy with domain routing
-- Professional CLI (18 commands)
+- Professional CLI (19 commands)
 - 240 backend tests + 120+ frontend tests (95% coverage)
 
 **Admin Features:**
@@ -178,7 +178,7 @@ If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step
 
 **Scripts:**
 - [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Hostname functions (get_hostname, get_access_url)
-- [scripts/docklite.sh](mdc:scripts/docklite.sh) - CLI wrapper (18 commands)
+- [scripts/docklite.sh](mdc:scripts/docklite.sh) - CLI wrapper (19 commands)
 
 **Documentation:**
 - [README.md](mdc:README.md) - Main documentation
@@ -223,22 +223,25 @@ If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step
 
 Always run tests after changes:
 ```bash
-./docklite test               # All tests (240 backend + 120+ frontend)
+./docklite test               # All tests (240 backend + 120+ frontend unit)
 ./docklite test-backend       # Backend only (240 tests)
 ./docklite test-frontend      # Frontend only (120+ tests)
+./docklite test-e2e           # E2E tests (24 tests, requires Playwright)
 
 # Specific test categories
 ./docklite test-backend -k traefik    # Traefik tests (18)
 ./docklite test-backend -k hostname   # Hostname tests (20)
 ./docklite test-backend -k security   # Security tests (34)
+./docklite test-e2e --ui              # E2E interactive mode
 bash scripts/lib/test_hostname.sh     # Bash hostname tests (6)
 
 # Or via Docker Compose (works on all platforms)
 docker compose exec backend pytest -v
 docker compose exec frontend npm test
+cd frontend && npm run test:e2e       # E2E tests
 ```
 
-Expected: All tests passing ✅ (240 backend, 120+ frontend)
+Expected: All tests passing ✅ (240 backend, 120+ frontend unit, 24 E2E)
 
 **Note:** CLI commands use `.venv/` automatically - tests run in containers.
 

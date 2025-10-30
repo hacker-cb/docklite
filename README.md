@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/hacker-cb/docklite/workflows/CI/badge.svg)
 ![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
-![Tests](https://img.shields.io/badge/tests-240%20backend%20%2B%20120%2B%20frontend-success)
+![Tests](https://img.shields.io/badge/tests-380%2B%20(backend%2C%20frontend%2C%20e2e)-success)
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 
@@ -105,7 +105,7 @@ DockLite использует **multi-tenant** архитектуру, где к
 - **Database**: SQLite (с возможностью миграции на PostgreSQL)
 - **Reverse Proxy**: Traefik v3
 - **Deployment**: Docker, docker-compose
-- **Testing**: Pytest (240 tests), Vitest (120+ tests)
+- **Testing**: Pytest (240 tests), Vitest (120+ tests), Playwright (24 E2E tests)
 
 ## Установка
 
@@ -447,23 +447,27 @@ alembic downgrade -1
 
 ## Тестирование
 
-DockLite имеет комплексное покрытие тестами:
+DockLite имеет комплексное покрытие тестами на всех уровнях:
 - **Backend**: 240 тестов (pytest) - API, Services, Validators, Utils
-- **Frontend**: 120+ тестов (vitest) - Components, Views, Composables, Utils, Router
-- **Total**: 360+ тестов
+- **Frontend Unit**: 120+ тестов (vitest) - Components, Views, Composables, Utils, Router
+- **E2E**: 24 теста (playwright) - User flows, authentication, multi-tenancy
+- **Total**: 380+ тестов
 - **Coverage**: ~95%
 
 ### Запуск тестов
 
 ```bash
-# Все тесты сразу
+# Все тесты сразу (backend + frontend unit)
 ./docklite test
 
-# Только backend
+# Только backend (240 tests)
 ./docklite test-backend
 
-# Только frontend
+# Только frontend unit (120+ tests)
 ./docklite test-frontend
+
+# E2E tests (24 tests) - требует установки Playwright
+cd frontend && npm run test:e2e
 
 # С опциями
 ./docklite test-backend -v       # Verbose output
@@ -473,7 +477,40 @@ DockLite имеет комплексное покрытие тестами:
 ./docklite test-frontend --ui    # Interactive UI
 ```
 
-**Подробнее:** [scripts/README.md](mdc:scripts/README.md)
+### E2E тесты (Playwright)
+
+E2E тесты проверяют реальные пользовательские сценарии через браузер:
+
+**Покрытие:**
+- ✅ Авторизация (admin и user)
+- ✅ Разграничение прав доступа
+- ✅ Управление проектами
+- ✅ Управление контейнерами
+- ✅ Multi-tenancy изоляция
+- ✅ Защита системных контейнеров
+
+**Установка и запуск:**
+```bash
+# Установка (однократно)
+cd frontend
+npm install --save-dev @playwright/test
+npx playwright install chromium
+
+# Создать тестовых пользователей
+./docklite add-user cursor -p "CursorAI_Test2024!" --admin
+./docklite add-user testuser -p "TestUser_2024!" --user
+
+# Запуск
+npm run test:e2e              # Все E2E тесты
+npm run test:e2e:ui           # Интерактивный режим
+npm run test:e2e:debug        # Режим отладки
+```
+
+**Подробнее:** 
+- [HOW_TO_RUN_TESTS.md](./HOW_TO_RUN_TESTS.md) - Подробное руководство
+- [E2E_TESTS.md](./E2E_TESTS.md) - E2E тестирование с Playwright
+- [frontend/tests/e2e/README.md](./frontend/tests/e2e/README.md) - E2E тесты (техническая документация)
+- [scripts/README.md](./scripts/README.md) - CLI команды
 
 ## Текущий статус
 
@@ -499,8 +536,8 @@ DockLite имеет комплексное покрытие тестами:
 
 **Интерфейс и инструменты:**
 - Современный Vue.js 3 + PrimeVue UI
-- Professional CLI (18 команд + bash completion)
-- Comprehensive testing (360+ tests, 95% coverage)
+- Professional CLI (19 команд + bash completion)
+- Comprehensive testing (380+ tests including E2E, 95% coverage)
 
 ### 🔄 В планах
 
@@ -517,6 +554,8 @@ DockLite имеет комплексное покрытие тестами:
 - [SETUP.md](./SETUP.md) - Подробная настройка окружения разработки
 - [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md) - Руководство по деплою
 - [SSH_ACCESS.md](./SSH_ACCESS.md) - Настройка SSH доступа
+- [HOW_TO_RUN_TESTS.md](./HOW_TO_RUN_TESTS.md) - Руководство по тестированию
+- [E2E_TESTS.md](./E2E_TESTS.md) - E2E тестирование с Playwright
 
 ### Техническая документация
 

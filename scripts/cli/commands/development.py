@@ -442,3 +442,83 @@ def test_frontend(
     
     log_success("Frontend tests complete")
 
+
+@app.command(name="test-e2e")
+def test_e2e(
+    ui: bool = typer.Option(False, "--ui", "-u", help="Interactive UI mode"),
+    debug: bool = typer.Option(False, "--debug", "-d", help="Debug mode (step through tests)"),
+    report: bool = typer.Option(False, "--report", "-r", help="Show test report"),
+    headed: bool = typer.Option(False, "--headed", help="Run tests in headed mode (show browser)"),
+) -> None:
+    """Run E2E tests (Playwright)."""
+    import subprocess
+    
+    print_banner("E2E Tests (Playwright)")
+    
+    frontend_dir = PROJECT_ROOT / "frontend"
+    
+    # Check if Playwright is installed
+    if not (frontend_dir / "node_modules" / "@playwright").exists():
+        log_error("Playwright is not installed!")
+        console.print()
+        log_info("Install Playwright:")
+        console.print("  cd frontend")
+        console.print("  npm install --save-dev @playwright/test")
+        console.print("  npx playwright install chromium")
+        console.print()
+        raise typer.Exit(1)
+    
+    # Check if test users exist
+    log_step("Checking test users...")
+    try:
+        result = docker_compose_cmd(
+            "exec", "-T", "backend",
+            "python", "-m", "app.cli_helpers.list_users", "simple",
+            cwd=PROJECT_ROOT,
+            capture_output=True
+        )
+        users = result.stdout.strip().split('\n') if result.stdout else []
+        
+        has_cursor = any('cursor' in user for user in users)
+        has_testuser = any('testuser' in user for user in users)
+        
+        if not has_cursor or not has_testuser:
+            log_warning("Test users not found!")
+            console.print()
+            log_info("Create test users:")
+            if not has_cursor:
+                console.print('  ./docklite add-user cursor -p "CursorAI_Test2024!" --admin')
+            if not has_testuser:
+                console.print('  ./docklite add-user testuser -p "TestUser_2024!" --user')
+            console.print()
+            log_info("Or proceed anyway (some tests may fail)")
+            console.print()
+    except Exception as e:
+        log_warning(f"Could not check test users: {e}")
+    
+    # Run E2E tests
+    if report:
+        log_step("Opening test report...")
+        subprocess.run(["npm", "run", "test:e2e:report"], cwd=frontend_dir)
+    elif ui:
+        log_step("Starting Playwright UI mode...")
+        subprocess.run(["npm", "run", "test:e2e:ui"], cwd=frontend_dir)
+    elif debug:
+        log_step("Starting Playwright debug mode...")
+        subprocess.run(["npm", "run", "test:e2e:debug"], cwd=frontend_dir)
+    else:
+        log_step("Running E2E tests...")
+        args = ["npm", "run", "test:e2e"]
+        if headed:
+            # Run with --headed flag
+            args.extend(["--", "--headed"])
+        
+        try:
+            subprocess.run(args, cwd=frontend_dir, check=True)
+            log_success("E2E tests passed! 🎉")
+        except subprocess.CalledProcessError:
+            log_error("E2E tests failed")
+            console.print()
+            log_info("Tip: Use --ui flag for interactive debugging")
+            raise typer.Exit(1)
+

@@ -1,5 +1,137 @@
 # GitHub Actions Workflows
 
+## Overview
+
+DockLite использует GitHub Actions для автоматического тестирования:
+- ✅ **CI** - Unit тесты (backend + frontend)
+- ✅ **E2E** - End-to-end тесты с Playwright
+- ✅ **Setup Dev** - Проверка `./docklite setup-dev`
+- ✅ **Type Check** - Проверка типов
+
+---
+
+## 🌐 E2E Tests
+
+**Файл:** `test-e2e.yml`
+
+### Назначение
+
+Запускает полные end-to-end тесты через Playwright для проверки реальных пользовательских сценариев.
+
+### Когда запускается
+
+- ✅ При пуше в `main` или `dev` (если изменены frontend/backend/docker-compose)
+- ✅ При создании Pull Request
+- ✅ Вручную через GitHub Actions UI
+
+### Что проверяется
+
+**24 E2E теста:**
+
+#### Authentication (7 tests)
+- Login form display
+- Admin/user login
+- Invalid credentials
+- Logout
+- Session persistence
+- Protected routes
+
+#### Admin User (9 tests)
+- Access all views (Projects, Users, Containers, Traefik)
+- See system containers
+- System containers protection
+- Create project/user dialogs
+- Multi-tenant view
+
+#### Non-Admin User (8 tests)
+- Limited navigation
+- See only own projects
+- NOT see system containers
+- NOT access admin pages
+
+### Workflow Steps
+
+```yaml
+1. Checkout code
+2. Setup Python 3.11 + Node.js 20
+3. Install dependencies (npm ci + Playwright browsers)
+4. Start DockLite (docker compose up)
+5. Wait for services (health checks)
+6. Create test users (cursor, testuser)
+7. Run Playwright tests
+8. Upload artifacts (reports, videos)
+9. Cleanup (docker compose down)
+```
+
+### Test Users
+
+Создаются автоматически:
+- **cursor** (admin) - password: `CursorAI_Test2024!`
+- **testuser** (user) - password: `TestUser_2024!`
+
+### Artifacts
+
+#### Playwright Report (always)
+- Полный отчет о тестах
+- Сохраняется 30 дней
+- Просмотр: Скачать артефакт и открыть index.html
+
+#### Test Videos (on failure)
+- Видео-записи упавших тестов
+- Сохраняется 7 дней
+- Помогает в отладке
+
+### Service Logs
+
+При падении автоматически собираются логи:
+- Backend logs
+- Frontend logs
+- Traefik logs
+
+### Typical Run Time
+
+- ⏱️ Setup: ~3-4 минуты
+- ⏱️ Tests: ~1-2 минуты (24 tests)
+- ⏱️ Total: ~5-6 минут
+
+### Local Testing
+
+Запустите локально перед пушем:
+```bash
+# Setup
+cd frontend
+npm install @playwright/test
+npx playwright install chromium
+
+# Create test users
+./docklite add-user cursor -p "CursorAI_Test2024!" --admin
+./docklite add-user testuser -p "TestUser_2024!" --user
+
+# Run tests
+./docklite test-e2e           # Headless
+./docklite test-e2e --ui      # Interactive (recommended)
+./docklite test-e2e --headed  # Show browser
+```
+
+### Troubleshooting
+
+#### Tests timeout
+- Increase timeout in `playwright.config.js`
+- Check service health endpoints
+- Review service logs
+
+#### Flaky tests
+- Add explicit waits: `waitForLoadState('networkidle')`
+- Increase wait times for slow operations
+- Run with `--workers=1` for serial execution
+
+#### Authentication failures
+- Verify test users created successfully
+- Check JWT secret consistency
+- Review auth flow logs
+
+---
+
 ## 🧪 Test Development Setup
 
 **Файл:** `test-setup-dev.yml`

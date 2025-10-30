@@ -101,6 +101,19 @@ scripts/
 ./docklite test-frontend --coverage # Coverage report
 ```
 
+#### `test-e2e` - E2E Tests
+```bash
+./docklite test-e2e             # Run all E2E tests (Playwright)
+./docklite test-e2e --ui        # Interactive UI mode
+./docklite test-e2e --debug     # Debug mode (step through tests)
+./docklite test-e2e --report    # Show test report
+./docklite test-e2e --headed    # Show browser while testing
+```
+
+**Prerequisites:**
+- Playwright installed: `cd frontend && npm install @playwright/test && npx playwright install chromium`
+- Test users created: `cursor` (admin) and `testuser` (user)
+
 ---
 
 ### Deployment

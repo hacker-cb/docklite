@@ -8,7 +8,11 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -23,7 +27,8 @@
     "@vue/test-utils": "^2.4.4",
     "vitest": "^1.2.2",
     "happy-dom": "^13.3.8",
-    "@vitest/coverage-v8": "^1.2.2"
+    "@vitest/coverage-v8": "^1.2.2",
+    "@playwright/test": "^1.41.2"
   }
 }
 

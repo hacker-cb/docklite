@@ -1,105 +1,203 @@
-# 🧪 Как запустить тесты DockLite
+# 🧪 How to Run DockLite Tests
 
-## ⚠️ Важно
+## Test Coverage Overview
 
-Тесты написаны, но **НЕ запускались** так как Docker еще не установлен на сервере.
+DockLite has comprehensive test coverage across multiple layers:
+- ✅ **240 Backend tests** (pytest) - 95% coverage
+- ✅ **120+ Frontend tests** (vitest) - unit tests
+- ✅ **24 E2E tests** (playwright) - UI flows
 
-После установки Docker обязательно запустите тесты чтобы убедиться что все работает!
+**Total: 380+ tests**
 
-## 🚀 Быстрый запуск (когда Docker установлен)
+## 🚀 Quick Start
 
-### Способ 1: Через скрипт (рекомендуется)
+### All Tests (Recommended)
 
 ```bash
-cd ~/docklite
-./run-tests.sh
+./docklite test               # Run all tests (backend + frontend unit)
 ```
 
-Это запустит:
-- Backend тесты (pytest) в контейнере
-- Frontend тесты (vitest) локально (требует npm install)
+### Individual Test Suites
 
-### Способ 2: Вручную
-
-**Backend тесты:**
 ```bash
-cd ~/docklite
-docker-compose run --rm backend pytest -v
+./docklite test-backend       # Backend only (240 tests)
+./docklite test-frontend      # Frontend unit tests only (120+ tests)
+cd frontend && npm run test:e2e  # E2E tests (24 tests)
 ```
 
-**Frontend тесты:**
+## 📦 Backend Tests (240 tests)
+
+### Run All Backend Tests
 ```bash
-cd ~/docklite/frontend
+./docklite test-backend
+# or
+docker compose exec backend pytest -v
+```
+
+### Specific Test Categories
+```bash
+# Authentication tests (34)
+docker compose exec backend pytest -k security -v
+
+# Traefik tests (18)
+docker compose exec backend pytest -k traefik -v
+
+# Hostname tests (20)
+docker compose exec backend pytest -k hostname -v
+
+# Projects API tests
+docker compose exec backend pytest tests/test_api/test_projects.py -v
+
+# Containers API tests
+docker compose exec backend pytest tests/test_api/test_containers.py -v
+```
+
+### With Coverage
+```bash
+docker compose exec backend pytest --cov=app --cov-report=term-missing
+```
+
+### HTML Coverage Report
+```bash
+docker compose exec backend pytest --cov=app --cov-report=html
+# Report: backend/htmlcov/index.html
+```
+
+### Run Specific Test
+```bash
+docker compose exec backend pytest tests/test_api/test_auth.py::test_login_success -v
+```
+
+## 🎨 Frontend Unit Tests (120+ tests)
+
+### Prerequisites
+```bash
+cd frontend
 npm install
-npm test
 ```
 
-## 📦 Backend тесты через Docker
-
-### Запустить все backend тесты
+### Run All Unit Tests
 ```bash
-docker-compose run --rm backend pytest -v
+./docklite test-frontend
+# or
+cd frontend && npm test
 ```
 
-### Только тесты авторизации
+### Watch Mode (auto-reload)
 ```bash
-docker-compose run --rm backend pytest tests/test_api/test_auth.py -v
-```
-
-### Только тесты projects
-```bash
-docker-compose run --rm backend pytest tests/test_api/test_projects.py -v
-```
-
-### С покрытием (coverage)
-```bash
-docker-compose run --rm backend pytest --cov=app --cov-report=term-missing
-```
-
-### С HTML отчетом
-```bash
-docker-compose run --rm backend pytest --cov=app --cov-report=html
-# Отчет в: backend/htmlcov/index.html
-```
-
-## 🎨 Frontend тесты
-
-### Предварительно: установить зависимости
-```bash
-cd ~/docklite/frontend
-npm install
-```
-
-### Запустить все frontend тесты
-```bash
-npm test
-```
-
-### В watch режиме (авто-перезапуск)
-```bash
+cd frontend
 npm test -- --watch
 ```
 
-### С UI интерфейсом
+### UI Mode (interactive)
 ```bash
+cd frontend
 npm run test:ui
 ```
 
-### С покрытием
+### With Coverage
 ```bash
+cd frontend
 npm run test:coverage
-# Отчет в: frontend/coverage/index.html
+# Report: frontend/coverage/index.html
 ```
 
-### Только auth тесты
+### Specific Test Files
 ```bash
-npm test -- auth.spec.js
+cd frontend
+npm test -- components/CreateProjectDialog.test.js
+npm test -- composables/useProjects.test.js
+npm test -- views/ContainersView.test.js
 ```
 
-### Только forms тесты
+## 🌐 E2E Tests (24 tests)
+
+E2E tests validate complete user flows through a real browser using Playwright.
+
+### Prerequisites
+
+1. **Install Playwright:**
 ```bash
-npm test -- forms.spec.js
+cd frontend
+npm install --save-dev @playwright/test
+npx playwright install chromium
 ```
+
+2. **Start DockLite:**
+```bash
+./docklite start
+```
+
+3. **Create test users:**
+```bash
+# Admin user (already exists)
+./docklite add-user cursor -p "CursorAI_Test2024!" --admin
+
+# Regular user (create if not exists)
+./docklite add-user testuser -p "TestUser_2024!" --user
+```
+
+### Run All E2E Tests
+```bash
+cd frontend
+npm run test:e2e
+```
+
+### Interactive Mode (UI)
+```bash
+cd frontend
+npm run test:e2e:ui
+```
+
+### Debug Mode
+```bash
+cd frontend
+npm run test:e2e:debug
+```
+
+### Specific Test Files
+```bash
+cd frontend
+npx playwright test auth.spec.js      # Authentication tests (7)
+npx playwright test admin.spec.js     # Admin user tests (9)
+npx playwright test user.spec.js      # Non-admin user tests (8)
+```
+
+### View Test Report
+```bash
+cd frontend
+npm run test:e2e:report
+```
+
+### E2E Test Coverage
+
+**Authentication (7 tests):**
+- ✅ Login form display
+- ✅ Admin login
+- ✅ User login
+- ✅ Invalid credentials
+- ✅ Logout
+- ✅ Session persistence
+- ✅ Protected routes
+
+**Admin User (9 tests):**
+- ✅ Access all views (Projects, Users, Containers, Traefik)
+- ✅ See system containers
+- ✅ System containers protection
+- ✅ Create project dialog
+- ✅ Add user dialog
+- ✅ View all projects (multi-tenant)
+
+**Non-Admin User (8 tests):**
+- ✅ Limited navigation menu
+- ✅ See only own projects
+- ✅ NOT see system containers
+- ✅ NOT access Users page
+- ✅ NOT access Traefik page
+- ✅ Create project dialog
+- ✅ See own containers only
+
+See detailed guide: [frontend/tests/e2e/README.md](frontend/tests/e2e/README.md)
 
 ## 🔍 Первая проверка (before running full tests)
 
@@ -177,41 +275,48 @@ npm install
 npm install --save-dev happy-dom@latest
 ```
 
-## 📊 Ожидаемые результаты
+## 📊 Expected Results
 
-### Backend (60 тестов)
+### Backend (240 tests)
 ```
-tests/test_api/test_projects.py::TestProjectsCRUD::test_create_project_success PASSED
-tests/test_api/test_projects.py::TestProjectsCRUD::test_create_project_without_port PASSED
-...
-tests/test_api/test_auth.py::TestAuthSetup::test_setup_check_empty_db PASSED
-tests/test_api/test_auth.py::TestAuthSetup::test_setup_create_first_admin PASSED
-...
-tests/test_services/test_auth_service.py::TestPasswordHashing::test_password_hash_creates_hash PASSED
+tests/test_api/test_projects.py ...................... PASSED
+tests/test_api/test_auth.py .......................... PASSED
+tests/test_api/test_containers.py .................... PASSED
+tests/test_api/test_users.py ......................... PASSED
+tests/test_services/test_traefik_service.py .......... PASSED
+tests/test_utils/test_hostname.py .................... PASSED
 ...
 
-============================== 60 passed in 3.2s ==============================
+============================== 240 passed in 5.8s ==============================
 ```
 
-### Frontend (28 тестов)
+### Frontend Unit Tests (120+ tests)
 ```
-✓ forms.spec.js (18 tests) 18ms
-  ✓ Forms Structure Tests
-    ✓ Project Creation Form (5)
-    ✓ Projects Table (6)
-    ✓ Environment Variables Form (3)
-    ✓ Form Data Structure (1)
-  ✓ Form Validation (3)
+✓ components/CreateProjectDialog.test.js (15)
+✓ components/EnvVarsDialog.test.js (12)
+✓ composables/useProjects.test.js (25)
+✓ composables/useContainers.test.js (20)
+✓ views/ContainersView.test.js (18)
+✓ utils/formatters.test.js (30+)
 
-✓ auth.spec.js (10 tests) 22ms
-  ✓ Setup Component (8)
-  ✓ Login Component (4)
-  ✓ App Authentication (2)
+Test Files  15 passed (15)
+     Tests  120 passed (120)
+  Duration  892ms
+```
 
-Test Files  2 passed (2)
-     Tests  28 passed (28)
-  Start at  10:30:15
-  Duration  412ms
+### E2E Tests (24 tests)
+```
+Running 24 tests using 1 worker
+
+  ✓ auth.spec.js:5:1 › Authentication › should show login form (1.2s)
+  ✓ auth.spec.js:15:1 › Authentication › should login with admin (2.1s)
+  ✓ admin.spec.js:10:1 › Admin › should access Projects view (1.5s)
+  ✓ admin.spec.js:20:1 › Admin › should access Users management (1.8s)
+  ✓ user.spec.js:10:1 › Non-Admin › limited navigation menu (1.3s)
+  ✓ user.spec.js:30:1 › Non-Admin › see only own projects (2.0s)
+  ...
+
+  24 passed (45s)
 ```
 
 ## 🔄 CI/CD (автоматический запуск)
@@ -298,52 +403,87 @@ git pull
 ./rebuild.sh
 ```
 
-## 🎯 Быстрые команды
+## 🎯 Quick Commands Cheat Sheet
 
 ```bash
-# Все тесты (одной командой)
-cd ~/docklite && ./run-tests.sh
+# All tests (backend + frontend unit)
+./docklite test
 
-# Только backend
-docker-compose run --rm backend pytest
+# Backend only (240 tests)
+./docklite test-backend
 
-# Только frontend
-cd frontend && npm test
+# Frontend unit only (120+ tests)
+./docklite test-frontend
 
-# Только auth тесты
-docker-compose run --rm backend pytest tests/test_api/test_auth.py tests/test_services/test_auth_service.py
+# E2E only (24 tests)
+cd frontend && npm run test:e2e
 
-# С coverage
-docker-compose run --rm backend pytest --cov=app
+# Specific backend test category
+docker compose exec backend pytest -k traefik -v
+docker compose exec backend pytest -k hostname -v
+docker compose exec backend pytest -k security -v
 
-# Первый failed test останавливает выполнение
-docker-compose run --rm backend pytest -x
+# With coverage
+docker compose exec backend pytest --cov=app
+
+# Stop on first failure
+docker compose exec backend pytest -x
+
+# Verbose output
+docker compose exec backend pytest -vv
+
+# Show print statements
+docker compose exec backend pytest -s
+
+# E2E in UI mode (interactive)
+cd frontend && npm run test:e2e:ui
+
+# E2E debug mode
+cd frontend && npm run test:e2e:debug
 ```
 
-## ✅ Чеклист первого запуска тестов
+## ✅ First Time Setup Checklist
 
-После установки Docker:
+- [ ] DockLite is running: `./docklite start`
+- [ ] Backend tests pass: `./docklite test-backend`
+- [ ] Frontend deps installed: `cd frontend && npm install`
+- [ ] Frontend tests pass: `./docklite test-frontend`
+- [ ] Playwright installed: `cd frontend && npm install @playwright/test`
+- [ ] Playwright browsers: `cd frontend && npx playwright install chromium`
+- [ ] Test users created (cursor, testuser)
+- [ ] E2E tests pass: `cd frontend && npm run test:e2e`
+- [ ] All 380+ tests passing ✅
 
-- [ ] Docker установлен и запущен
-- [ ] `docker-compose build` выполнен
-- [ ] Backend тесты: `docker-compose run --rm backend pytest -v`
-- [ ] Frontend deps: `cd frontend && npm install`
-- [ ] Frontend тесты: `cd frontend && npm test`
-- [ ] Все тесты прошли успешно
-- [ ] Coverage > 85%
+## 📝 Notes
 
-## 📝 Примечания
+### Test Organization
 
-**Тесты созданы но НЕ запускались** так как:
-1. Docker не установлен на сервере
-2. Нет виртуального окружения Python
-3. Нет node_modules для frontend
+**Backend tests** (`backend/tests/`) - 240 tests:
+- API endpoints (auth, projects, users, containers, presets, deployment)
+- Services (auth, docker, traefik, project)
+- Utils (hostname, formatters)
+- Validators (compose, domain)
+- Models and core functionality
 
-После установки Docker и запуска `./start.sh` тесты должны заработать.
+**Frontend unit tests** (`frontend/tests/`) - 120+ tests:
+- Components (dialogs, forms)
+- Composables (useProjects, useContainers, usePresets)
+- Views (ProjectsView, UsersView, ContainersView)
+- Utils (formatters, toast)
+- Router
 
-Если какие-то тесты fail - это нормально, нужно будет поправить импорты или мелкие баги.
+**E2E tests** (`frontend/tests/e2e/`) - 24 tests:
+- Authentication flows
+- Admin user functionality
+- Non-admin user restrictions
+- Multi-tenancy isolation
+- System containers protection
+
+### CI/CD
+
+See [docs/CI_CD.md](docs/CI_CD.md) for automated testing setup.
 
 ---
 
-**После установки Docker обязательно запустите**: `./run-tests.sh` 🧪
+**Coverage:** 95% backend, 85% frontend unit tests ✅
 

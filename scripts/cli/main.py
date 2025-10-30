@@ -30,6 +30,7 @@ app.command(name="logs")(development.logs)
 app.command(name="test")(development.test)
 app.command(name="test-backend")(development.test_backend)
 app.command(name="test-frontend")(development.test_frontend)
+app.command(name="test-e2e")(development.test_e2e)
 
 app.command(name="setup-user")(deployment.setup_user)
 app.command(name="setup-ssh")(deployment.setup_ssh)
