@@ -1,0 +1,416 @@
+---
+description: macOS compatibility patterns and cross-platform development
+globs: scripts/**/*.py,scripts/**/*.sh,backend/**/*.py
+---
+
+# macOS Compatibility
+
+## Platform Support
+
+**Development:** ✅ macOS + Linux  
+**Production:** Linux only
+
+DockLite fully supports **development on macOS** with some platform-specific considerations.
+
+## ✅ What Works on macOS
+
+### Docker
+- Docker Desktop for Mac
+- All docker commands (`docker compose`, `docker ps`, etc)
+- Container management
+- Volume mappings
+- Hot-reload (backend + frontend)
+
+### Development Workflow
+- Building images
+- Running services
+- Testing (backend pytest + frontend vitest)
+- Logs and debugging
+- All development CLI commands
+
+### Python CLI
+- All development commands (`start`, `stop`, `test`, `logs`)
+- Status and monitoring commands
+- Database operations (via backend container)
+
+## ❌ What Doesn't Work (Linux-Only)
+
+### Production Deployment Commands
+
+These require Linux and are NOT needed for development:
+
+- `useradd`, `usermod` - system user management
+- `sg docker` - docker group switching
+- `hostnamectl` - systemd hostname utility
+- `setup-user` - creates Linux system users
+- `setup-ssh` - configures SSH for deployment
+
+**Solution:** Run deployment commands on Linux production server, not locally.
+
+## 🔧 Writing Cross-Platform Code
+
+### 1. Auto-Detect Paths (NEVER Hardcode!)
+
+**❌ BAD:**
+```python
+PROJECT_ROOT = Path("/home/pavel/docklite")
+```
+
+**✅ GOOD:**
+```python
+# Auto-detect from script location
+SCRIPTS_DIR = Path(__file__).parent.parent.absolute()
+PROJECT_ROOT = SCRIPTS_DIR.parent
+```
+
+**✅ GOOD (Bash):**
+```bash
+# Auto-detect from script location
+get_project_root() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "$(cd "$script_dir/../.." && pwd)"
+}
+```
+
+### 2. Docker Group Detection
+
+**❌ BAD:**
+```python
+# Always use sg docker
+subprocess.run(["sg", "docker", "-c", "docker ps"])
+```
+
+**✅ GOOD:**
+```python
+def has_docker_group() -> bool:
+    """Check if current user is in docker group (Linux-specific)."""
+    try:
+        import os
+        # On macOS, docker group doesn't exist - skip sg
+        if not shutil.which("sg"):
+            return True  # macOS - no group switching needed
+        
+        docker_group = grp.getgrnam('docker')
+        return docker_group.gr_gid in os.getgroups()
+    except (KeyError, OSError):
+        return True  # No group switching needed
+```
+
+**✅ GOOD (Bash):**
+```bash
+docker_compose_cmd() {
+    # Check if sg command exists (Linux only)
+    if command -v sg &> /dev/null && ! groups | grep -q docker; then
+        # Linux: Use sg if not in docker group
+        sg docker -c "docker-compose $*"
+    else
+        # macOS or in docker group: run directly
+        docker-compose "$@"
+    fi
+}
+```
+
+### 3. Platform-Specific Commands
+
+**Use command existence checks:**
+
+```bash
+# Check if Linux-only command exists
+if command -v hostnamectl &> /dev/null; then
+    # Linux systemd
+    hostnamectl set-hostname "$hostname"
+else
+    # macOS or other
+    sudo hostname "$hostname"
+fi
+```
+
+**Or use try/except in Python:**
+
+```python
+def check_root():
+    """Check if running as root."""
+    try:
+        if os.geteuid() != 0:
+            raise PermissionError("Must run as root")
+    except AttributeError:
+        # Windows/macOS may not have geteuid
+        pass
+```
+
+### 4. Home Directory
+
+**❌ BAD:**
+```python
+home = "/home/username"
+```
+
+**✅ GOOD:**
+```python
+home = Path.home()  # Works on all platforms
+```
+
+**✅ GOOD (Bash):**
+```bash
+home=$(eval echo ~$username)
+```
+
+### 5. User Management (Linux-Only)
+
+**Mark Linux-only functions clearly:**
+
+```python
+def create_system_user(username: str):
+    """
+    Create Linux system user (Linux only).
+    
+    Raises:
+        NotImplementedError: On non-Linux platforms
+    """
+    if sys.platform != "linux":
+        raise NotImplementedError("System user management requires Linux")
+    
+    subprocess.run(["useradd", "-m", username], check=True)
+```
+
+**Or skip entirely:**
+
+```bash
+setup_user() {
+    # Only run on Linux
+    if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+        log_error "This command requires Linux"
+        exit 1
+    fi
+    
+    useradd -m "$username"
+}
+```
+
+## 📋 macOS Development Setup
+
+### One-Time Setup
+
+```bash
+# 1. Install Python dependencies
+pip3 install typer rich python-dotenv pytest
+
+# 2. Create .env file
+cat > .env << 'EOF'
+HOSTNAME=localhost
+TRAEFIK_DASHBOARD_HOST=localhost
+PROJECTS_DIR=/Users/$(whoami)/docklite-projects
+SECRET_KEY=dev-secret-key-change-in-production
+EOF
+
+# 3. Make CLI executable
+chmod +x scripts/docklite
+```
+
+### Daily Development
+
+```bash
+# Start services
+docker compose up -d
+
+# Run tests
+docker compose exec backend pytest
+docker compose exec frontend npm test
+
+# View logs
+docker compose logs -f backend
+
+# Stop services
+docker compose down
+```
+
+### Using CLI (Optional)
+
+```bash
+./scripts/docklite start
+./scripts/docklite test
+./scripts/docklite status
+./scripts/docklite logs backend
+```
+
+## 🚀 Production Deployment (from macOS)
+
+**Deployment runs on Linux server, not locally:**
+
+```bash
+# 1. SSH to Linux server
+ssh user@production-server.com
+
+# 2. On server: clone/pull repo
+git pull origin main
+
+# 3. On server: run deployment commands
+./scripts/docklite setup-user
+./scripts/docklite setup-ssh
+./scripts/docklite init-db
+
+# 4. On server: start services
+./scripts/docklite start
+```
+
+**Or use rsync from macOS:**
+
+```bash
+# Sync files to server
+rsync -avz --exclude '.git' ./ user@server:/opt/docklite/
+
+# SSH and run deployment
+ssh user@server 'cd /opt/docklite && ./scripts/docklite rebuild'
+```
+
+## 🧪 Testing Strategy
+
+### Local Tests (macOS)
+
+**Development tests - run locally:**
+```bash
+# Backend unit tests
+cd backend && pytest
+
+# Frontend tests
+cd frontend && npm test
+
+# CLI tests
+cd scripts && pytest tests/
+```
+
+### Production Tests (Linux VM/Server)
+
+**Deployment tests - require Linux:**
+```bash
+# In Linux VM or server
+./scripts/docklite setup-user --user testuser
+./scripts/docklite setup-ssh --user testuser
+ssh testuser@localhost
+```
+
+## 🎯 Best Practices
+
+### DO ✅
+
+1. **Auto-detect paths** using `Path(__file__)` or `${BASH_SOURCE[0]}`
+2. **Check command existence** before using (`command -v sg`, `shutil.which("sg")`)
+3. **Use `Path.home()`** instead of hardcoded home directories
+4. **Document Linux-only functions** clearly in docstrings
+5. **Test on both platforms** when possible
+6. **Use Docker Compose directly** on macOS for simplicity
+
+### DON'T ❌
+
+1. **Never hardcode paths** like `/home/user/...`
+2. **Don't assume `sg` exists** - check first
+3. **Don't use Linux-specific commands** without checks (`useradd`, `hostnamectl`)
+4. **Don't use platform-specific groups** without existence checks
+5. **Don't run deployment commands on macOS** - use Linux server
+
+## 🔍 Checking Platform
+
+### Python
+
+```python
+import sys
+import platform
+
+# Check OS
+if sys.platform == "darwin":
+    # macOS
+    pass
+elif sys.platform == "linux":
+    # Linux
+    pass
+
+# Or
+if platform.system() == "Darwin":
+    # macOS
+    pass
+```
+
+### Bash
+
+```bash
+# Check OS type
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    echo "Running on macOS"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    echo "Running on Linux"
+fi
+
+# Or check command existence
+if command -v sg &> /dev/null; then
+    # Likely Linux
+fi
+```
+
+## 📚 Examples
+
+### Cross-Platform Path Detection
+
+See implementations:
+- [scripts/cli/config.py](mdc:scripts/cli/config.py) - Python auto-detect
+- [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Bash auto-detect
+
+### Docker Group Handling
+
+See implementations:
+- [scripts/cli/utils/docker.py](mdc:scripts/cli/utils/docker.py) - Python docker utils
+- [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Bash docker helpers
+
+### Platform-Specific Deployment
+
+See implementations:
+- [scripts/cli/commands/deployment.py](mdc:scripts/cli/commands/deployment.py) - Linux-only commands
+- [scripts/deployment/](mdc:scripts/deployment/) - Bash deployment scripts
+
+## 🆘 Common Issues
+
+### Issue: CLI commands fail on macOS
+
+**Symptom:** `sg: command not found`
+
+**Solution:** Updated code checks for `sg` existence. Update to latest version.
+
+### Issue: Hardcoded paths break on macOS
+
+**Symptom:** `FileNotFoundError: /home/pavel/docklite`
+
+**Solution:** Use auto-detection (see examples above).
+
+### Issue: Can't run deployment commands
+
+**Symptom:** `useradd: command not found`
+
+**Solution:** Normal! Deployment commands are Linux-only. Run on production server.
+
+### Issue: Docker group errors
+
+**Symptom:** Permission denied on Docker socket
+
+**Solution:** On macOS, Docker Desktop manages permissions. Restart Docker Desktop.
+
+## 📝 Summary
+
+**For Development:**
+- ✅ macOS fully supported
+- ✅ All dev commands work
+- ✅ Docker Compose recommended
+- ✅ Tests run in containers
+
+**For Production:**
+- ⚠️ Deployment requires Linux
+- ✅ Deploy from macOS via SSH/git
+- ✅ Run deployment commands on server
+
+**When Writing Code:**
+- ✅ Auto-detect paths
+- ✅ Check command existence
+- ✅ Document Linux-only functions
+- ✅ Test on both platforms
+
+See [MACOS_COMPATIBILITY.md](mdc:MACOS_COMPATIBILITY.md) for detailed guide.

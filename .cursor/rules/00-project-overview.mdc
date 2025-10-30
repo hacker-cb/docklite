@@ -10,7 +10,7 @@ DockLite - multi-tenant система управления веб-сервер�
 ## Project Structure
 
 ```
-/home/pavel/docklite/          # Main DockLite system
+<PROJECT_ROOT>/                # DockLite system (paths auto-detected)
 ├── backend/                   # FastAPI backend
 │   ├── app/
 │   │   ├── api/              # API endpoints (auth, users, projects, containers, presets, deployment)
@@ -48,11 +48,13 @@ DockLite - multi-tenant система управления веб-сервер�
 │   └── completion/           # Bash completion (2)
 └── docker-compose.yml
 
-/home/{system_user}/projects/  # User deployed projects (multi-tenant)
+<PROJECTS_DIR>/                # User deployed projects (multi-tenant, configurable)
     ├── {project-slug}/        # Slug-based path (e.g., example-com-a7b2)
     │   ├── docker-compose.yml
     │   └── .env
 ```
+
+**Note:** Paths auto-detect based on script location. Works on macOS and Linux.
 
 ## Key Architecture Decisions
 
@@ -92,6 +94,11 @@ DockLite - multi-tenant система управления веб-сервер�
 - PrimeVue UI components
 - Axios for API calls
 - Vitest for testing
+
+**Platform Support:**
+- ✅ Development: macOS + Linux
+- ✅ Production: Linux
+- 🐳 Docker Desktop (macOS) or Docker Engine (Linux)
 
 ## Current Phase Status
 
@@ -183,6 +190,20 @@ Always run tests after changes:
 ./docklite test-backend -k hostname   # Hostname tests (20)
 ./docklite test-backend -k security   # Security tests (34)
 bash scripts/lib/test_hostname.sh     # Bash hostname tests (6)
+
+# Or via Docker Compose (works on all platforms)
+docker compose exec backend pytest -v
+docker compose exec frontend npm test
 ```
 
 Expected: All tests passing ✅ (240 backend, 120+ frontend)
+
+## macOS Development
+
+DockLite fully supports development on macOS. See [macos-compatibility.mdc](mdc:.cursor/rules/macos-compatibility.mdc) for details.
+
+**Key differences:**
+- ✅ All development features work
+- ✅ Docker Desktop instead of Docker Engine
+- ⚠️ Deployment commands (setup-user, setup-ssh) are Linux-only
+- ✅ Use Docker Compose directly or Python CLI
