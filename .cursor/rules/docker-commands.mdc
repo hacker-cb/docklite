@@ -115,7 +115,7 @@ Only use direct docker commands for:
 - Custom docker commands
 
 **Use `sg docker -c "..."` wrapper** because:
-- User `pavel` is in `docker` group
+- User may be in `docker` group
 - But current shell doesn't have group activated
 - `sg docker -c` runs command in docker group context
 - CLI scripts handle this automatically
