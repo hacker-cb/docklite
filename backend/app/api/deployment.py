@@ -92,7 +92,7 @@ async def get_ssh_setup_info():
     server_host = get_server_hostname()
 
     return {
-        "deploy_user" -> dict: deploy_user,
+        "deploy_user": deploy_user,
         "projects_dir": settings.PROJECTS_DIR,
         "server": server_host,
         "instructions": {

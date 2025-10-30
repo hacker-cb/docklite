@@ -53,7 +53,7 @@ async def get_projects(
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(
-    project_id -> dict: int,
+    project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -74,7 +74,7 @@ async def get_project(
 
 @router.put("/{project_id}", response_model=ProjectResponse)
 async def update_project(
-    project_id -> dict: int,
+    project_id: int,
     project: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -114,7 +114,7 @@ async def delete_project(
 
 @router.get("/{project_id}/env", response_model=Dict[str, str])
 async def get_env_vars(
-    project_id -> dict: int,
+    project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -135,7 +135,7 @@ async def get_env_vars(
 
 @router.put("/{project_id}/env")
 async def update_env_vars(
-    project_id -> dict: int,
+    project_id: int,
     env_vars: Dict[str, str],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
