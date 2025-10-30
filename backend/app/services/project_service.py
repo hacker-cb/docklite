@@ -193,7 +193,9 @@ class ProjectService:
             new_domain = project_data.domain if domain_updated else project.domain
 
             modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
-                new_compose, new_domain, str(project.slug)
+                str(new_compose) if new_compose else "", 
+                str(new_domain) if new_domain else "", 
+                str(project.slug)
             )
 
             if traefik_error:
@@ -262,7 +264,8 @@ class ProjectService:
 
         try:
             env_vars_str = str(project.env_vars) if project.env_vars else "{}"
-            return json.loads(env_vars_str)
+            result: dict[str, str] = json.loads(env_vars_str)
+            return result
         except BaseException:
             return {}
 

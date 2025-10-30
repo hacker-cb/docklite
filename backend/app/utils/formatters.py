@@ -38,7 +38,7 @@ def generate_slug_from_domain(domain: str, project_id: int) -> str:
     return f"{slug_base}-{short_id}"
 
 
-def format_project_response(project: Project) -> dict:
+def format_project_response(project: Optional[Project]) -> dict:
     """
     Format project model to API response
 
