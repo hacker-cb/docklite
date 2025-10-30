@@ -42,7 +42,7 @@ async def get_projects(
     """Get all projects (filtered by ownership for non-admin)"""
     service = ProjectService(db)
     projects = await service.get_all_projects(
-        user_id=current_user.id, is_admin=bool(current_user.is_admin)
+        user_id=int(current_user.id), is_admin=bool(current_user.is_admin)
     )
 
     return {
@@ -60,7 +60,7 @@ async def get_project(
     """Get project by ID (with ownership check)"""
     service = ProjectService(db)
     project = await service.get_project(
-        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
+        project_id, user_id=int(current_user.id), is_admin=bool(current_user.is_admin)
     )
 
     if not project:

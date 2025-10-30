@@ -79,12 +79,12 @@ class ProjectService:
         await self.db.flush()  # Flush to get ID
 
         # Generate slug from domain and ID
-        slug = generate_slug_from_domain(project_data.domain, new_project.id)
+        slug = generate_slug_from_domain(project_data.domain, int(new_project.id))
         setattr(new_project, "slug", slug)
 
         # Inject Traefik labels into compose content
         modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
-            project_data.compose_content, project_data.domain, str(slug)
+            project_data.compose_content, project_data.domain, slug
         )
 
         if traefik_error:
