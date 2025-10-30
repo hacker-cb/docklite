@@ -29,7 +29,7 @@ class TestFormatProjectResponse:
             updated_at = datetime(2024, 1, 2, 13, 30, 0)
         
         project = MockProject()
-        result = format_project_response(project)
+        result = format_project_response(project)  # type: ignore[arg-type]
         
         assert result["id"] == 1
         assert result["name"] == "test-project"
