@@ -1,8 +1,10 @@
 # DockLite - Web Server Management System
 
 ![CI](https://github.com/hacker-cb/docklite/workflows/CI/badge.svg)
+![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
 ![Tests](https://img.shields.io/badge/tests-240%20backend%20%2B%20120%2B%20frontend-success)
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 
 DockLite - это система управления веб-сервером с возможностью деплоя множества проектов через docker-compose. Система предоставляет удобный веб-интерфейс, REST API и professional CLI.
 
@@ -506,6 +508,29 @@ DockLite имеет комплексное покрытие тестами:
 - Расширенное логирование и мониторинг
 - Backup и восстановление
 - MCP Server для AI агентов
+
+## 📚 Документация
+
+### Руководства
+
+- [QUICKSTART.md](./QUICKSTART.md) - Быстрый старт для новых пользователей
+- [SETUP.md](./SETUP.md) - Подробная настройка окружения разработки
+- [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md) - Руководство по деплою
+- [SSH_ACCESS.md](./SSH_ACCESS.md) - Настройка SSH доступа
+
+### Техническая документация
+
+- [TRAEFIK.md](./TRAEFIK.md) - Traefik v3 reverse proxy и routing
+- [PRESETS.md](./PRESETS.md) - 14 шаблонов docker-compose
+- [SYSTEM_CONTAINERS_PROTECTION.md](./SYSTEM_CONTAINERS_PROTECTION.md) - Защита системных контейнеров
+- [scripts/README.md](./scripts/README.md) - CLI команды и скрипты
+- [scripts/completion/README.md](./scripts/completion/README.md) - Bash completion
+
+### CI/CD
+
+- [docs/CI_CD.md](./docs/CI_CD.md) - GitHub Actions workflows и автоматическое тестирование
+- [.github/workflows/README.md](./.github/workflows/README.md) - Подробности о workflow
+- [docs/diagrams/ci-workflow.md](./docs/diagrams/ci-workflow.md) - Диаграммы CI pipeline
 
 ## Поддержка
 

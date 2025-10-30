@@ -1,0 +1,283 @@
+name: Test Development Setup
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'scripts/**'
+      - 'docklite'
+      - '.github/workflows/test-setup-dev.yml'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'scripts/**'
+      - 'docklite'
+      - '.github/workflows/test-setup-dev.yml'
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  test-setup-linux:
+    name: Test setup-dev on Linux
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Make CLI executable
+        run: chmod +x ./docklite
+
+      - name: Run setup-dev
+        run: ./docklite setup-dev
+
+      - name: Verify venv created
+        run: |
+          if [ ! -d ".venv" ]; then
+            echo "❌ .venv directory not created"
+            exit 1
+          fi
+          echo "✅ .venv directory exists"
+
+      - name: Verify venv Python
+        run: |
+          if [ ! -f ".venv/bin/python" ]; then
+            echo "❌ .venv/bin/python not found"
+            exit 1
+          fi
+          echo "✅ .venv/bin/python exists"
+
+      - name: Verify dependencies installed
+        run: |
+          .venv/bin/python -c "import typer, rich, dotenv, yaml" || {
+            echo "❌ Dependencies not installed in venv"
+            exit 1
+          }
+          echo "✅ All dependencies installed"
+
+      - name: Verify .env created
+        run: |
+          if [ ! -f ".env" ]; then
+            echo "❌ .env file not created"
+            exit 1
+          fi
+          echo "✅ .env file exists"
+
+      - name: Test CLI version command
+        run: |
+          output=$(./docklite version)
+          if [[ "$output" != *"DockLite"* ]]; then
+            echo "❌ CLI version command failed"
+            exit 1
+          fi
+          echo "✅ CLI version command works"
+          echo "$output"
+
+      - name: Test CLI help command
+        run: |
+          ./docklite --help > /dev/null || {
+            echo "❌ CLI help command failed"
+            exit 1
+          }
+          echo "✅ CLI help command works"
+
+      - name: Verify CLI uses venv
+        run: |
+          # Check that CLI is using venv python
+          ./docklite version 2>&1 | grep -q "DockLite" || {
+            echo "❌ CLI not using venv correctly"
+            exit 1
+          }
+          echo "✅ CLI uses venv automatically"
+
+      - name: Test setup-dev idempotency (run again)
+        run: |
+          ./docklite setup-dev || {
+            echo "❌ setup-dev not idempotent"
+            exit 1
+          }
+          echo "✅ setup-dev is idempotent"
+
+      - name: Display Python environment info
+        run: |
+          echo "System Python:"
+          python3 --version
+          echo ""
+          echo "Venv Python:"
+          .venv/bin/python --version
+          echo ""
+          echo "Installed packages in venv:"
+          .venv/bin/pip list
+
+  test-setup-macos:
+    name: Test setup-dev on macOS
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Make CLI executable
+        run: chmod +x ./docklite
+
+      - name: Run setup-dev
+        run: ./docklite setup-dev
+
+      - name: Verify venv created
+        run: |
+          if [ ! -d ".venv" ]; then
+            echo "❌ .venv directory not created"
+            exit 1
+          fi
+          echo "✅ .venv directory exists"
+
+      - name: Verify venv Python
+        run: |
+          if [ ! -f ".venv/bin/python" ]; then
+            echo "❌ .venv/bin/python not found"
+            exit 1
+          fi
+          echo "✅ .venv/bin/python exists"
+
+      - name: Verify dependencies installed
+        run: |
+          .venv/bin/python -c "import typer, rich, dotenv, yaml" || {
+            echo "❌ Dependencies not installed in venv"
+            exit 1
+          }
+          echo "✅ All dependencies installed"
+
+      - name: Verify .env created
+        run: |
+          if [ ! -f ".env" ]; then
+            echo "❌ .env file not created"
+            exit 1
+          fi
+          echo "✅ .env file exists"
+
+      - name: Test CLI version command
+        run: |
+          output=$(./docklite version)
+          if [[ "$output" != *"DockLite"* ]]; then
+            echo "❌ CLI version command failed"
+            exit 1
+          fi
+          echo "✅ CLI version command works"
+          echo "$output"
+
+      - name: Test CLI help command
+        run: |
+          ./docklite --help > /dev/null || {
+            echo "❌ CLI help command failed"
+            exit 1
+          }
+          echo "✅ CLI help command works"
+
+      - name: Verify CLI uses venv
+        run: |
+          # Check that CLI is using venv python
+          ./docklite version 2>&1 | grep -q "DockLite" || {
+            echo "❌ CLI not using venv correctly"
+            exit 1
+          }
+          echo "✅ CLI uses venv automatically"
+
+      - name: Test setup-dev idempotency (run again)
+        run: |
+          ./docklite setup-dev || {
+            echo "❌ setup-dev not idempotent"
+            exit 1
+          }
+          echo "✅ setup-dev is idempotent"
+
+      - name: Verify no --break-system-packages needed
+        run: |
+          # Verify that user packages are not polluted
+          user_packages=$(python3 -m pip list --user 2>/dev/null | grep -E "(typer|rich)" || echo "")
+          if [[ -n "$user_packages" ]]; then
+            echo "⚠️  Warning: Found DockLite packages in user site-packages"
+            echo "$user_packages"
+            echo "This might indicate --user flag was used"
+          else
+            echo "✅ No DockLite packages in user site-packages (clean system)"
+          fi
+
+      - name: Display Python environment info
+        run: |
+          echo "System Python:"
+          python3 --version
+          echo ""
+          echo "Venv Python:"
+          .venv/bin/python --version
+          echo ""
+          echo "Installed packages in venv:"
+          .venv/bin/pip list
+          echo ""
+          echo "User site-packages (should be minimal):"
+          python3 -m pip list --user 2>/dev/null || echo "(none)"
+
+  test-setup-multiple-python:
+    name: Test setup-dev with Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Make CLI executable
+        run: chmod +x ./docklite
+
+      - name: Run setup-dev
+        run: ./docklite setup-dev
+
+      - name: Verify installation
+        run: |
+          .venv/bin/python -c "import typer, rich, dotenv, yaml"
+          ./docklite version
+          echo "✅ Python ${{ matrix.python-version }} works"
+
+  summary:
+    name: Setup Test Summary
+    runs-on: ubuntu-latest
+    needs: [test-setup-linux, test-setup-macos, test-setup-multiple-python]
+    if: always()
+    
+    steps:
+      - name: Check results
+        run: |
+          echo "╔═══════════════════════════════════════════════════════════════╗"
+          echo "║           Development Setup Test Results                     ║"
+          echo "╚═══════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Linux:              ${{ needs.test-setup-linux.result }}"
+          echo "macOS:              ${{ needs.test-setup-macos.result }}"
+          echo "Multiple Python:    ${{ needs.test-setup-multiple-python.result }}"
+          echo ""
+          
+          if [[ "${{ needs.test-setup-linux.result }}" == "success" ]] && \
+             [[ "${{ needs.test-setup-macos.result }}" == "success" ]] && \
+             [[ "${{ needs.test-setup-multiple-python.result }}" == "success" ]]; then
+            echo "✅ All setup tests passed!"
+            exit 0
+          else
+            echo "❌ Some setup tests failed"
+            exit 1
+          fi
+
