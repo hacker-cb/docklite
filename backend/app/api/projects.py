@@ -36,7 +36,7 @@ async def create_project(
 
 @router.get("", response_model=ProjectListResponse)
 async def get_projects(
-    db -> list: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Get all projects (filtered by ownership for non-admin)"""
