@@ -50,7 +50,7 @@ def format_project_response(project: Optional[Project]) -> dict:
     """
     if not project:
         return {}
-    
+
     return {
         "id": project.id,
         "name": project.name,
