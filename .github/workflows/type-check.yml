@@ -16,6 +16,7 @@ on:
       - 'scripts/cli/**/*.py'
       - 'backend/mypy.ini'
       - 'scripts/mypy.ini'
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   mypy-backend:
