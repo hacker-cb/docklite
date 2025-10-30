@@ -24,23 +24,27 @@ export const TEST_USERS = {
  * Login helper function
  */
 export async function login(page, username, password) {
-  await page.goto('/');
+  // Go to login page
+  await page.goto('/#/login');
   
   // Wait for login form
-  await page.waitForSelector('input[type="text"]');
+  await page.waitForSelector('input#username', { state: 'visible' });
   
   // Fill credentials
-  await page.fill('input[type="text"]', username);
-  await page.fill('input[type="password"]', password);
+  await page.fill('input#username', username);
+  await page.fill('input#password', password);
   
   // Submit
   await page.click('button[type="submit"]');
   
-  // Wait for navigation to complete
-  await page.waitForURL('/');
+  // Wait for successful login and redirect to projects
+  await page.waitForURL('**/projects', { timeout: 10000 });
   
-  // Wait for app to load (check for navigation)
-  await page.waitForSelector('nav', { timeout: 5000 });
+  // Wait for app to fully load
+  await page.waitForSelector('button:has-text("Projects")', { state: 'visible', timeout: 5000 });
+  
+  // Additional wait for any async operations
+  await page.waitForLoadState('networkidle');
 }
 
 /**
@@ -48,7 +52,7 @@ export async function login(page, username, password) {
  */
 export async function logout(page) {
   await page.click('button:has-text("Logout")');
-  await page.waitForURL('/login');
+  await page.waitForURL('/#/login');
 }
 
 /**
@@ -59,13 +63,19 @@ export const test = base.extend({
    * Admin user context
    */
   adminPage: async ({ browser }, use) => {
-    const context = await browser.newContext();
+    // Create fresh context with no storage
+    const context = await browser.newContext({
+      storageState: undefined,
+    });
     const page = await context.newPage();
     
+    // Login as admin
     await login(page, TEST_USERS.admin.username, TEST_USERS.admin.password);
     
+    // Pass page to test
     await use(page);
     
+    // Cleanup
     await context.close();
   },
   
@@ -73,13 +83,19 @@ export const test = base.extend({
    * Regular user context
    */
   userPage: async ({ browser }, use) => {
-    const context = await browser.newContext();
+    // Create fresh context with no storage
+    const context = await browser.newContext({
+      storageState: undefined,
+    });
     const page = await context.newPage();
     
+    // Login as regular user
     await login(page, TEST_USERS.user.username, TEST_USERS.user.password);
     
+    // Pass page to test
     await use(page);
     
+    // Cleanup
     await context.close();
   },
 });

@@ -99,6 +99,10 @@ const checkAuth = async () => {
   if (!token) {
     isAuthenticated.value = false
     await checkSetup()
+    // Redirect to login if not on login page and setup not needed
+    if (router.currentRoute.value.path !== '/login' && !needsSetup.value) {
+      router.push('/login')
+    }
     return
   }
 
@@ -107,12 +111,20 @@ const checkAuth = async () => {
     currentUser.value = response.data
     isAuthenticated.value = true
     needsSetup.value = false
+    // Redirect to projects if on login page
+    if (router.currentRoute.value.path === '/login') {
+      router.push('/projects')
+    }
   } catch (error) {
     // Token invalid, clear it
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     isAuthenticated.value = false
     await checkSetup()
+    // Redirect to login on auth failure
+    if (router.currentRoute.value.path !== '/login') {
+      router.push('/login')
+    }
   }
 }
 
@@ -120,6 +132,8 @@ const handleLoginSuccess = (user) => {
   currentUser.value = user
   isAuthenticated.value = true
   needsSetup.value = false
+  // Redirect to projects after successful login
+  router.push('/projects')
 }
 
 const handleLogout = async () => {
@@ -136,7 +150,8 @@ const handleLogout = async () => {
     
     isAuthenticated.value = false
     currentUser.value = null
-    router.push('/projects')
+    // Redirect to login after logout
+    router.push('/login')
   }
 }
 

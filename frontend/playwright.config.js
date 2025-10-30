@@ -15,7 +15,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   
   // Maximum time one test can run
-  timeout: 30 * 1000,
+  timeout: 10 * 1000,
   
   // Test execution settings
   fullyParallel: true,
@@ -42,6 +42,9 @@ export default defineConfig({
     
     // Video on failure
     video: 'retain-on-failure',
+    
+    // No persistent storage between tests
+    storageState: undefined,
   },
 
   // Configure projects for different browsers
@@ -62,12 +65,13 @@ export default defineConfig({
     // },
   ],
 
-  // Run local dev server before starting tests
+  // Assume DockLite is already running
+  // Run `./docklite start` before tests
   webServer: {
-    command: 'docker compose up -d',
+    command: 'echo "Assuming DockLite is already running..."',
     url: 'http://localhost',
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
+    timeout: 5 * 1000,
+    reuseExistingServer: true,
   },
 });
 

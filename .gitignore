@@ -25,6 +25,11 @@ node_modules/
 dist/
 .vite/
 
+# Testing (Playwright)
+test-results/
+playwright-report/
+playwright/.cache/
+
 # IDE
 .vscode/
 .idea/
