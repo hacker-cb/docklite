@@ -316,7 +316,7 @@ async def get_container_stats(
         if error:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
 
-        return stats
+        return {"stats": stats}
     except HTTPException:
         raise
     except Exception as e:
