@@ -32,7 +32,7 @@ describe('Setup Component', () => {
     })
 
     it('should have username field with autocomplete', () => {
-      const input = wrapper.find('input[id="username"]')
+      const input = wrapper.find('#username input')
       expect(input.exists()).toBe(true)
       expect(input.attributes('name')).toBe('username')
       expect(input.attributes('autocomplete')).toBe('username')
@@ -40,14 +40,14 @@ describe('Setup Component', () => {
     })
 
     it('should have email field', () => {
-      const input = wrapper.find('input[id="email"]')
+      const input = wrapper.find('#email input')
       expect(input.exists()).toBe(true)
       expect(input.attributes('type')).toBe('email')
       expect(input.attributes('name')).toBe('email')
     })
 
     it('should have password field with new-password autocomplete', () => {
-      const input = wrapper.find('input[id="password"]')
+      const input = wrapper.find('#password input')
       expect(input.exists()).toBe(true)
       expect(input.attributes('type')).toBe('password')
       expect(input.attributes('name')).toBe('password')

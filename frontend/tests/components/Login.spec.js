@@ -32,20 +32,20 @@ describe('Login Component', () => {
     })
 
     it('should have username field with name attribute', () => {
-      const input = wrapper.find('input[id="username"]')
+      const input = wrapper.find('#username input')
       expect(input.exists()).toBe(true)
       expect(input.attributes('name')).toBe('username')
     })
 
     it('should have password field with name attribute', () => {
-      const input = wrapper.find('input[id="password"]')
+      const input = wrapper.find('#password input')
       expect(input.exists()).toBe(true)
       expect(input.attributes('type')).toBe('password')
       expect(input.attributes('name')).toBe('password')
     })
 
     it('should have autocomplete attribute on password', () => {
-      const input = wrapper.find('input[id="password"]')
+      const input = wrapper.find('#password input')
       expect(input.attributes('autocomplete')).toBe('current-password')
     })
 

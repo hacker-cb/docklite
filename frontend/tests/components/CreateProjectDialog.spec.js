@@ -16,10 +16,10 @@ vi.mock('../../src/composables/usePresets', () => ({
   usePresets: () => {
     const { ref } = require('vue')
     return {
-      presets: [
+      presets: ref([
         { id: 'nginx', name: 'Nginx', category: 'web', icon: '🌐', description: 'Web server', tags: ['web'] },
         { id: 'postgres', name: 'PostgreSQL', category: 'database', icon: '🐘', description: 'Database', tags: ['db'] }
-      ],
+      ]),
       categories: [
         { id: 'web', name: 'Web Servers', count: 1 },
         { id: 'database', name: 'Databases', count: 1 }
@@ -30,7 +30,9 @@ vi.mock('../../src/composables/usePresets', () => ({
       resetSelection: vi.fn(),
       selectedPreset: ref(null),  // Must be ref
       selectedCategory: null,
-      filteredPresets: []
+      filteredPresets: [],
+      presetDetails: ref(null),
+      presetComposeContent: ref('')
     }
   }
 }))
