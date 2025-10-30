@@ -80,7 +80,7 @@ showError(toast, error)
 
 Location: [frontend/src/router.js](mdc:frontend/src/router.js)
 
-- Uses `createWebHashHistory()` - URLs like `#/projects`, `#/users`
+- Uses `createWebHistory()` - Clean URLs like `/projects`, `/users`
 - Lazy loading views: `component: () => import('./views/ProjectsView.vue')`
 - Navigation guard for admin routes
 

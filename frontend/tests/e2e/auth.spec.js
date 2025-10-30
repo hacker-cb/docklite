@@ -29,7 +29,7 @@ test.describe('Authentication', () => {
     await login(page, TEST_USERS.admin.username, TEST_USERS.admin.password);
     
     // Should be on projects page
-    await expect(page).toHaveURL('/#/projects');
+    await expect(page).toHaveURL('/projects');
     
     // Navigation buttons should be visible
     await expect(page.locator('button:has-text("Projects")')).toBeVisible();
@@ -45,7 +45,7 @@ test.describe('Authentication', () => {
     await login(page, TEST_USERS.user.username, TEST_USERS.user.password);
     
     // Should be on projects page
-    await expect(page).toHaveURL('/#/projects');
+    await expect(page).toHaveURL('/projects');
     
     // Navigation buttons should be visible
     await expect(page.locator('button:has-text("Projects")')).toBeVisible();
@@ -98,7 +98,7 @@ test.describe('Authentication', () => {
     await page.reload();
     
     // Should still be authenticated and on projects page
-    await expect(page).toHaveURL('/#/projects');
+    await expect(page).toHaveURL('/projects');
     await expect(page.locator('button:has-text("Projects")')).toBeVisible();
   });
 

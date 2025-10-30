@@ -60,7 +60,7 @@ DockLite implements true multi-tenant architecture:
 
 **Core:**
 - Vue 3 Composition API
-- Vue Router 4 (hash mode)
+- Vue Router 4 (history mode)
 - PrimeVue UI components
 - Vite build tool
 

@@ -16,7 +16,7 @@ import { test, expect } from './fixtures/auth.fixture.js';
 test.describe('Non-Admin User Functionality', () => {
   test('should see limited navigation menu', async ({ userPage }) => {
     // Already on projects page from login
-    await userPage.waitForURL('/#/projects');
+    await userPage.waitForURL('/projects');
     
     // Should see allowed navigation buttons
     await expect(userPage.locator('button:has-text("Projects")')).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('Non-Admin User Functionality', () => {
 
   test('should access Projects view', async ({ userPage }) => {
     // Already on projects page from login
-    await userPage.waitForURL('/#/projects');
+    await userPage.waitForURL('/projects');
     
     // Should see "New Project" button
     await expect(userPage.locator('button:has-text("New Project")')).toBeVisible();
@@ -37,7 +37,7 @@ test.describe('Non-Admin User Functionality', () => {
 
   test('should see only own projects', async ({ userPage }) => {
     // Already on projects page from login
-    await userPage.waitForURL('/#/projects');
+    await userPage.waitForURL('/projects');
     
     // Wait for projects to load
     await userPage.waitForTimeout(1000);
@@ -67,7 +67,7 @@ test.describe('Non-Admin User Functionality', () => {
     
     // If they try to navigate directly, they should be blocked
     // URL will show redirect (may not be perfect due to hash routing)
-    await userPage.goto('/#/containers');
+    await userPage.goto('/containers');
     await userPage.waitForTimeout(500);
     
     // Either redirected or see empty/blocked view (both acceptable)
@@ -81,7 +81,7 @@ test.describe('Non-Admin User Functionality', () => {
     await expect(userPage.locator('button:has-text("Users")')).not.toBeVisible();
     
     // Try to navigate directly to Users page
-    await userPage.goto('/#/users');
+    await userPage.goto('/users');
     await userPage.waitForTimeout(500);
     
     // Should be redirected back to projects (admin-only route)
@@ -95,7 +95,7 @@ test.describe('Non-Admin User Functionality', () => {
 
   test('should open create project dialog', async ({ userPage }) => {
     // Already on projects page from login
-    await userPage.waitForURL('/#/projects');
+    await userPage.waitForURL('/projects');
     
     // Click New Project
     await userPage.click('button:has-text("New Project")');
@@ -114,7 +114,7 @@ test.describe('Non-Admin User Functionality', () => {
     await expect(userPage.locator('button:has-text("Containers")')).not.toBeVisible();
     
     // Even if they try direct navigation, they won't see Containers button
-    await userPage.goto('/#/containers');
+    await userPage.goto('/containers');
     await userPage.waitForTimeout(500);
     
     // Either redirected to projects or no containers button visible

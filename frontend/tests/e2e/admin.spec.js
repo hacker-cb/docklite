@@ -15,7 +15,7 @@ import { test, expect } from './fixtures/auth.fixture.js';
 test.describe('Admin User Functionality', () => {
   test('should access Projects view', async ({ adminPage }) => {
     // Already on projects page after login
-    await adminPage.waitForURL('/#/projects');
+    await adminPage.waitForURL('/projects');
     
     // Should see navigation buttons
     await expect(adminPage.locator('button:has-text("Projects")')).toBeVisible();
@@ -27,7 +27,7 @@ test.describe('Admin User Functionality', () => {
   test('should access Users management', async ({ adminPage }) => {
     // Navigate to Users
     await adminPage.click('button:has-text("Users")');
-    await adminPage.waitForURL('/#/users');
+    await adminPage.waitForURL('/users');
     
     // Should see "Add User" button
     await expect(adminPage.locator('button:has-text("Add User")')).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('Admin User Functionality', () => {
   test('should access Containers view', async ({ adminPage }) => {
     // Navigate to Containers
     await adminPage.click('button:has-text("Containers")');
-    await adminPage.waitForURL('/#/containers');
+    await adminPage.waitForURL('/containers');
     
     // Should see containers table
     await expect(adminPage.locator('.p-datatable').first()).toBeVisible();
@@ -48,7 +48,7 @@ test.describe('Admin User Functionality', () => {
   test('should see system containers in Containers view', async ({ adminPage }) => {
     // Navigate to Containers
     await adminPage.click('button:has-text("Containers")');
-    await adminPage.waitForURL('/#/containers');
+    await adminPage.waitForURL('/containers');
     
     // Wait for containers to load
     await adminPage.waitForTimeout(1000);
@@ -68,7 +68,7 @@ test.describe('Admin User Functionality', () => {
   test('should NOT be able to stop system containers', async ({ adminPage }) => {
     // Navigate to Containers
     await adminPage.click('button:has-text("Containers")');
-    await adminPage.waitForURL('/#/containers');
+    await adminPage.waitForURL('/containers');
     
     // Wait for containers to load
     await adminPage.waitForTimeout(1000);
@@ -99,7 +99,7 @@ test.describe('Admin User Functionality', () => {
 
   test('should create new project dialog', async ({ adminPage }) => {
     // Already on projects page from login
-    await adminPage.waitForURL('/#/projects');
+    await adminPage.waitForURL('/projects');
     
     // Click New Project
     await adminPage.click('button:has-text("New Project")');
@@ -116,7 +116,7 @@ test.describe('Admin User Functionality', () => {
   test('should add new user dialog', async ({ adminPage }) => {
     // Navigate to Users
     await adminPage.click('button:has-text("Users")');
-    await adminPage.waitForURL('/#/users');
+    await adminPage.waitForURL('/users');
     
     // Click Add User
     await adminPage.click('button:has-text("Add User")');
@@ -130,7 +130,7 @@ test.describe('Admin User Functionality', () => {
 
   test('should view all projects from different users', async ({ adminPage }) => {
     // Already on projects page from login
-    await adminPage.waitForURL('/#/projects');
+    await adminPage.waitForURL('/projects');
     
     // Wait for projects to load
     await adminPage.waitForTimeout(1000);

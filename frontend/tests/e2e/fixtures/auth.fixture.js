@@ -25,7 +25,7 @@ export const TEST_USERS = {
  */
 export async function login(page, username, password) {
   // Go to login page
-  await page.goto('/#/login');
+  await page.goto('/login');
   
   // Wait for login form
   await page.waitForSelector('input#username', { state: 'visible' });
@@ -52,7 +52,7 @@ export async function login(page, username, password) {
  */
 export async function logout(page) {
   await page.click('button:has-text("Logout")');
-  await page.waitForURL('/#/login');
+  await page.waitForURL('/login');
 }
 
 /**
