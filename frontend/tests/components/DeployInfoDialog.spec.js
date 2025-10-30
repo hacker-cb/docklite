@@ -79,7 +79,9 @@ describe('DeployInfoDialog', () => {
     })
 
     it('should display deployment instructions', async () => {
+      await wrapper.vm.$nextTick()
       await flushPromises()
+      expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.instructions.upload_files).toContain('rsync')
       expect(wrapper.vm.deployInfo.instructions.start_containers).toContain('docker-compose up -d')
     })
