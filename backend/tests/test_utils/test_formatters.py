@@ -57,7 +57,7 @@ class TestFormatProjectResponse:
             updated_at = datetime.now()
         
         project = MockProject()
-        result = format_project_response(project)
+        result = format_project_response(project)  # type: ignore[arg-type]
         
         assert result["env_vars"] == {}
 
@@ -146,7 +146,7 @@ class TestSafeJsonLoads:
     
     def test_none_input(self):
         """Test parsing None returns default"""
-        result = safe_json_loads(None)
+        result = safe_json_loads(None)  # type: ignore[arg-type]
         assert result == {}
     
     def test_empty_string(self):
