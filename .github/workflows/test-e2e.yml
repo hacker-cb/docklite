@@ -93,20 +93,20 @@ jobs:
       - name: Create test users
         run: |
           echo "👤 Creating admin user: cursor"
-          ./docklite add-user cursor -p "CursorAI_Test2024!" --admin --email "cursor@test.local"
+          ./docklite user add cursor -p "CursorAI_Test2024!" --admin --email "cursor@test.local"
           
           echo "👤 Creating regular user: testuser"
-          ./docklite add-user testuser -p "TestUser_2024!" --email "testuser@test.local"
+          ./docklite user add testuser -p "TestUser_2024!" --email "testuser@test.local"
           
           echo "✅ Test users created"
 
       - name: Verify test users
         run: |
           echo "📋 Listing users..."
-          ./docklite list-users
+          ./docklite user list
           
           # Verify users exist
-          users_output=$(./docklite list-users)
+          users_output=$(./docklite user list)
           if echo "$users_output" | grep -q "cursor"; then
             echo "✅ Admin user 'cursor' exists"
           else
