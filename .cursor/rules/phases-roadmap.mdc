@@ -2,52 +2,22 @@
 description: Development phases and roadmap
 ---
 
-# DockLite Development Phases
+# DockLite Development Roadmap
 
-## Completed Phases
+## Current Status
 
-### ✅ Phase 1: Core Infrastructure
-- **Multi-tenancy architecture** - user isolation with system_user mapping
-- **Projects CRUD API** with ownership and slug-based paths
-- **14 docker-compose presets** (web servers, databases, CMS, monitoring)
-- **JWT authentication** with role-based access control
-- **User Management** - CRUD, password management, admin controls
-- **SSH deployment** - per-user isolation via system users
-- **Vue.js 3 + PrimeVue UI** with modern component architecture
-- **Clean architecture** - Services, Models, Validators, Utils, Constants
-- Initial test coverage
+✅ **Production Ready**
+- Multi-tenant project management with user isolation
+- Docker containers management with system protection
+- Traefik v3 reverse proxy with auto service discovery
+- JWT authentication with role-based access control (admin/user)
+- Professional CLI (18 commands) with bash completion
+- 240 backend tests + 120+ frontend tests (95% coverage)
+- 14 docker-compose presets (Traefik-ready)
 
-### ✅ Phase 2: Container Management
-- **Docker service** for docker-compose orchestration via SSH
-- **Container lifecycle API** - start, stop, restart, status
-- **Real-time status** from Docker API
-- **UI controls** for container management with ownership checks
-- **Deployment info** endpoint with instructions
+## Upcoming Features
 
-### ✅ Phase 3: Production Ready
-- **Comprehensive testing** - 157 backend tests, 120+ frontend tests
-- **Test coverage** - ~95% overall coverage
-- **Validators** - compose validation, domain validation
-- **Error handling** - custom exceptions, proper error messages
-- **API documentation** - OpenAPI/Swagger
-- **Production architecture** - ready for deployment
-
-### ✅ Phase 4: Traefik v3 Integration + Security (2025-10-29)
-- **Traefik v3 reverse proxy** - modern cloud-native solution (not Nginx)
-- **Auto service discovery** - via Docker labels
-- **Domain-based routing** - `http://example.com` without ports
-- **TraefikService** - auto-injects labels into docker-compose
-- **Unified hostname system** - Config > System > Fallback priority
-- **Dashboard security** - Admin-only via ForwardAuth (JWT + is_admin)
-- **14 presets updated** - Traefik-ready (expose, networks, labels)
-- **CLI improvements** - list-users, enhanced reset-password
-- **229 tests passing** - +72 new tests (Traefik, hostname, security)
-- **Zero vulnerabilities** - 34 comprehensive security tests
-- See: [TRAEFIK.md](mdc:TRAEFIK.md), [PHASE_4_COMPLETE.md](mdc:PHASE_4_COMPLETE.md)
-
-## Upcoming Phases
-
-### 🔄 Phase 5: SSL/HTTPS with Let's Encrypt ⭐ NEXT (90% Ready)
+### 🔄 Phase 5: SSL/HTTPS with Let's Encrypt (Next - 90% Ready)
 - **Let's Encrypt integration** - automatic SSL certificates
 - **Certificate resolver** - Traefik built-in support
 - **TLS configuration** - HTTPS labels for projects
@@ -60,7 +30,7 @@ description: Development phases and roadmap
 - Improved compose validation
 - Secrets management
 
-### 🔄 Phase 7: Logs
+### 🔄 Phase 7: Logs & Monitoring
 - View container logs in UI
 - WebSocket for real-time logs
 - Last N lines
@@ -78,14 +48,14 @@ description: Development phases and roadmap
 - Production optimizations
 - Documentation polish
 
-## Future Improvements
+## Future Ideas
 
-See [FUTURE_IMPROVEMENTS.md](mdc:FUTURE_IMPROVEMENTS.md) for 27+ ideas including:
+Consider for later phases:
 - Health checks
 - Audit logs  
 - Project templates
-- Backup/restore
-- Monitoring
+- Backup/restore improvements
+- Monitoring dashboard
 - Webhooks
 - Resource limits
 - Performance optimizations
