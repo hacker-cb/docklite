@@ -7,6 +7,8 @@ from typing import Optional, List
 
 from ..config import (
     PROJECT_ROOT,
+    SCRIPTS_DIR,
+    VENV_PYTHON,
     DEFAULT_PROJECTS_DIR,
     CONTAINER_BACKEND,
     CONTAINER_FRONTEND,
@@ -520,4 +522,50 @@ def test_e2e(
             console.print()
             log_info("Tip: Use --ui flag for interactive debugging")
             raise typer.Exit(1)
+
+
+@app.command(name="test-cli")
+def test_cli(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    coverage: bool = typer.Option(False, "--coverage", "-c", help="Generate coverage report"),
+    file: Optional[str] = typer.Option(None, "--file", "-f", help="Run specific test file"),
+) -> None:
+    """Run CLI tests (pytest for scripts/tests/)."""
+    import subprocess
+    
+    print_banner("CLI Tests")
+    
+    # Check if pytest is installed in venv
+    pytest_path = VENV_PYTHON.parent / "pytest"
+    if not pytest_path.exists():
+        log_error("pytest not found in venv. Run: ./docklite dev setup-dev")
+        raise typer.Exit(1)
+    
+    log_step("Running CLI tests...")
+    
+    # Build pytest command
+    pytest_args = [str(pytest_path), "tests/"]
+    
+    if file:
+        pytest_args = [str(pytest_path), f"tests/{file}"]
+    
+    if verbose:
+        pytest_args.append("-v")
+    else:
+        pytest_args.append("-q")
+    
+    if coverage:
+        pytest_args.extend(["--cov=cli", "--cov-report=term-missing"])
+    
+    # Run pytest from scripts/ directory
+    result = subprocess.run(
+        pytest_args,
+        cwd=SCRIPTS_DIR
+    )
+    
+    if result.returncode == 0:
+        log_success("All CLI tests passed!")
+    else:
+        log_error("Some CLI tests failed")
+        raise typer.Exit(1)
 

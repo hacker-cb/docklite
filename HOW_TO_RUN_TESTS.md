@@ -199,6 +199,51 @@ npm run test:e2e:report
 
 See detailed guide: [frontend/tests/e2e/README.md](frontend/tests/e2e/README.md)
 
+## 🛠️ CLI Tests (Python CLI)
+
+### Quick Run
+
+```bash
+./docklite dev test-cli           # Run all CLI tests (quiet mode)
+```
+
+### Verbose Output
+
+```bash
+./docklite dev test-cli -v        # Verbose output
+```
+
+### With Coverage
+
+```bash
+./docklite dev test-cli -c        # Generate coverage report
+```
+
+### Specific Test File
+
+```bash
+./docklite dev test-cli -f test_commands_user.py  # Run specific file
+./docklite dev test-cli -f test_config.py         # Config tests
+```
+
+### CLI Test Coverage
+
+**Tests:** ~60 tests covering:
+- ✅ Commands (development, deployment, user, maintenance)
+- ✅ Utils (docker, console, system, validation)
+- ✅ Configuration (paths, hostname, URL generation)
+
+**Location:** `scripts/tests/`  
+**Framework:** pytest with unittest.mock  
+**Test files:**
+- `test_commands_development.py` - Start, stop, rebuild, test commands
+- `test_commands_maintenance.py` - Backup, restore, clean, status
+- `test_commands_user.py` - User management (add, list, reset-password)
+- `test_config.py` - Configuration and hostname detection
+- `test_docker.py` - Docker utilities
+- `test_console.py` - Console output formatting
+- `test_system.py` - System utilities
+
 ## 🔍 Первая проверка (before running full tests)
 
 ### Проверка синтаксиса Python

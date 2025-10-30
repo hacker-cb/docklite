@@ -17,6 +17,7 @@ BACKEND_DATA_DIR = PROJECT_ROOT / "backend-data"
 BACKUPS_DIR = PROJECT_ROOT / "backups"
 ENV_FILE = PROJECT_ROOT / ".env"
 DOCKER_COMPOSE_FILE = PROJECT_ROOT / "docker-compose.yml"
+VENV_PYTHON = PROJECT_ROOT / ".venv" / "bin" / "python"
 
 # Default projects directory - use home directory for cross-platform compatibility
 _home = Path.home()

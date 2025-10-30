@@ -17,7 +17,7 @@ app = typer.Typer(
 )
 
 # Add command groups
-app.add_typer(development.app, name="dev", help="Development commands (5)")
+app.add_typer(development.app, name="dev", help="Development commands (6)")
 app.add_typer(deployment.app, name="deploy", help="Deployment commands (3)")
 app.add_typer(user.app, name="user", help="User management commands (3)")
 app.add_typer(maintenance.app, name="maint", help="Maintenance commands (3)")
@@ -49,7 +49,7 @@ def main_callback():
       test                    # Run all tests
     
     Command Groups:
-      dev                     # Development (setup-dev, rebuild, test-*)
+      dev                     # Development (setup-dev, rebuild, test-*, test-cli)
       deploy                  # Deployment (setup-user, setup-ssh, init-db)
       user                    # User management (add, list, reset-password)
       maint                   # Maintenance (backup, restore, clean)

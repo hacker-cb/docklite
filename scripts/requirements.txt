@@ -15,3 +15,7 @@ PyYAML>=6.0            # YAML parsing (if needed for docker-compose.yml)
 mypy>=1.11.0          # Static type checker
 types-PyYAML>=6.0.12  # Type stubs for PyYAML
 
+# Testing
+pytest>=7.4.0         # Test framework for CLI tests
+pytest-cov>=4.1.0     # Coverage plugin for pytest
+

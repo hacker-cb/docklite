@@ -115,7 +115,7 @@ Shows:
 
 ---
 
-### Development Group (`dev`) - 5 Commands
+### Development Group (`dev`) - 6 Commands
 
 Development and testing commands:
 
@@ -166,6 +166,18 @@ What it does:
 **Prerequisites:**
 - Playwright: `cd frontend && npm install @playwright/test && npx playwright install chromium`
 - Test users: `cursor` (admin) and `testuser` (user)
+
+#### `dev test-cli` - CLI Tests
+```bash
+./docklite dev test-cli                    # Run all CLI tests (quiet)
+./docklite dev test-cli -v                 # Verbose output
+./docklite dev test-cli -c                 # With coverage report
+./docklite dev test-cli -f test_config.py  # Run specific test file
+```
+
+**Tests:** ~60 tests covering commands, utils, config  
+**Location:** `scripts/tests/`  
+**Framework:** pytest with unittest.mock
 
 ---
 

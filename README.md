@@ -70,7 +70,7 @@ cd docklite
 ### Интерфейс
 - **Веб-интерфейс** - современный UI на Vue.js 3 + PrimeVue
 - **REST API** - полное API для всех операций
-- **CLI** - профессиональный CLI с 20 командами (6 root + 4 группы) и bash completion
+- **CLI** - профессиональный CLI с 21 командой (6 root + 4 группы) и bash completion
 
 ## Архитектура
 
@@ -440,6 +440,7 @@ DockLite использует логическую группировку ком
 ./docklite dev test-backend    # Тесты бэкенда
 ./docklite dev test-frontend   # Тесты фронтенда
 ./docklite dev test-e2e        # E2E тесты (Playwright)
+./docklite dev test-cli        # Тесты CLI (pytest)
 ```
 
 **Deployment (`deploy`)** - Деплой на production (Linux only):
@@ -577,7 +578,7 @@ npm run test:e2e:debug        # Режим отладки
 
 **Интерфейс и инструменты:**
 - Современный Vue.js 3 + PrimeVue UI
-- Professional CLI (19 команд + bash completion)
+- Professional CLI (21 команда + bash completion)
 - Comprehensive testing (380+ tests including E2E, 95% coverage)
 
 ### 🔄 В планах
