@@ -33,18 +33,18 @@ describe('useContainers Composable', () => {
   describe('startContainer', () => {
     it('should start container successfully', async () => {
       const mockResponse = { status: 'running', message: 'Started' }
-      mockContainersApi.start.mockResolvedValue({ data: mockResponse })
+      containersApi.start.mockResolvedValue({ data: mockResponse })
 
       const result = await composable.startContainer(1)
 
       expect(result).toEqual(mockResponse)
-      expect(mockContainersApi.start).toHaveBeenCalledWith(1)
+      expect(containersApi.start).toHaveBeenCalledWith(1)
       expect(composable.loading.value).toBe(false)
       expect(composable.error.value).toBeNull()
     })
 
     it('should set loading state', async () => {
-      mockContainersApi.start.mockImplementation(() => {
+      containersApi.start.mockImplementation(() => {
         expect(composable.loading.value).toBe(true)
         return Promise.resolve({ data: {} })
       })
@@ -55,7 +55,7 @@ describe('useContainers Composable', () => {
 
     it('should handle errors', async () => {
       const mockError = new Error('Start failed')
-      mockContainersApi.start.mockRejectedValue(mockError)
+      containersApi.start.mockRejectedValue(mockError)
 
       await expect(composable.startContainer(1)).rejects.toThrow('Start failed')
       expect(composable.error.value).toBe(mockError)
@@ -66,17 +66,17 @@ describe('useContainers Composable', () => {
   describe('stopContainer', () => {
     it('should stop container successfully', async () => {
       const mockResponse = { status: 'stopped', message: 'Stopped' }
-      mockContainersApi.stop.mockResolvedValue({ data: mockResponse })
+      containersApi.stop.mockResolvedValue({ data: mockResponse })
 
       const result = await composable.stopContainer(1)
 
       expect(result).toEqual(mockResponse)
-      expect(mockContainersApi.stop).toHaveBeenCalledWith(1)
+      expect(containersApi.stop).toHaveBeenCalledWith(1)
     })
 
     it('should handle errors', async () => {
       const mockError = new Error('Stop failed')
-      mockContainersApi.stop.mockRejectedValue(mockError)
+      containersApi.stop.mockRejectedValue(mockError)
 
       await expect(composable.stopContainer(1)).rejects.toThrow('Stop failed')
       expect(composable.error.value).toBe(mockError)
@@ -86,17 +86,17 @@ describe('useContainers Composable', () => {
   describe('restartContainer', () => {
     it('should restart container successfully', async () => {
       const mockResponse = { status: 'running', message: 'Restarted' }
-      mockContainersApi.restart.mockResolvedValue({ data: mockResponse })
+      containersApi.restart.mockResolvedValue({ data: mockResponse })
 
       const result = await composable.restartContainer(1)
 
       expect(result).toEqual(mockResponse)
-      expect(mockContainersApi.restart).toHaveBeenCalledWith(1)
+      expect(containersApi.restart).toHaveBeenCalledWith(1)
     })
 
     it('should handle errors', async () => {
       const mockError = new Error('Restart failed')
-      mockContainersApi.restart.mockRejectedValue(mockError)
+      containersApi.restart.mockRejectedValue(mockError)
 
       await expect(composable.restartContainer(1)).rejects.toThrow('Restart failed')
       expect(composable.error.value).toBe(mockError)
@@ -106,17 +106,17 @@ describe('useContainers Composable', () => {
   describe('getContainerStatus', () => {
     it('should get container status successfully', async () => {
       const mockStatus = { status: 'running', uptime: '2 hours' }
-      mockContainersApi.getStatus.mockResolvedValue({ data: mockStatus })
+      containersApi.getStatus.mockResolvedValue({ data: mockStatus })
 
       const result = await composable.getContainerStatus(1)
 
       expect(result).toEqual(mockStatus)
-      expect(mockContainersApi.getStatus).toHaveBeenCalledWith(1)
+      expect(containersApi.getStatus).toHaveBeenCalledWith(1)
     })
 
     it('should handle errors', async () => {
       const mockError = new Error('Status check failed')
-      mockContainersApi.getStatus.mockRejectedValue(mockError)
+      containersApi.getStatus.mockRejectedValue(mockError)
 
       await expect(composable.getContainerStatus(1)).rejects.toThrow('Status check failed')
       expect(composable.error.value).toBe(mockError)
