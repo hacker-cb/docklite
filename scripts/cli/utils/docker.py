@@ -9,13 +9,17 @@ from .console import log_error
 
 
 def has_docker_group() -> bool:
-    """Check if current user is in docker group."""
+    """Check if current user is in docker group (Linux-specific)."""
     try:
-        docker_group = grp.getgrnam('docker')
         import os
+        # On macOS, docker group doesn't exist - always return True to skip sg
+        if not shutil.which("sg"):
+            return True  # macOS or no sg command - no group switching needed
+        
+        docker_group = grp.getgrnam('docker')
         return docker_group.gr_gid in os.getgroups()
     except (KeyError, OSError):
-        return False
+        return True  # If docker group doesn't exist, assume no group switching needed
 
 
 def get_docker_compose_command() -> List[str]:

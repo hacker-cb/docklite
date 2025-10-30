@@ -80,28 +80,33 @@ get_actual_home() {
 
 # Docker helpers
 docker_compose_cmd() {
-    # Use sg docker if not in docker group
-    if groups | grep -q docker; then
-        if command -v docker-compose &> /dev/null; then
-            docker-compose "$@"
-        else
-            docker compose "$@"
-        fi
-    else
+    # Check if sg command exists (Linux only) and we're not in docker group
+    if command -v sg &> /dev/null && ! groups | grep -q docker; then
+        # Linux: Use sg docker if not in docker group
         if command -v docker-compose &> /dev/null; then
             sg docker -c "docker-compose $*"
         else
             sg docker -c "docker compose $*"
+        fi
+    else
+        # macOS or already in docker group: run directly
+        if command -v docker-compose &> /dev/null; then
+            docker-compose "$@"
+        else
+            docker compose "$@"
         fi
     fi
 }
 
 is_container_running() {
     local container=$1
-    if groups | grep -q docker; then
-        docker ps --format '{{.Names}}' | grep -q "^${container}$"
-    else
+    # Check if sg command exists (Linux only) and we're not in docker group
+    if command -v sg &> /dev/null && ! groups | grep -q docker; then
+        # Linux: Use sg docker if not in docker group
         sg docker -c "docker ps --format '{{.Names}}'" | grep -q "^${container}$"
+    else
+        # macOS or already in docker group: run directly
+        docker ps --format '{{.Names}}' | grep -q "^${container}$"
     fi
 }
 
@@ -208,9 +213,12 @@ get_docklite_version() {
     echo "1.0.0"
 }
 
-# Project paths
+# Project paths - Auto-detect based on script location
 get_project_root() {
-    echo "/home/pavel/docklite"
+    # Get the directory of the common.sh script
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Go up two levels: lib -> scripts -> project_root
+    echo "$(cd "$script_dir/../.." && pwd)"
 }
 
 get_scripts_dir() {

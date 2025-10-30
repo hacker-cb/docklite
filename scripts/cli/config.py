@@ -8,16 +8,17 @@ from typing import Optional
 # Version
 VERSION = "1.0.0"
 
-# Paths
-PROJECT_ROOT = Path("/home/pavel/docklite")
-SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+# Paths - Auto-detect based on script location
+SCRIPTS_DIR = Path(__file__).parent.parent.absolute()  # scripts/cli -> scripts
+PROJECT_ROOT = SCRIPTS_DIR.parent  # scripts -> project root
 BACKEND_DATA_DIR = PROJECT_ROOT / "backend-data"
 BACKUPS_DIR = PROJECT_ROOT / "backups"
 ENV_FILE = PROJECT_ROOT / ".env"
 DOCKER_COMPOSE_FILE = PROJECT_ROOT / "docker-compose.yml"
 
-# Default projects directory
-DEFAULT_PROJECTS_DIR = Path("/home/pavel/docklite-projects")
+# Default projects directory - use home directory for cross-platform compatibility
+_home = Path.home()
+DEFAULT_PROJECTS_DIR = _home / "docklite-projects"
 
 # Container names
 CONTAINER_TRAEFIK = "docklite-traefik"
