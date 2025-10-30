@@ -36,7 +36,9 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)) -> Tok
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_active_user)) -> UserResponse:
+async def get_current_user_info(
+    current_user: User = Depends(get_current_active_user),
+) -> UserResponse:
     """Get current user information"""
     return format_user_response(current_user)
 
@@ -57,7 +59,9 @@ async def check_setup_needed(db: AsyncSession = Depends(get_db)) -> dict:
 
 
 @router.post("/setup", response_model=Token)
-async def initial_setup(user_data: UserCreate, db: AsyncSession = Depends(get_db)) -> Token:
+async def initial_setup(
+    user_data: UserCreate, db: AsyncSession = Depends(get_db)
+) -> Token:
     """Create first admin user (only works if no users exist)"""
     auth_service = AuthService(db)
 
@@ -65,7 +69,10 @@ async def initial_setup(user_data: UserCreate, db: AsyncSession = Depends(get_db
     user, error = await auth_service.create_first_admin(user_data)
 
     if error or not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error or "Failed to create admin")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error or "Failed to create admin",
+        )
 
     # Auto-login: create access token
     access_token = auth_service.create_access_token(data={"sub": str(user.username)})
@@ -74,7 +81,9 @@ async def initial_setup(user_data: UserCreate, db: AsyncSession = Depends(get_db
 
 
 @router.get("/verify-admin")
-async def verify_admin(current_user: User = Depends(get_current_user_with_cookie)) -> Response:
+async def verify_admin(
+    current_user: User = Depends(get_current_user_with_cookie),
+) -> Response:
     """
     Verify that current user is an admin (for Traefik ForwardAuth)
 

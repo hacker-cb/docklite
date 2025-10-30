@@ -80,7 +80,7 @@ class ProjectService:
 
         # Generate slug from domain and ID
         slug = generate_slug_from_domain(project_data.domain, new_project.id)
-        setattr(new_project, 'slug', slug)
+        setattr(new_project, "slug", slug)
 
         # Inject Traefik labels into compose content
         modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
@@ -92,7 +92,7 @@ class ProjectService:
             return None, f"Failed to inject Traefik labels: {traefik_error}"
 
         # Update compose_content with Traefik labels
-        setattr(new_project, 'compose_content', modified_compose)
+        setattr(new_project, "compose_content", modified_compose)
 
         await self.db.commit()
         await self.db.refresh(new_project)
@@ -199,7 +199,7 @@ class ProjectService:
             if traefik_error:
                 return None, f"Failed to inject Traefik labels: {traefik_error}"
 
-            setattr(project, 'compose_content', modified_compose)
+            setattr(project, "compose_content", modified_compose)
 
             # Update compose file
             compose_file = project_path / "docker-compose.yml"
@@ -207,15 +207,15 @@ class ProjectService:
 
         # Update domain in DB
         if domain_updated:
-            setattr(project, 'domain', project_data.domain)
+            setattr(project, "domain", project_data.domain)
 
         # Update name if provided
         if project_data.name:
-            setattr(project, 'name', project_data.name)
+            setattr(project, "name", project_data.name)
 
         # Update env vars if provided
         if project_data.env_vars is not None:
-            setattr(project, 'env_vars', json.dumps(project_data.env_vars))
+            setattr(project, "env_vars", json.dumps(project_data.env_vars))
 
             # Update .env file
             env_file = project_path / ".env"
@@ -277,7 +277,7 @@ class ProjectService:
         if not project:
             return False, ErrorMessages.PROJECT_NOT_FOUND
 
-        setattr(project, 'env_vars', json.dumps(env_vars))
+        setattr(project, "env_vars", json.dumps(env_vars))
 
         # Update .env file
         project_path = await self.get_project_path(project)

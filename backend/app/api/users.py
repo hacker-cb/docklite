@@ -51,7 +51,10 @@ async def create_user(
     user, error = await auth_service.create_user(user_data)
 
     if error or not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error or "Failed to create user")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error or "Failed to create user",
+        )
 
     return format_user_response(user)
 
@@ -103,10 +106,10 @@ async def update_user(
         )
 
     if is_active is not None:
-        setattr(user, 'is_active', 1 if is_active else 0)
+        setattr(user, "is_active", 1 if is_active else 0)
 
     if is_admin is not None:
-        setattr(user, 'is_admin', 1 if is_admin else 0)
+        setattr(user, "is_admin", 1 if is_admin else 0)
 
     await db.commit()
     await db.refresh(user)
@@ -172,7 +175,7 @@ async def change_password(
 
     # Hash new password
     auth_service = AuthService(db)
-    setattr(user, 'password_hash', auth_service.get_password_hash(new_password))
+    setattr(user, "password_hash", auth_service.get_password_hash(new_password))
 
     await db.commit()
 

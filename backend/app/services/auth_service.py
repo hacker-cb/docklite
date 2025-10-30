@@ -144,7 +144,7 @@ class AuthService:
             return None, error
 
         # Make first user admin
-        setattr(user, 'is_admin', 1)
+        setattr(user, "is_admin", 1)
         await self.db.commit()
         await self.db.refresh(user)
 
