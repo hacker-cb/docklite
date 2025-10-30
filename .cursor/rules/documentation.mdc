@@ -1,0 +1,214 @@
+---
+description: Documentation structure and maintenance rules
+---
+
+# Documentation Guidelines
+
+## Documentation Structure
+
+### Core Documentation (9 files in root)
+
+**User-facing documentation:**
+- `README.md` - Main documentation, quick start, features overview
+- `QUICKSTART.md` - Fast setup guide for new users
+- `ARCHITECTURE.md` - System architecture, design decisions
+- `TRAEFIK.md` - Traefik v3 integration guide
+- `DEPLOY_GUIDE.md` - Production deployment instructions
+- `SSH_ACCESS.md` - SSH setup and deployment workflow
+- `HOW_TO_RUN_TESTS.md` - Testing guide
+- `PRESETS.md` - Docker-compose presets documentation
+- `SYSTEM_CONTAINERS_PROTECTION.md` - System containers protection guide
+
+### Cursor Rules (21 files in .cursor/rules/)
+
+**Development guidelines for AI:**
+- `00-project-overview.mdc` - Project structure and overview
+- `phases-roadmap.mdc` - Current status and future roadmap
+- `access-urls.mdc` - URL conventions and hostname system
+- Backend: `backend-api.mdc`, `backend-models.mdc`
+- Frontend: `frontend-vue.mdc`
+- Infrastructure: `traefik.mdc`, `traefik-dashboard.mdc`, `hostname-system.mdc`
+- Security: `dashboard-security.mdc`, `password-management.mdc`, `multi-tenancy.mdc`
+- CLI: `cli-patterns.mdc`, `python-cli.mdc`, `scripts-cli.mdc`, `user-management-cli.mdc`
+- Features: `containers-management.mdc`, `deployment.mdc`, `docker-commands.mdc`
+- Cross-platform: `macos-compatibility.mdc`, `testing.mdc`
+
+## Documentation Rules
+
+### ✅ DO
+
+1. **Update existing documentation** when features change
+2. **Keep information in ONE place** - avoid duplication
+3. **Use cursor rules** for development patterns and conventions
+4. **Use README/guides** for user-facing documentation
+5. **Keep current status** in `phases-roadmap.mdc`
+6. **Document important decisions** in relevant .mdc files
+7. **Update examples** when code patterns change
+
+### ❌ DON'T
+
+1. **NEVER create historical files** like:
+   - `*_COMPLETE.md` - no completion reports
+   - `*_MIGRATION*.md` - no migration logs
+   - `SESSION_SUMMARY.md` - no session summaries
+   - `CHANGELOG.md` - use git history instead
+   - `STATUS.md`, `PROJECT_STATUS.md` - use roadmap instead
+   - `FINAL_REPORT.md`, `WORK_COMPLETE.md` - no work reports
+
+2. **NEVER duplicate information** across files:
+   - Architecture should be in `ARCHITECTURE.md` only
+   - Hostname system is in cursor rules only
+   - Testing is in `HOW_TO_RUN_TESTS.md` only
+   - CLI patterns are in cursor rules only
+
+3. **NEVER create temporary/service files**:
+   - `FILES_LIST.md` - redundant
+   - `START_HERE.md`, `NEXT_SESSION.md` - use roadmap
+   - `CURSOR_RULES_UPDATED.md` - use git commits
+
+4. **NEVER create separate quickstart files** for subsystems:
+   - `PYTHON_CLI_QUICKSTART.md` - use README.md
+   - `DASHBOARD_QUICK_START.md` - use README.md
+
+## Where to Document What
+
+### User Guides → Root .md files
+
+**README.md** - For:
+- Quick start instructions
+- Main features overview
+- CLI commands reference
+- Installation steps
+
+**QUICKSTART.md** - For:
+- Fast setup (5 minutes)
+- Minimal configuration
+- First admin creation
+
+**[Feature].md** (TRAEFIK.md, SSH_ACCESS.md, etc.) - For:
+- Detailed feature guides
+- Configuration options
+- Troubleshooting
+- Examples
+
+### Development Patterns → Cursor Rules (.mdc)
+
+**Backend patterns:**
+- API endpoint structure → `backend-api.mdc`
+- Model definitions → `backend-models.mdc`
+- Service patterns → relevant .mdc files
+
+**Frontend patterns:**
+- Component structure → `frontend-vue.mdc`
+- API calls → `frontend-vue.mdc`
+
+**Infrastructure:**
+- Traefik labels → `traefik.mdc`
+- Hostname functions → `hostname-system.mdc`
+- Container management → `containers-management.mdc`
+
+**Security:**
+- Authentication → `dashboard-security.mdc`
+- Authorization → `multi-tenancy.mdc`
+- Password management → `password-management.mdc`
+
+### Project Status → phases-roadmap.mdc
+
+**Current status:**
+- Completed features (brief list)
+- Production readiness status
+- Test coverage stats
+
+**Future plans:**
+- Next phase description
+- Upcoming features
+- Future ideas (brief)
+
+### Architecture Decisions → ARCHITECTURE.md
+
+- System design
+- Technology choices
+- Key architectural patterns
+- Trade-offs and rationale
+
+## Updating Documentation
+
+### When Adding a Feature
+
+1. **Update code** + write tests
+2. **Update cursor rules** if adding new pattern
+3. **Update README.md** if user-facing command/feature
+4. **Update relevant guide** if complex feature (TRAEFIK.md, etc.)
+5. **Update roadmap** - move from "upcoming" to "current status"
+
+### When Changing Behavior
+
+1. **Update affected code** + update tests
+2. **Search and update** all mentions in cursor rules
+3. **Update user guides** if user-visible change
+4. **Update examples** in documentation
+
+### When Refactoring
+
+1. **Update cursor rules** with new patterns
+2. **Remove old patterns** from rules
+3. **Keep user guides** (if behavior unchanged)
+4. **Update examples** if API changed
+
+## Documentation Maintenance
+
+### Regular Cleanup
+
+Every major milestone:
+1. Review root .md files for outdated info
+2. Remove historical/temporary files
+3. Consolidate duplicate information
+4. Update roadmap status
+
+### Keep Fresh
+
+- Update test counts when adding tests
+- Update CLI commands list when adding commands
+- Update feature lists when shipping features
+- Update examples when patterns change
+
+## Examples
+
+### ✅ Good Documentation Practice
+
+```
+Feature: Added SSL support
+1. Updated code + tests
+2. Updated traefik.mdc with new labels pattern
+3. Updated TRAEFIK.md with SSL section
+4. Updated README.md with HTTPS URLs
+5. Updated phases-roadmap.mdc (moved SSL to "current")
+```
+
+### ❌ Bad Documentation Practice
+
+```
+Feature: Added SSL support
+1. Created SSL_IMPLEMENTATION_COMPLETE.md (❌ historical)
+2. Created SSL_QUICKSTART.md (❌ duplicate of TRAEFIK.md section)
+3. Created SSL_STATUS.md (❌ use roadmap)
+4. Left old HTTP examples in docs (❌ outdated)
+```
+
+## Quick Reference
+
+**Adding user-facing feature?** → Update README.md + relevant guide  
+**Adding dev pattern?** → Update relevant .mdc rule  
+**Changed architecture?** → Update ARCHITECTURE.md  
+**Milestone complete?** → Update phases-roadmap.mdc only  
+**Need to remember something?** → Update existing .mdc, don't create new file
+
+## File Count Guidelines
+
+**Target:** 9-12 root .md files maximum  
+**Target:** 20-25 cursor rules maximum  
+
+If exceeding these numbers, look for:
+- Duplicate information to consolidate
+- Historical files to delete
+- Subsystem docs to merge into main guides
