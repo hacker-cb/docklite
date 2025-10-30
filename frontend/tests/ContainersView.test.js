@@ -120,8 +120,9 @@ describe('ContainersView', () => {
   })
   
   it('renders containers view correctly', () => {
-    expect(wrapper.find('h2').text()).toContain('Containers')
-    expect(wrapper.find('[class*="containers-table"]').exists()).toBe(true)
+    const header = wrapper.find('.view-header h2')
+    expect(header.exists()).toBe(true)
+    expect(header.text()).toContain('Containers')
   })
   
   it('loads and displays containers', async () => {

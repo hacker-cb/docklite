@@ -13,23 +13,26 @@ vi.mock('../../src/composables/useProjects', () => ({
 }))
 
 vi.mock('../../src/composables/usePresets', () => ({
-  usePresets: () => ({
-    presets: [
-      { id: 'nginx', name: 'Nginx', category: 'web', icon: '🌐', description: 'Web server', tags: ['web'] },
-      { id: 'postgres', name: 'PostgreSQL', category: 'database', icon: '🐘', description: 'Database', tags: ['db'] }
-    ],
-    categories: [
-      { id: 'web', name: 'Web Servers', count: 1 },
-      { id: 'database', name: 'Databases', count: 1 }
-    ],
-    loadingPresets: false,
-    loadPresets: vi.fn(() => Promise.resolve()),
-    selectPreset: vi.fn(),
-    resetSelection: vi.fn(),
-    selectedPreset: null,
-    selectedCategory: null,
-    filteredPresets: []
-  })
+  usePresets: () => {
+    const { ref } = require('vue')
+    return {
+      presets: [
+        { id: 'nginx', name: 'Nginx', category: 'web', icon: '🌐', description: 'Web server', tags: ['web'] },
+        { id: 'postgres', name: 'PostgreSQL', category: 'database', icon: '🐘', description: 'Database', tags: ['db'] }
+      ],
+      categories: [
+        { id: 'web', name: 'Web Servers', count: 1 },
+        { id: 'database', name: 'Databases', count: 1 }
+      ],
+      loadingPresets: false,
+      loadPresets: vi.fn(() => Promise.resolve()),
+      selectPreset: vi.fn(),
+      resetSelection: vi.fn(),
+      selectedPreset: ref(null),  // Must be ref
+      selectedCategory: null,
+      filteredPresets: []
+    }
+  }
 }))
 
 describe('CreateProjectDialog', () => {

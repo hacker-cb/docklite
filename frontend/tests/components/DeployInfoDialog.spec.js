@@ -38,7 +38,7 @@ describe('DeployInfoDialog', () => {
   beforeEach(async () => {
     wrapper = mount(DeployInfoDialog, {
       props: {
-        modelValue: true,
+        modelValue: false,  // Start closed
         projectId: 1
       },
       global: {
@@ -49,6 +49,9 @@ describe('DeployInfoDialog', () => {
         }
       }
     })
+    // Open dialog to trigger watch
+    await wrapper.setProps({ modelValue: true })
+    await wrapper.vm.$nextTick()
     await flushPromises()
   })
 
@@ -64,35 +67,27 @@ describe('DeployInfoDialog', () => {
 
   describe('Deployment info loading', () => {
     it('should load deployment info on mount', async () => {
-      await wrapper.vm.$nextTick()
-      await flushPromises()
       expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.project_id).toBe(1)
     })
 
     it('should display project information', async () => {
-      await wrapper.vm.$nextTick()
-      await flushPromises()
       expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.domain).toBe('test.local')
       expect(wrapper.vm.deployInfo.project_path).toContain('/home/docklite/projects/1')
     })
 
     it('should display deployment instructions', async () => {
-      await wrapper.vm.$nextTick()
-      await flushPromises()
       expect(wrapper.vm.deployInfo).toBeTruthy()
       expect(wrapper.vm.deployInfo.instructions.upload_files).toContain('rsync')
       expect(wrapper.vm.deployInfo.instructions.start_containers).toContain('docker-compose up -d')
     })
 
     it('should display deploy script example', async () => {
-      await flushPromises()
       expect(wrapper.vm.deployInfo.examples.deploy_script).toContain('#!/bin/bash')
     })
 
     it('should display ssh config example', async () => {
-      await flushPromises()
       expect(wrapper.vm.deployInfo.examples.ssh_config).toContain('Host docklite-')
     })
   })
