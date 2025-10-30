@@ -8,9 +8,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cli.commands.maintenance import app
+from cli.commands.maintenance import app as maint_app
+from cli.main import app as main_app
 
 runner = CliRunner()
+maint_runner = CliRunner()
 
 
 class TestStatusCommand:
@@ -26,7 +28,8 @@ class TestStatusCommand:
             "frontend": True
         }
         
-        result = runner.invoke(app, ["status"])
+        # Use main_app because status is registered at root level
+        result = runner.invoke(main_app, ["status"])
         
         # Should show status
         assert mock_docker_compose.called
@@ -42,7 +45,8 @@ class TestStatusCommand:
             "frontend": True
         }
         
-        result = runner.invoke(app, ["status", "--verbose"])
+        # Use main_app because status is registered at root level
+        result = runner.invoke(main_app, ["status", "--verbose"])
         
         # Verbose mode should show more info
         assert mock_docker_compose.called
@@ -65,7 +69,7 @@ class TestBackupCommand:
         
         with patch('shutil.copy'):
             with patch('pathlib.Path.exists', return_value=True):
-                result = runner.invoke(app, ["backup"])
+                result = runner.invoke(maint_app, ["backup"])
         
         # Should create backup
         # Note: This is a simplified test
@@ -77,7 +81,7 @@ class TestCleanCommand:
     @patch('subprocess.run')
     def test_clean_with_images_flag(self, mock_subprocess):
         """Test clean with --images flag."""
-        result = runner.invoke(app, ["clean", "--images"])
+        result = runner.invoke(maint_app, ["clean", "--images"])
         
         # Should run docker image prune
         assert mock_subprocess.called
@@ -88,7 +92,7 @@ class TestCleanCommand:
         """Test clean with --volumes when confirmed."""
         mock_confirm.return_value = True
         
-        result = runner.invoke(app, ["clean", "--volumes"])
+        result = runner.invoke(maint_app, ["clean", "--volumes"])
         
         # Should run docker volume prune
         assert mock_subprocess.called

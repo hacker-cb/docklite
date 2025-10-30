@@ -28,15 +28,18 @@ class TestHasDockerGroup:
     
     def test_returns_false_when_not_in_docker_group(self):
         """Test returns False when user is not in docker group."""
-        with patch('grp.getgrnam') as mock_grp:
-            mock_grp.return_value = Mock(gr_gid=999)
-            with patch('os.getgroups', return_value=[1000, 1001]):
-                assert has_docker_group() is False
+        with patch('shutil.which', return_value="/usr/bin/sg"):  # Mock sg command exists
+            with patch('grp.getgrnam') as mock_grp:
+                mock_grp.return_value = Mock(gr_gid=999)
+                with patch('os.getgroups', return_value=[1000, 1001]):
+                    assert has_docker_group() is False
     
-    def test_returns_false_on_error(self):
-        """Test returns False on error."""
-        with patch('grp.getgrnam', side_effect=KeyError("docker")):
-            assert has_docker_group() is False
+    def test_returns_true_on_error(self):
+        """Test returns True on error (skip group switching if docker group doesn't exist)."""
+        with patch('shutil.which', return_value="/usr/bin/sg"):  # Mock sg command exists
+            with patch('grp.getgrnam', side_effect=KeyError("docker")):
+                # If docker group doesn't exist, return True to skip sg command
+                assert has_docker_group() is True
 
 
 class TestGetDockerComposeCommand:

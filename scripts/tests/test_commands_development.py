@@ -8,9 +8,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cli.commands.development import app
+from cli.commands.development import app as dev_app
+from cli.main import app as main_app
 
 runner = CliRunner()
+dev_runner = CliRunner()
 
 
 class TestStartCommand:
@@ -33,7 +35,8 @@ class TestStartCommand:
         mock_projects_dir.mkdir = Mock()
         mock_container.return_value = True
         
-        result = runner.invoke(app, ["start"])
+        # Use main_app because start is registered at root level
+        result = runner.invoke(main_app, ["start"])
         
         # Should not fail
         mock_check_docker.assert_called_once()
@@ -56,7 +59,7 @@ class TestStartCommand:
         mock_projects_dir.mkdir = Mock()
         mock_container.return_value = True
         
-        result = runner.invoke(app, ["start", "--build"])
+        result = runner.invoke(main_app, ["start", "--build"])
         
         mock_check_docker.assert_called_once()
 
@@ -67,7 +70,7 @@ class TestStopCommand:
     @patch('cli.commands.development.docker_compose_cmd')
     def test_stop_basic(self, mock_docker_compose):
         """Test basic stop command."""
-        result = runner.invoke(app, ["stop"])
+        result = runner.invoke(main_app, ["stop"])
         
         # Should call docker-compose down
         assert mock_docker_compose.called
@@ -78,7 +81,7 @@ class TestStopCommand:
         """Test stop with volumes when confirmed."""
         mock_confirm.return_value = True
         
-        result = runner.invoke(app, ["stop", "--volumes"])
+        result = runner.invoke(main_app, ["stop", "--volumes"])
         
         assert mock_docker_compose.called
 
@@ -89,7 +92,7 @@ class TestLogsCommand:
     @patch('cli.commands.development.docker_compose_cmd')
     def test_logs_all_services(self, mock_docker_compose):
         """Test logs for all services."""
-        result = runner.invoke(app, ["logs"])
+        result = runner.invoke(main_app, ["logs"])
         
         # Should call docker-compose logs
         assert mock_docker_compose.called
@@ -97,7 +100,7 @@ class TestLogsCommand:
     @patch('cli.commands.development.docker_compose_cmd')
     def test_logs_specific_service(self, mock_docker_compose):
         """Test logs for specific service."""
-        result = runner.invoke(app, ["logs", "backend"])
+        result = runner.invoke(main_app, ["logs", "backend"])
         
         # Should call docker-compose logs with service name
         assert mock_docker_compose.called
