@@ -62,7 +62,7 @@ class AuthService:
             )
             username: str = payload.get("sub")
             if username is None:
-                return None
+                raise JWTError("Missing username")
             return TokenData(username=username)
         except JWTError:
             return None
