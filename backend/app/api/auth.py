@@ -15,7 +15,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login")
-async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)) -> Token:
+async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)) -> dict:
     """Login and get JWT token"""
     auth_service = AuthService(db)
 
@@ -61,7 +61,7 @@ async def check_setup_needed(db: AsyncSession = Depends(get_db)) -> dict:
 @router.post("/setup")
 async def initial_setup(
     user_data: UserCreate, db: AsyncSession = Depends(get_db)
-) -> Token:
+) -> dict:
     """Create first admin user (only works if no users exist)"""
     auth_service = AuthService(db)
 

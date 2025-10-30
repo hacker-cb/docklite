@@ -65,8 +65,7 @@ class AuthService:
                 return None
             return TokenData(username=username)
         except JWTError:
-            pass
-        return None
+            return None
 
     async def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
