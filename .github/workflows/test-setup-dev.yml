@@ -67,6 +67,15 @@ jobs:
           fi
           echo "✅ .env file exists"
 
+      - name: Verify pytest installed
+        run: |
+          if [ ! -f ".venv/bin/pytest" ]; then
+            echo "❌ pytest not found in venv"
+            exit 1
+          fi
+          echo "✅ pytest installed"
+          .venv/bin/pytest --version
+
       - name: Test CLI version command
         run: |
           output=$(./docklite version)
@@ -163,6 +172,15 @@ jobs:
             exit 1
           fi
           echo "✅ .env file exists"
+
+      - name: Verify pytest installed
+        run: |
+          if [ ! -f ".venv/bin/pytest" ]; then
+            echo "❌ pytest not found in venv"
+            exit 1
+          fi
+          echo "✅ pytest installed"
+          .venv/bin/pytest --version
 
       - name: Test CLI version command
         run: |
