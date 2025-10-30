@@ -13,9 +13,13 @@ DockLite - это система управления веб-сервером с
 git clone https://github.com/hacker-cb/docklite.git
 cd docklite
 
-# Настройте окружение
-cp .env.example .env
-nano .env  # Укажите ваш HOSTNAME
+# Настройте окружение разработки (автоматически)
+./docklite setup-dev
+
+# ИЛИ вручную:
+# cp .env.example .env
+# nano .env  # Укажите ваш HOSTNAME
+# pip3 install --user -r scripts/requirements.txt
 
 # Запустите систему
 ./docklite start
@@ -25,6 +29,18 @@ nano .env  # Укажите ваш HOSTNAME
 ```
 
 Откройте в браузере: `http://your-server-hostname`
+
+## ⚙️ Первоначальная настройка
+
+Команда `./docklite setup-dev` автоматически:
+- ✅ Проверяет Python 3.8+
+- ✅ **Создает виртуальное окружение (.venv/)** 
+- ✅ Устанавливает зависимости CLI в venv (typer, rich, python-dotenv, PyYAML)
+- ✅ Создает .env файл из .env.example
+- ✅ Проверяет Docker
+- ✅ Делает CLI исполняемым
+
+**Виртуальное окружение:** CLI автоматически использует `.venv/` - зависимости изолированы от системного Python. Вручную активировать venv **не нужно** - скрипт `./docklite` сам переключается на venv python.
 
 ## Возможности
 
@@ -324,10 +340,34 @@ services:
 
 ## Разработка
 
-### Backend
+### Первоначальная настройка
 
 ```bash
-cd /home/pavel/docklite/backend
+# Один раз при первом клонировании
+./docklite setup-dev
+
+# Создает:
+# - .venv/ - виртуальное окружение для CLI
+# - .env - конфигурация из .env.example
+# - Устанавливает зависимости в venv
+```
+
+### Backend (в Docker)
+
+```bash
+# Backend работает в Docker контейнере
+docker compose up -d backend
+
+# Логи
+docker compose logs -f backend
+
+# Тесты
+docker compose exec backend pytest -v
+```
+
+**Разработка вне Docker (опционально):**
+```bash
+cd backend
 
 # Создать виртуальное окружение (требует python3-venv)
 python3 -m venv venv
@@ -337,7 +377,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Запустить сервер
-python app/main.py
+uvicorn app.main:app --reload
 ```
 
 ### Frontend

@@ -68,6 +68,9 @@ shift
 # Execute command
 case "$COMMAND" in
     # Development commands
+    setup-dev)
+        exec "$SCRIPT_DIR/development/setup-dev.sh" "$@"
+        ;;
     start)
         exec "$SCRIPT_DIR/development/start.sh" "$@"
         ;;

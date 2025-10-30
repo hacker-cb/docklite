@@ -21,6 +21,7 @@ app.add_typer(deployment.app, name="deploy", help="Deployment commands (setup-us
 app.add_typer(maintenance.app, name="maint", help="Maintenance commands (backup, restore, status, etc.)")
 
 # Register individual commands at root level for convenience
+app.command(name="setup-dev")(development.setup_dev)
 app.command(name="start")(development.start)
 app.command(name="stop")(development.stop)
 app.command(name="restart")(development.restart)
@@ -34,6 +35,7 @@ app.command(name="setup-user")(deployment.setup_user)
 app.command(name="setup-ssh")(deployment.setup_ssh)
 app.command(name="init-db")(deployment.init_db)
 
+app.command(name="add-user")(maintenance.add_user)
 app.command(name="backup")(maintenance.backup)
 app.command(name="restore")(maintenance.restore)
 app.command(name="clean")(maintenance.clean)

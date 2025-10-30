@@ -5,12 +5,17 @@ Production-grade scripts for managing DockLite system.
 ## Quick Start
 
 ```bash
+# First time setup (creates venv, installs dependencies)
+./docklite setup-dev
+
 # From project root
 ./docklite start          # Start system
 ./docklite status         # Check status
 ./docklite test           # Run tests
 ./docklite --help         # Show all commands
 ```
+
+**Note:** CLI automatically uses `.venv/` virtual environment - no need to activate manually!
 
 ## Structure
 

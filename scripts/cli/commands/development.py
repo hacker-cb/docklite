@@ -31,6 +31,141 @@ from ..utils.validation import check_docker, check_docker_compose
 app = typer.Typer(help="Development commands")
 
 
+@app.command(name="setup-dev")
+def setup_dev():
+    """Setup development environment (create venv, install dependencies, create .env)."""
+    import subprocess
+    import sys
+    import platform
+    
+    print_banner("DockLite Development Setup")
+    
+    # Check Python
+    log_step("Checking Python installation...")
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    if sys.version_info < (3, 8):
+        log_error(f"Python 3.8+ required, found {python_version}")
+        raise typer.Exit(1)
+    log_success(f"Python {python_version} found")
+    
+    # Create virtual environment
+    venv_path = PROJECT_ROOT / ".venv"
+    requirements_file = PROJECT_ROOT / "scripts" / "requirements.txt"
+    
+    if not venv_path.exists():
+        log_step("Creating virtual environment...")
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "venv", str(venv_path)],
+                check=True,
+                capture_output=True
+            )
+            log_success(f"Virtual environment created at .venv/")
+        except subprocess.CalledProcessError as e:
+            log_error("Failed to create virtual environment")
+            console.print(f"[red]Error: {e.stderr.decode()}[/red]")
+            log_info("Make sure python3-venv is installed:")
+            if platform.system() == "Linux":
+                console.print("  sudo apt-get install python3-venv")
+            raise typer.Exit(1)
+    else:
+        log_success("Virtual environment already exists")
+    
+    # Detect venv python
+    if platform.system() == "Windows":
+        venv_python = venv_path / "Scripts" / "python.exe"
+        venv_pip = venv_path / "Scripts" / "pip.exe"
+    else:
+        venv_python = venv_path / "bin" / "python"
+        venv_pip = venv_path / "bin" / "pip"
+    
+    # Install CLI dependencies in venv
+    log_step("Installing Python CLI dependencies in venv...")
+    try:
+        result = subprocess.run(
+            [str(venv_pip), "install", "-q", "-r", str(requirements_file)],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        log_success("CLI dependencies installed in venv")
+        
+        # Show warnings if any (but dimmed)
+        if result.stderr and "WARNING" in result.stderr:
+            console.print("[dim]" + result.stderr.strip() + "[/dim]")
+            
+    except subprocess.CalledProcessError as e:
+        log_error("Failed to install CLI dependencies")
+        console.print(f"[red]Error: {e.stderr}[/red]")
+        log_info(f"Try manually: .venv/bin/pip install -r {requirements_file}")
+        raise typer.Exit(1)
+    
+    # Check .env file
+    log_step("Checking .env configuration...")
+    env_file = PROJECT_ROOT / ".env"
+    env_example = PROJECT_ROOT / ".env.example"
+    
+    if not env_file.exists():
+        if env_example.exists():
+            log_info("Creating .env from .env.example...")
+            import shutil
+            shutil.copy(env_example, env_file)
+            log_success(".env file created")
+            console.print()
+            log_warning("Please edit .env and set your HOSTNAME:")
+            console.print("  nano .env")
+        else:
+            log_warning("No .env.example found - creating basic .env...")
+            with open(env_file, 'w') as f:
+                f.write("# DockLite Configuration\n")
+                f.write("HOSTNAME=localhost\n")
+                f.write("TRAEFIK_DASHBOARD_HOST=localhost\n")
+                f.write(f"PROJECTS_DIR={Path.home()}/docklite-projects\n")
+                f.write("SECRET_KEY=dev-secret-key-change-in-production\n")
+            log_success(".env file created with defaults")
+    else:
+        log_success(".env file exists")
+    
+    # Check Docker
+    log_step("Checking Docker...")
+    try:
+        check_docker()
+        check_docker_compose()
+        log_success("Docker is running")
+    except Exception:
+        log_warning("Docker is not installed or not running")
+        console.print("Install Docker Desktop (macOS) or Docker Engine (Linux)")
+        console.print("See: https://docs.docker.com/get-docker/")
+    
+    # Make CLI executable
+    log_step("Making CLI executable...")
+    docklite_cli = PROJECT_ROOT / "docklite"
+    docklite_sh = PROJECT_ROOT / "scripts" / "docklite.sh"
+    docklite_cli.chmod(0o755)
+    docklite_sh.chmod(0o755)
+    log_success("CLI ready")
+    
+    console.print()
+    print_banner("Setup Complete! 🎉")
+    console.print()
+    console.print("[bold green]Virtual environment ready![/bold green]")
+    console.print(f"  Location: [cyan]{venv_path}[/cyan]")
+    console.print()
+    console.print("[bold]Next steps:[/bold]")
+    console.print("  1. Edit .env file:        [cyan]nano .env[/cyan]")
+    console.print("  2. Start DockLite:        [cyan]./docklite start[/cyan]")
+    console.print("  3. Create admin user:     [cyan]./docklite add-user admin -p 'YourPassword' --admin[/cyan]")
+    console.print(f"  4. Open in browser:       [cyan]{get_access_url()}[/cyan]")
+    console.print()
+    console.print("[bold]Available commands:[/bold]")
+    console.print("  [cyan]./docklite --help[/cyan]         # Show all commands")
+    console.print("  [cyan]./docklite status[/cyan]         # Check system status")
+    console.print("  [cyan]./docklite test[/cyan]           # Run all tests")
+    console.print()
+    console.print("[dim]Note: The ./docklite CLI automatically uses the .venv environment[/dim]")
+    console.print()
+
+
 @app.command()
 def start(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before starting"),

@@ -5,6 +5,20 @@ globs: scripts/**/*.py,scripts/**/*.sh,backend/**/*.py
 
 # macOS Compatibility
 
+## 🚨 FIRST STEP: Setup Development Environment
+
+**MANDATORY ON macOS (AND ALL PLATFORMS):**
+
+```bash
+./docklite setup-dev
+```
+
+This is **REQUIRED** before starting development. Creates venv, installs dependencies, handles macOS-specific setup automatically.
+
+**NO EXCEPTIONS.** Don't skip this step on macOS thinking dependencies are already installed.
+
+---
+
 ## Platform Support
 
 **Development:** ✅ macOS + Linux  
@@ -192,46 +206,53 @@ setup_user() {
 ### One-Time Setup
 
 ```bash
-# 1. Install Python dependencies
-pip3 install typer rich python-dotenv pytest
+# One command - creates venv and installs everything
+./docklite setup-dev
+```
 
-# 2. Create .env file
-cat > .env << 'EOF'
-HOSTNAME=localhost
-TRAEFIK_DASHBOARD_HOST=localhost
-PROJECTS_DIR=/Users/$(whoami)/docklite-projects
-SECRET_KEY=dev-secret-key-change-in-production
-EOF
+**What it does:**
+- Creates `.venv/` virtual environment (isolated from system Python)
+- Installs CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- Creates `.env` from `.env.example`
+- Checks Docker
+- Makes CLI executable
 
-# 3. Make CLI executable
-chmod +x scripts/docklite
+**Manual Setup (if needed):**
+```bash
+# 1. Create virtual environment
+python3 -m venv .venv
+
+# 2. Install Python dependencies in venv
+.venv/bin/pip install -r scripts/requirements.txt
+
+# 3. Create .env file
+cp .env.example .env
+nano .env  # Edit HOSTNAME
+
+# 4. Make CLI executable
+chmod +x docklite
+chmod +x scripts/docklite.sh
 ```
 
 ### Daily Development
 
 ```bash
-# Start services
-docker compose up -d
+# Using CLI (recommended - uses venv automatically)
+./docklite start          # Start services
+./docklite status         # Check status
+./docklite test           # Run all tests
+./docklite logs backend   # View logs
+./docklite stop           # Stop services
 
-# Run tests
+# Or directly with Docker Compose
+docker compose up -d
 docker compose exec backend pytest
 docker compose exec frontend npm test
-
-# View logs
 docker compose logs -f backend
-
-# Stop services
 docker compose down
 ```
 
-### Using CLI (Optional)
-
-```bash
-./scripts/docklite start
-./scripts/docklite test
-./scripts/docklite status
-./scripts/docklite logs backend
-```
+**Note:** `./docklite` wrapper automatically uses `.venv/bin/python` - no manual activation needed!
 
 ## 🚀 Production Deployment (from macOS)
 
@@ -293,20 +314,23 @@ ssh testuser@localhost
 
 ### DO ✅
 
-1. **Auto-detect paths** using `Path(__file__)` or `${BASH_SOURCE[0]}`
-2. **Check command existence** before using (`command -v sg`, `shutil.which("sg")`)
-3. **Use `Path.home()`** instead of hardcoded home directories
-4. **Document Linux-only functions** clearly in docstrings
-5. **Test on both platforms** when possible
-6. **Use Docker Compose directly** on macOS for simplicity
+1. **Use venv** for CLI dependencies (`.venv/`) - keeps system Python clean
+2. **Auto-detect paths** using `Path(__file__)` or `${BASH_SOURCE[0]}`
+3. **Check command existence** before using (`command -v sg`, `shutil.which("sg")`)
+4. **Use `Path.home()`** instead of hardcoded home directories
+5. **Document Linux-only functions** clearly in docstrings
+6. **Test on both platforms** when possible
+7. **Run `./docklite setup-dev`** for first-time setup
 
 ### DON'T ❌
 
-1. **Never hardcode paths** like `/home/user/...`
-2. **Don't assume `sg` exists** - check first
-3. **Don't use Linux-specific commands** without checks (`useradd`, `hostnamectl`)
-4. **Don't use platform-specific groups** without existence checks
-5. **Don't run deployment commands on macOS** - use Linux server
+1. **Never install CLI dependencies globally** - always use venv
+2. **Never hardcode paths** like `/home/user/...`
+3. **Don't assume `sg` exists** - check first
+4. **Don't use Linux-specific commands** without checks (`useradd`, `hostnamectl`)
+5. **Don't use platform-specific groups** without existence checks
+6. **Don't run deployment commands on macOS** - use Linux server
+7. **Don't use `--break-system-packages`** - venv makes it unnecessary
 
 ## 🔍 Checking Platform
 
@@ -370,6 +394,12 @@ See implementations:
 
 ## 🆘 Common Issues
 
+### Issue: ModuleNotFoundError: No module named 'typer'
+
+**Symptom:** CLI fails with import error
+
+**Solution:** Run `./docklite setup-dev` to create venv and install dependencies.
+
 ### Issue: CLI commands fail on macOS
 
 **Symptom:** `sg: command not found`
@@ -398,6 +428,8 @@ See implementations:
 
 **For Development:**
 - ✅ macOS fully supported
+- ✅ One-command setup: `./docklite setup-dev`
+- ✅ venv-based CLI (no system pollution)
 - ✅ All dev commands work
 - ✅ Docker Compose recommended
 - ✅ Tests run in containers
@@ -408,6 +440,7 @@ See implementations:
 - ✅ Run deployment commands on server
 
 **When Writing Code:**
+- ✅ Use venv for CLI dependencies
 - ✅ Auto-detect paths
 - ✅ Check command existence
 - ✅ Document Linux-only functions

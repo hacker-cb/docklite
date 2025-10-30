@@ -7,6 +7,33 @@ description: DockLite project structure and architecture overview
 
 DockLite - multi-tenant система управления веб-сервером для деплоя множества проектов через docker-compose с user isolation и role-based access control.
 
+## 🚨 CRITICAL: Development Environment Setup
+
+**REQUIRED FOR ALL NEW AGENTS/DEVELOPERS:**
+
+Before making ANY changes to the codebase, you MUST run:
+
+```bash
+./docklite setup-dev
+```
+
+**Why this is critical:**
+- ✅ Creates isolated `.venv/` virtual environment
+- ✅ Installs all CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- ✅ Sets up `.env` configuration
+- ✅ Validates Docker is running
+- ✅ Ensures consistent development environment
+
+**DO NOT:**
+- ❌ Install packages globally (`pip3 install` without venv)
+- ❌ Skip this step and assume dependencies are installed
+- ❌ Use `--user` or `--break-system-packages` flags
+- ❌ Start working without proper environment
+
+**The `./docklite` CLI wrapper automatically uses `.venv/` - no manual activation needed!**
+
+If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step.
+
 ## Project Structure
 
 ```
@@ -160,7 +187,22 @@ DockLite - multi-tenant система управления веб-сервер�
 
 ## CLI Usage
 
-**Main CLI:** `./docklite <command>` (18 commands)
+**Main CLI:** `./docklite <command>` (19 commands)
+
+### First Time Setup
+```bash
+# One command to setup development environment
+./docklite setup-dev          # Creates venv, installs deps, creates .env
+```
+
+**What it does:**
+- ✅ Creates `.venv/` virtual environment
+- ✅ Installs CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- ✅ Creates `.env` from `.env.example`
+- ✅ Checks Docker
+- ✅ Makes CLI executable
+
+**Important:** CLI automatically uses venv - no manual activation needed!
 
 ### Essential Commands
 ```bash
@@ -168,7 +210,7 @@ DockLite - multi-tenant система управления веб-сервер�
 ./docklite stop               # Stop system
 ./docklite status             # Check status + URLs
 ./docklite test               # Run all tests (240 backend + 120+ frontend)
-./docklite add-user           # Add new user
+./docklite add-user <name>    # Add new user (interactive or with -p flag)
 ./docklite list-users         # List all users
 ./docklite reset-password     # Reset user password
 ./docklite backup             # Backup system
@@ -198,6 +240,8 @@ docker compose exec frontend npm test
 
 Expected: All tests passing ✅ (240 backend, 120+ frontend)
 
+**Note:** CLI commands use `.venv/` automatically - tests run in containers.
+
 ## macOS Development
 
 DockLite fully supports development on macOS. See [macos-compatibility.mdc](mdc:.cursor/rules/macos-compatibility.mdc) for details.
@@ -205,5 +249,6 @@ DockLite fully supports development on macOS. See [macos-compatibility.mdc](mdc:
 **Key differences:**
 - ✅ All development features work
 - ✅ Docker Desktop instead of Docker Engine
+- ✅ venv works seamlessly (no --break-system-packages needed!)
 - ⚠️ Deployment commands (setup-user, setup-ssh) are Linux-only
-- ✅ Use Docker Compose directly or Python CLI
+- ✅ Use `./docklite setup-dev` for automatic setup

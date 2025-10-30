@@ -1,0 +1,333 @@
+---
+description: Virtual environment setup and management for DockLite CLI
+globs: docklite,scripts/cli/**/*.py,scripts/development/setup-dev.sh
+---
+
+# Virtual Environment Setup
+
+## 🚨 CRITICAL RULE
+
+**EVERY NEW AGENT/DEVELOPER MUST RUN THIS FIRST:**
+
+```bash
+./docklite setup-dev
+```
+
+This is **REQUIRED** before:
+- Running any CLI commands
+- Making code changes
+- Testing features
+- Committing code
+
+**NO EXCEPTIONS.** If you see `ModuleNotFoundError`, you skipped this step.
+
+---
+
+## Overview
+
+DockLite CLI uses **virtual environment (venv)** for isolated Python dependencies. This keeps system Python clean and ensures consistent development environment across all platforms.
+
+## Location
+
+**Path:** `.venv/` in project root  
+**Ignored:** Yes (in `.gitignore`)  
+**Auto-activated:** Yes (by `./docklite` wrapper)
+
+## One-Command Setup
+
+```bash
+./docklite setup-dev
+```
+
+Creates venv, installs dependencies, sets up .env file - everything needed to start development.
+
+## Architecture
+
+### Wrapper Auto-Activation
+
+The `./docklite` wrapper automatically switches to venv Python:
+
+```python
+# In ./docklite
+if not in_venv and venv_exists:
+    # Re-execute with venv python
+    os.execv('.venv/bin/python', [sys.executable] + sys.argv)
+```
+
+**Result:** Users run `./docklite <command>` - venv activation is transparent!
+
+### Dependencies (in venv)
+
+**File:** `scripts/requirements.txt`
+
+```
+typer[all]>=0.12.0      # CLI framework with completion
+rich>=13.7.0            # Beautiful terminal output
+python-dotenv>=1.0.0    # .env file support
+PyYAML>=6.0             # docker-compose.yml parsing
+```
+
+## setup-dev Command
+
+**Location:** [scripts/cli/commands/development.py](mdc:scripts/cli/commands/development.py)
+
+**What it does:**
+
+1. **Checks Python 3.8+** - validates version
+2. **Creates `.venv/`** - using `python3 -m venv .venv`
+3. **Installs dependencies** - `venv/bin/pip install -r scripts/requirements.txt`
+4. **Creates `.env`** - from `.env.example` if missing
+5. **Checks Docker** - validates Docker is running
+6. **Makes CLI executable** - `chmod +x` on scripts
+
+**Cross-platform:** Works on macOS, Linux, Windows
+
+### Bash Version
+
+**Location:** [scripts/development/setup-dev.sh](mdc:scripts/development/setup-dev.sh)
+
+Same functionality in bash for users who prefer direct script execution.
+
+## Usage
+
+### First Time
+
+```bash
+# Clone repo
+git clone <repo>
+cd docklite
+
+# Setup (once)
+./docklite setup-dev
+
+# Start using CLI
+./docklite start
+./docklite status
+```
+
+### Daily Development
+
+```bash
+# No activation needed!
+./docklite start
+./docklite test
+./docklite logs backend
+
+# Wrapper handles venv automatically
+```
+
+### Manual Activation (rarely needed)
+
+```bash
+# If you need to work in venv directly
+source .venv/bin/activate
+
+# Check installed packages
+pip list
+
+# Run Python scripts
+python my_script.py
+
+# Deactivate when done
+deactivate
+```
+
+## Platform-Specific Notes
+
+### macOS (Homebrew Python)
+
+✅ **Works perfectly** - no special flags needed  
+✅ **No --break-system-packages** - venv isolates everything  
+✅ **No --user flag** - installs in venv, not system
+
+```bash
+# On macOS, setup-dev automatically:
+# 1. Creates venv (no issues with Homebrew Python)
+# 2. Installs packages in venv (no system pollution)
+# 3. Works seamlessly
+```
+
+### Linux
+
+✅ **Requires python3-venv** package
+
+```bash
+# If venv module missing
+sudo apt-get install python3-venv
+
+# Then run setup
+./docklite setup-dev
+```
+
+### Windows
+
+✅ **Supported** - wrapper detects Windows paths
+
+```bash
+# venv structure on Windows
+.venv/Scripts/python.exe
+.venv/Scripts/pip.exe
+```
+
+## Troubleshooting
+
+### Issue: ModuleNotFoundError: No module named 'typer'
+
+**Symptom:** CLI fails on import
+
+**Solution:**
+```bash
+./docklite setup-dev
+```
+
+### Issue: python3-venv is not installed (Linux)
+
+**Symptom:** `No module named venv`
+
+**Solution:**
+```bash
+sudo apt-get install python3-venv
+./docklite setup-dev
+```
+
+### Issue: venv exists but corrupted
+
+**Symptom:** Import errors despite venv existing
+
+**Solution:**
+```bash
+# Remove and recreate
+rm -rf .venv
+./docklite setup-dev
+```
+
+### Issue: Permission denied on ./docklite
+
+**Symptom:** Cannot execute CLI
+
+**Solution:**
+```bash
+chmod +x ./docklite
+chmod +x ./scripts/docklite.sh
+```
+
+## Development Guidelines
+
+### When Adding New Dependencies
+
+1. **Add to `scripts/requirements.txt`:**
+```bash
+echo "new-package>=1.0.0" >> scripts/requirements.txt
+```
+
+2. **Update existing venvs:**
+```bash
+.venv/bin/pip install -r scripts/requirements.txt
+```
+
+3. **Test on both platforms:**
+```bash
+# macOS
+./docklite --help
+
+# Linux (in VM or CI)
+./docklite --help
+```
+
+### When Creating CLI Commands
+
+**Always assume venv:**
+
+```python
+# DON'T check if in venv
+# The wrapper handles it
+
+# DO just import and use
+import typer
+from rich import console
+```
+
+### Testing CLI Changes
+
+```bash
+# CLI uses venv automatically
+./docklite <your-command>
+
+# To test manually in venv
+source .venv/bin/activate
+python scripts/cli/main.py <command>
+deactivate
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+- name: Setup DockLite CLI
+  run: |
+    python3 -m venv .venv
+    .venv/bin/pip install -r scripts/requirements.txt
+    cp .env.example .env
+
+- name: Test CLI
+  run: ./docklite --version
+```
+
+### Docker (Development)
+
+```dockerfile
+# For CLI testing in Docker
+RUN python3 -m venv /app/.venv
+RUN /app/.venv/bin/pip install -r /app/scripts/requirements.txt
+```
+
+## Best Practices
+
+### ✅ DO
+
+- **Always use `./docklite`** - wrapper handles venv
+- **Run `setup-dev` first** - on fresh clones
+- **Keep `.venv/` in .gitignore** - never commit
+- **Update dependencies properly** - via requirements.txt
+- **Test cross-platform** - macOS and Linux
+
+### ❌ DON'T
+
+- **Never install globally** - `pip3 install` without venv
+- **Never commit `.venv/`** - too large, platform-specific
+- **Don't use --user flag** - unnecessary with venv
+- **Don't use --break-system-packages** - venv handles isolation
+- **Don't activate manually** - wrapper does it
+
+## Files Modified
+
+**Wrapper:**
+- [docklite](mdc:docklite) - Entry point with auto-activation
+
+**Commands:**
+- [scripts/cli/commands/development.py](mdc:scripts/cli/commands/development.py) - `setup-dev` command
+- [scripts/development/setup-dev.sh](mdc:scripts/development/setup-dev.sh) - Bash version
+
+**Config:**
+- [scripts/requirements.txt](mdc:scripts/requirements.txt) - Dependencies
+- [.gitignore](mdc:.gitignore) - Excludes `.venv/`
+
+**Documentation:**
+- [README.md](mdc:README.md) - Quick start with `setup-dev`
+- [SETUP.md](mdc:SETUP.md) - Detailed setup guide
+- [scripts/README.md](mdc:scripts/README.md) - CLI documentation
+
+## Summary
+
+✅ **One command:** `./docklite setup-dev`  
+✅ **Auto-activation:** No manual `source .venv/bin/activate`  
+✅ **Cross-platform:** macOS, Linux, Windows  
+✅ **Isolated:** No system Python pollution  
+✅ **Clean:** Proper dependency management  
+
+The venv approach ensures:
+- **Reproducible** - same deps everywhere
+- **Clean** - no system conflicts
+- **Simple** - transparent to users
+- **Professional** - industry best practice

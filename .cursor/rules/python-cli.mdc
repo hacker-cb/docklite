@@ -5,6 +5,18 @@ globs: scripts/**/*.py,backend/app/cli_helpers/*.py
 
 # Python CLI System
 
+## 🚨 FIRST STEP: Setup Development Environment
+
+**MANDATORY BEFORE ANY WORK:**
+
+```bash
+./docklite setup-dev
+```
+
+This creates `.venv/` and installs all dependencies. Skip this and CLI will fail.
+
+---
+
 ## Architecture (Hybrid Approach)
 
 **CLI Location:** [scripts/cli/](mdc:scripts/cli/)  
@@ -44,9 +56,46 @@ backend/app/cli_helpers/
 
 **Framework:** [Typer](https://typer.tiangolo.com/) - Modern CLI with auto-completion  
 **UI:** [Rich](https://rich.readthedocs.io/) - Beautiful terminal output  
+**Environment:** Virtual environment (.venv/) - isolated dependencies  
 **Testing:** pytest with 60 tests
 
-## Commands (17 total)
+## Virtual Environment (venv)
+
+**Location:** `.venv/` in project root  
+**Auto-activation:** `./docklite` wrapper automatically uses `.venv/bin/python`  
+**Setup:** `./docklite setup-dev` creates and configures venv
+
+### Key Features
+
+✅ **No manual activation** - wrapper handles it automatically  
+✅ **Isolated dependencies** - no system Python pollution  
+✅ **Cross-platform** - works on macOS, Linux, Windows  
+✅ **One-command setup** - `./docklite setup-dev`
+
+### Dependencies (in venv)
+
+```
+typer[all]>=0.12.0      # CLI framework with completion
+rich>=13.7.0            # Beautiful terminal output
+python-dotenv>=1.0.0    # .env file support
+PyYAML>=6.0             # docker-compose.yml parsing
+```
+
+### How It Works
+
+```python
+# In ./docklite wrapper
+if not in_venv and venv_exists:
+    # Re-execute with venv python
+    os.execv('.venv/bin/python', ['python'] + sys.argv)
+```
+
+Users just run `./docklite <command>` - venv activation is transparent!
+
+## Commands (19 total)
+
+**Setup (1):**
+- `setup-dev` - Setup development environment (creates venv, installs deps, creates .env)
 
 **Development (8):**
 - `start [--build] [--follow]` - Start services
@@ -63,7 +112,8 @@ backend/app/cli_helpers/
 - `setup-ssh [--user]` - Configure SSH
 - `init-db [--reset]` - Initialize database
 
-**Maintenance (6):**
+**Maintenance (7):**
+- `add-user <username> [--password] [--admin] [--email]` - Add new user
 - `backup [--output]` - Backup to tar.gz
 - `restore <file>` - Restore from backup
 - `clean [--all|--images|--volumes|--logs]` - Cleanup
@@ -226,6 +276,7 @@ def test_something():
 
 ### ✅ DO
 
+- **Use venv** - all CLI dependencies must be in `.venv/`
 - **Use Typer** for all CLI commands
 - **Use Rich** for beautiful output (tables, panels, colors)
 - **Call backend helpers** for database operations (not inline SQL)
@@ -235,9 +286,11 @@ def test_something():
 - **Write tests** for new commands (follow existing patterns)
 - **Use type hints** everywhere
 - **Handle errors** gracefully with try/except
+- **Test venv activation** - ensure `./docklite` uses `.venv/bin/python`
 
 ### ❌ DON'T
 
+- **Never install globally** - always use venv (`.venv/`)
 - **Never hardcode** URLs (localhost:8000, etc) - use `get_access_url()`
 - **Never pass long Python scripts** as command args - use backend helpers
 - **Never import only one model** - always `from app.models import user, project`
@@ -245,6 +298,7 @@ def test_something():
 - **Don't forget follow=False** when calling start() from other commands
 - **Don't use print()** - use Rich console functions
 - **Don't skip error handling**
+- **Don't use --user or --break-system-packages** - venv makes them unnecessary
 
 ## Examples
 
@@ -267,22 +321,46 @@ See [backend/app/cli_helpers/list_users.py](mdc:backend/app/cli_helpers/list_use
 
 ## Installation
 
+**First Time Setup:**
 ```bash
-# Dependencies (already installed)
-sudo apt-get install python3-typer python3-rich python3-dotenv python3-pytest
+# One command - creates venv and installs everything
+./docklite setup-dev
+```
 
-# Run CLI
+**What it does:**
+- Creates `.venv/` virtual environment
+- Installs CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- Creates `.env` from `.env.example`
+- Checks Docker
+- Makes CLI executable
+
+**Manual Setup (if needed):**
+```bash
+# Create venv
+python3 -m venv .venv
+
+# Install dependencies
+.venv/bin/pip install -r scripts/requirements.txt
+
+# Create .env
+cp .env.example .env
+```
+
+**Usage:**
+```bash
+# No activation needed - wrapper handles it!
 ./docklite --help
-./docklite --install-completion bash
+./docklite start
+./docklite status
 ```
 
 ## Migration Notes
 
-**Old:** Bash scripts (~2000 lines)  
-**New:** Python CLI (~800 lines) + 2 helpers + 60 tests  
-**Improvement:** 60% less code, 100% tested, beautiful UX
+**Old:** Bash scripts (~2000 lines), system-wide pip installs  
+**New:** Python CLI (~900 lines) + venv + 2 helpers + 60 tests  
+**Improvement:** 55% less code, 100% tested, beautiful UX, isolated deps
 
-**Status:** ✅ Production ready, all 60 tests passing
+**Status:** ✅ Production ready, all 60 tests passing, venv-based
 
 ## Common Issues
 

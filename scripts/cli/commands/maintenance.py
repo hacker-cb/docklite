@@ -46,6 +46,138 @@ from ..utils.validation import check_docker
 app = typer.Typer(help="Maintenance commands")
 
 
+@app.command(name="add-user")
+def add_user(
+    username: str = typer.Argument(..., help="Username"),
+    password: Optional[str] = typer.Option(None, "--password", "-p", help="Password (prompted if not provided)"),
+    is_admin: bool = typer.Option(False, "--admin", "-a", help="Create as admin user"),
+    email: Optional[str] = typer.Option(None, "--email", "-e", help="Email address"),
+    system_user: str = typer.Option("docklite", "--system-user", "-s", help="Linux system user for projects"),
+):
+    """Add a new user to DockLite."""
+    import getpass
+    
+    print_banner("Add New User")
+    
+    # Check Docker
+    check_docker()
+    
+    # Check if backend is running
+    if not is_container_running(CONTAINER_BACKEND):
+        log_warning("Backend is not running. Starting it...")
+        docker_compose_cmd("up", "-d", "backend", cwd=PROJECT_ROOT)
+        log_step("Waiting for backend...")
+        time.sleep(3)
+    
+    # Get password if not provided
+    if not password:
+        console.print()
+        password = getpass.getpass(f"Enter password for {username}: ")
+        password_confirm = getpass.getpass("Confirm password: ")
+        
+        if password != password_confirm:
+            log_error("Passwords do not match!")
+            raise typer.Exit(1)
+    
+    if len(password) < 8:
+        log_error("Password must be at least 8 characters!")
+        raise typer.Exit(1)
+    
+    # Check if user exists
+    log_step("Checking if user exists...")
+    try:
+        result = docker_compose_cmd(
+            "exec", "-T", "backend",
+            "python", "-m", "app.cli_helpers.list_users", "simple",
+            cwd=PROJECT_ROOT,
+            capture_output=True
+        )
+        existing_users = result.stdout.strip().split('\n') if result.stdout.strip() else []
+        
+        if username in existing_users:
+            log_error(f"User '{username}' already exists!")
+            raise typer.Exit(1)
+            
+    except subprocess.CalledProcessError:
+        log_warning("Could not check existing users, continuing...")
+    
+    # Create user
+    log_step(f"Creating user '{username}'...")
+    
+    # Build Python script
+    admin_flag = "True" if is_admin else "False"
+    email_arg = f'"{email}"' if email else "None"
+    
+    python_script = f"""
+import asyncio
+import sys
+import logging
+
+# Disable SQLAlchemy logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+
+from app.core.database import AsyncSessionLocal
+from app.models import user, project  # Import all models
+from app.models.user import User
+from app.core.security import get_password_hash
+
+async def create_user():
+    async with AsyncSessionLocal() as session:
+        new_user = User(
+            username="{username}",
+            hashed_password=get_password_hash("{password}"),
+            is_admin={admin_flag},
+            email={email_arg},
+            system_user="{system_user}"
+        )
+        session.add(new_user)
+        await session.commit()
+        await session.refresh(new_user)
+        
+        print(f"SUCCESS:{{new_user.id}}")
+
+if __name__ == "__main__":
+    asyncio.run(create_user())
+"""
+    
+    try:
+        result = docker_compose_cmd(
+            "exec", "-T", "backend",
+            "python", "-c", python_script,
+            cwd=PROJECT_ROOT,
+            capture_output=True
+        )
+        
+        if "SUCCESS" in result.stdout:
+            user_id = result.stdout.strip().split(":")[-1]
+            log_success(f"User '{username}' created successfully! (ID: {user_id})")
+            
+            console.print()
+            console.print("[bold]User Details:[/bold]")
+            console.print(f"  Username:     [cyan]{username}[/cyan]")
+            console.print(f"  Role:         [cyan]{'Admin' if is_admin else 'User'}[/cyan]")
+            console.print(f"  System User:  [cyan]{system_user}[/cyan]")
+            if email:
+                console.print(f"  Email:        [cyan]{email}[/cyan]")
+            console.print()
+            
+            if is_admin:
+                log_info("This user has full admin privileges")
+            else:
+                log_info("This user can only see their own projects")
+                
+        else:
+            log_error("Failed to create user")
+            console.print(result.stdout)
+            raise typer.Exit(1)
+            
+    except subprocess.CalledProcessError as e:
+        log_error("Failed to create user")
+        if e.stderr:
+            console.print(f"[red]{e.stderr}[/red]")
+        raise typer.Exit(1)
+
+
 @app.command()
 def backup(
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output directory")
