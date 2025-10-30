@@ -178,10 +178,10 @@ const formData = ref({
 // Computed
 const canSave = computed(() => {
   if (editingProject.value) {
-    return formData.value.name && formData.value.domain && formData.value.compose_content
+    return !!(formData.value.name && formData.value.domain && formData.value.compose_content)
   }
-  return formData.value.name && formData.value.domain && 
-         (selectedPreset.value || formData.value.compose_content)
+  return !!(formData.value.name && formData.value.domain && 
+         (selectedPreset.value || formData.value.compose_content))
 })
 
 // Methods  
