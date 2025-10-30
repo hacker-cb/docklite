@@ -40,15 +40,17 @@ describe('Setup Component', () => {
     })
 
     it('should have email field', () => {
-      const input = wrapper.find('#email input')
-      expect(input.exists()).toBe(true)
+      const inputEl = wrapper.find('#email')
+      expect(inputEl.exists()).toBe(true)
+      const input = inputEl.find('input')
       expect(input.attributes('type')).toBe('email')
       expect(input.attributes('name')).toBe('email')
     })
 
     it('should have password field with new-password autocomplete', () => {
-      const input = wrapper.find('#password input')
-      expect(input.exists()).toBe(true)
+      const inputEl = wrapper.find('#password')
+      expect(inputEl.exists()).toBe(true)
+      const input = inputEl.find('input')
       expect(input.attributes('type')).toBe('password')
       expect(input.attributes('name')).toBe('password')
       expect(input.attributes('autocomplete')).toBe('new-password')
