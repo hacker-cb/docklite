@@ -145,9 +145,10 @@ describe('CreateProjectDialog', () => {
   })
 
   describe('Edit mode', () => {
-    it('should support editing mode', () => {
-      // Check component can receive editingProject prop (defined in component)
-      expect(wrapper.vm.$options.props).toHaveProperty('editingProject')
+    it('should support editing via project prop', () => {
+      // Component uses 'project' prop, not 'editingProject'
+      const props = wrapper.vm.$options.props
+      expect(props).toHaveProperty('project')
     })
   })
 
