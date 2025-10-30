@@ -5,11 +5,14 @@ import sys
 import os
 from pathlib import Path
 
-# Get project root
-PROJECT_ROOT = Path(__file__).parent.absolute()
+# Get project root (handle symlink case)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Check if we're running setup-dev command (which creates venv)
+is_setup_dev = len(sys.argv) > 1 and sys.argv[1] == 'setup-dev'
 
 # Check if we're in venv, if not try to use it
-if not hasattr(sys, 'real_prefix') and not (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+if not is_setup_dev and not hasattr(sys, 'real_prefix') and not (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
     # Not in venv, check if venv exists
     venv_path = PROJECT_ROOT / ".venv"
     if venv_path.exists():
@@ -26,7 +29,120 @@ if not hasattr(sys, 'real_prefix') and not (hasattr(sys, 'base_prefix') and sys.
         print("Warning: Virtual environment not found. CLI dependencies may not be installed.")
         print(f"Run: ./docklite setup-dev")
         print("")
-        # Continue anyway, maybe dependencies are installed globally
+        # Continue anyway, maybe dependencies are installed globally (or setup-dev will create it)
+
+# Special handling for setup-dev: run without dependencies
+if is_setup_dev:
+    # Built-in setup-dev without CLI dependencies
+    import subprocess
+    import shutil
+    
+    print("=" * 70)
+    print("  DockLite Development Setup")
+    print("=" * 70)
+    print()
+    
+    # Check Python version
+    print("→ Checking Python installation...")
+    if sys.version_info < (3, 8):
+        print(f"✗ Python 3.8+ required, found {sys.version_info.major}.{sys.version_info.minor}")
+        sys.exit(1)
+    print(f"✓ Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro} found")
+    print()
+    
+    # Create venv
+    venv_path = PROJECT_ROOT / ".venv"
+    if not venv_path.exists():
+        print("→ Creating virtual environment...")
+        try:
+            subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+            print(f"✓ Virtual environment created at .venv/")
+        except subprocess.CalledProcessError as e:
+            print(f"✗ Failed to create virtual environment")
+            print("  Make sure python3-venv is installed:")
+            print("  sudo apt-get install python3-venv")
+            sys.exit(1)
+    else:
+        print("✓ Virtual environment already exists")
+    print()
+    
+    # Detect venv executables
+    if sys.platform == "win32":
+        venv_pip = venv_path / "Scripts" / "pip.exe"
+    else:
+        venv_pip = venv_path / "bin" / "pip"
+    
+    # Install dependencies
+    requirements_file = PROJECT_ROOT / "scripts" / "requirements.txt"
+    print("→ Installing Python CLI dependencies in venv...")
+    try:
+        subprocess.run(
+            [str(venv_pip), "install", "-q", "-r", str(requirements_file)],
+            check=True,
+            capture_output=True
+        )
+        print("✓ CLI dependencies installed in venv")
+    except subprocess.CalledProcessError:
+        print("✗ Failed to install CLI dependencies")
+        print(f"  Try manually: {venv_pip} install -r {requirements_file}")
+        sys.exit(1)
+    print()
+    
+    # Create .env file
+    env_file = PROJECT_ROOT / ".env"
+    env_example = PROJECT_ROOT / ".env.example"
+    if not env_file.exists() and env_example.exists():
+        print("→ Creating .env file from .env.example...")
+        shutil.copy(env_example, env_file)
+        print("✓ .env file created")
+        print("  ⚠️  Edit .env and set your HOSTNAME!")
+    elif env_file.exists():
+        print("✓ .env file already exists")
+    print()
+    
+    # Check Docker
+    print("→ Checking Docker installation...")
+    if shutil.which("docker"):
+        print("✓ Docker found")
+    else:
+        print("⚠️  Docker not found")
+        print("  Install Docker Desktop (macOS) or Docker Engine (Linux)")
+    print()
+    
+    # Make CLI executable
+    cli_files = [
+        PROJECT_ROOT / "docklite",
+        PROJECT_ROOT / "scripts" / "docklite",
+        PROJECT_ROOT / "scripts" / "docklite.sh"
+    ]
+    for cli_file in cli_files:
+        if cli_file.exists():
+            cli_file.chmod(0o755)
+    print("✓ CLI files made executable")
+    print()
+    
+    print("=" * 70)
+    print("  ✓ Setup Complete!")
+    print("=" * 70)
+    print()
+    print("Virtual environment ready!")
+    print(f"  Location: {venv_path}")
+    print()
+    print("Next steps:")
+    print("  1. Edit .env file:        nano .env")
+    print("  2. Start DockLite:        ./docklite start")
+    print("  3. Create admin user:     ./docklite add-user admin -p 'YourPassword' --admin")
+    print(f"  4. Open in browser:       http://your-hostname")
+    print()
+    print("Available commands:")
+    print("  ./docklite --help         # Show all commands")
+    print("  ./docklite status         # Check system status")
+    print("  ./docklite test           # Run all tests")
+    print()
+    print("Note: The ./docklite CLI automatically uses the .venv environment")
+    print()
+    
+    sys.exit(0)
 
 # Add scripts directory to path so we can import cli
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
@@ -41,7 +157,7 @@ except ImportError as e:
     print("  .venv/bin/pip install -r scripts/requirements.txt")
     print("")
     print("Or use the setup command:")
-    print("  python3 docklite setup-dev")
+    print("  ./docklite setup-dev")
     sys.exit(1)
 
 if __name__ == "__main__":
