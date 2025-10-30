@@ -49,8 +49,8 @@ def check_system_container(container_id: str, operation: ContainerOperation) -> 
 
 @router.get("")
 async def list_containers(
-    all -> dict: bool = True, current_user: User = Depends(get_current_active_user)
-):
+    all: bool = True, current_user: User = Depends(get_current_active_user)
+) -> dict:
     """
     Get list of all Docker containers (admin only).
 

@@ -20,10 +20,10 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
-    project -> dict: ProjectCreate,
+    project: ProjectCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Create a new project (owned by current user)"""
     service = ProjectService(db)
     new_project, error = await service.create_project(project, owner_id=current_user.id)

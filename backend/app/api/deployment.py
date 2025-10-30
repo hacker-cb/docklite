@@ -14,11 +14,11 @@ router = APIRouter(prefix="/deployment", tags=["deployment"])
 
 @router.get("/{project_id}/info")
 async def get_deployment_info(
-    project_id -> dict: int,
+    project_id: int,
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Get deployment instructions for a project"""
     service = ProjectService(db)
     project = await service.get_project(
