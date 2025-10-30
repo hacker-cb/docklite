@@ -194,10 +194,12 @@ class ProjectService:
             )
             new_domain = project_data.domain if domain_updated else project.domain
 
-            modified_compose, traefik_error = TraefikService.inject_labels_to_compose(
-                str(new_compose) if new_compose else "",
-                str(new_domain) if new_domain else "",
-                str(project.slug)
+            modified_compose, traefik_error = (
+                TraefikService.inject_labels_to_compose(
+                    str(new_compose) if new_compose else "",
+                    str(new_domain) if new_domain else "",
+                    str(project.slug),
+                )
             )
 
             if traefik_error:
