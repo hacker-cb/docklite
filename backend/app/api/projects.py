@@ -119,11 +119,11 @@ async def get_env_vars(
     project_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Get project environment variables (with ownership check)"""
     service = ProjectService(db)
     env_vars = await service.get_env_vars(
-        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
+        project_id, user_id=int(current_user.id), is_admin=bool(current_user.is_admin)
     )
 
     if env_vars is None:
@@ -141,13 +141,13 @@ async def update_env_vars(
     env_vars: Dict[str, str],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-):
+) -> dict:
     """Update project environment variables (with ownership check)"""
     service = ProjectService(db)
     success, error = await service.update_env_vars(
         project_id,
         env_vars,
-        user_id=current_user.id,
+        user_id=int(current_user.id),
         is_admin=bool(current_user.is_admin),
     )
 
