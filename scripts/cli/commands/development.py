@@ -391,7 +391,7 @@ def test(
 
 @app.command(name="test-backend")
 def test_backend(
-    args: list[str] = typer.Argument(None, help="Arguments to pass to pytest")
+    args: List[str] = typer.Argument(None, help="Arguments to pass to pytest")
 ) -> None:
     """Run backend tests only."""
     print_banner("Backend Tests (Python/Pytest)")
