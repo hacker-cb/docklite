@@ -143,15 +143,18 @@ describe('CreateProjectDialog', () => {
 
   describe('Edit mode', () => {
     beforeEach(async () => {
+      const editProject = {
+        id: 1,
+        name: 'existing-project',
+        domain: 'existing.com',
+        compose_content: 'version: "3.8"\nservices:\n  app:\n    image: alpine',
+        env_vars: {}
+      }
+      
       wrapper = mount(CreateProjectDialog, {
         props: {
-          modelValue: true,
-          editingProject: {
-            id: 1,
-            name: 'existing-project',
-            domain: 'existing.com',
-            compose_content: 'version: "3.8"\nservices:\n  app:\n    image: alpine'
-          }
+          modelValue: false,  // Start closed
+          editingProject: null
         },
         global: {
           plugins: [PrimeVue, ToastService],
@@ -167,6 +170,12 @@ describe('CreateProjectDialog', () => {
             Skeleton: true
           }
         }
+      })
+      
+      // Open with editing project
+      await wrapper.setProps({ 
+        modelValue: true,
+        editingProject: editProject
       })
       await wrapper.vm.$nextTick()
     })

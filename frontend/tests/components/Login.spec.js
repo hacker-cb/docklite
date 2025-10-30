@@ -17,7 +17,10 @@ describe('Login Component', () => {
   beforeEach(() => {
     wrapper = mount(Login, {
       global: {
-        plugins: [PrimeVue]
+        plugins: [PrimeVue],
+        stubs: {
+          InputText: false  // Render actual inputs for testing
+        }
       }
     })
   })

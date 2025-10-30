@@ -17,7 +17,10 @@ describe('Setup Component', () => {
   beforeEach(() => {
     wrapper = mount(Setup, {
       global: {
-        plugins: [PrimeVue]
+        plugins: [PrimeVue],
+        stubs: {
+          InputText: false  // Render actual inputs for testing
+        }
       }
     })
   })
