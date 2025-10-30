@@ -102,7 +102,7 @@ tests/
 
 **Locally (recommended for development):**
 ```bash
-cd /home/pavel/docklite/frontend
+cd ~/docklite/frontend
 npm install
 npm test          # Run all tests
 npm test -- --run # Run once without watch

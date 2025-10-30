@@ -12,7 +12,7 @@ DockLite использует отдельного системного поль
 ### 1. Настройка сервера (один раз)
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 sudo ./setup-docklite-user.sh
 ```
 

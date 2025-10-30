@@ -310,7 +310,7 @@ scp -r ./files/ {system_user}@server:/home/{system_user}/projects/{slug}/
 ### DockLite System
 
 ```
-/home/pavel/docklite/
+~/docklite/
 ├── backend/
 │   ├── app/
 │   │   ├── api/           # REST endpoints
@@ -431,7 +431,7 @@ sudo -u docklite ssh-keygen -t ed25519
 
 3. **Deploy DockLite:**
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 docker-compose up -d
 ```
 

@@ -58,7 +58,7 @@ cd "$(get_project_root)"
 
 # Create projects directory if needed
 log_step "Creating projects directory..."
-mkdir -p /home/pavel/docklite-projects
+mkdir -p "$HOME/docklite-projects"
 log_success "Projects directory ready"
 
 # Start services

@@ -112,7 +112,7 @@ ssh docklite@{server} "cd /home/docklite/projects/{project_id} && docker-compose
 
 ## 📖 Полная документация
 
-См. [SSH_ACCESS.md](/home/pavel/docklite/SSH_ACCESS.md) для подробной информации.
+См. [SSH_ACCESS.md](./SSH_ACCESS.md) для подробной информации.
 
 ---
 

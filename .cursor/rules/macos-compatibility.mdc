@@ -67,7 +67,7 @@ These require Linux and are NOT needed for development:
 
 **❌ BAD:**
 ```python
-PROJECT_ROOT = Path("/home/pavel/docklite")
+PROJECT_ROOT = Path("/home/user/docklite")  # Hardcoded path
 ```
 
 **✅ GOOD:**
@@ -408,7 +408,7 @@ See implementations:
 
 ### Issue: Hardcoded paths break on macOS
 
-**Symptom:** `FileNotFoundError: /home/pavel/docklite`
+**Symptom:** `FileNotFoundError: /home/user/docklite`
 
 **Solution:** Use auto-detection (see examples above).
 

@@ -245,14 +245,14 @@ status = get_container_status()
 ```python
 from cli.config import (
     VERSION,              # "1.0.0"
-    PROJECT_ROOT,         # Path("/home/pavel/docklite")
+    PROJECT_ROOT,         # Path("~/docklite") - auto-detected
     BACKUPS_DIR,
     get_hostname,         # Priority: .env > system > localhost
     get_access_url        # Build URLs with hostname
 )
 
 # Always use get_access_url for URLs
-url = get_access_url("/api")  # http://artem.sokolov.me/api
+url = get_access_url("/api")  # http://example.com/api
 ```
 
 ## Testing

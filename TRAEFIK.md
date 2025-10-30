@@ -146,7 +146,7 @@ DockLite automatically uses your system hostname for access URLs. Check your hos
 
 ```bash
 hostname
-# Output: artem.sokolov.me (example)
+# Output: example.com (example)
 ```
 
 To set/change hostname:

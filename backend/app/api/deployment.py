@@ -96,11 +96,11 @@ async def get_ssh_setup_info():
         "projects_dir": settings.PROJECTS_DIR,
         "server": server_host,
         "instructions": {
-            "setup_server": "cd /home/pavel/docklite && sudo ./setup-docklite-user.sh",
+            "setup_server": "cd ~/docklite && sudo ./setup-docklite-user.sh",
             "generate_key": 'ssh-keygen -t ed25519 -C "your_email@example.com"',
             "copy_key": "cat ~/.ssh/id_ed25519.pub",
             "add_key": f"sudo -u {deploy_user} nano /home/{deploy_user}/.ssh/authorized_keys",
             "test_connection": f"ssh {deploy_user}@{server_host}",
         },
-        "documentation": "/home/pavel/docklite/SSH_ACCESS.md",
+        "documentation": "~/docklite/SSH_ACCESS.md",
     }

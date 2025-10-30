@@ -13,7 +13,7 @@ tags: ["docker"]
 ### Start/Stop/Restart
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 
 # Start
 ./docklite start

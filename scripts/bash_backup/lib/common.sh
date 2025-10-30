@@ -210,7 +210,9 @@ get_docklite_version() {
 
 # Project paths
 get_project_root() {
-    echo "/home/pavel/docklite"
+    # Auto-detect from script location
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "$(cd "$script_dir/../.." && pwd)"
 }
 
 get_scripts_dir() {

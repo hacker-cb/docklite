@@ -8,7 +8,7 @@
 #
 # Examples:
 #   ./reset-password.sh admin              # Reset admin password (interactive)
-#   ./reset-password.sh pavel              # Reset pavel's password
+#   ./reset-password.sh john               # Reset john's password
 #   ./reset-password.sh admin -p newpass   # Set specific password
 
 set -e

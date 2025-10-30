@@ -27,7 +27,7 @@ source ~/.bashrc
 
 **For current user only:**
 ```bash
-echo 'source /home/pavel/docklite/scripts/completion/docklite-completion.bash' >> ~/.bashrc
+echo 'source ~/docklite/scripts/completion/docklite-completion.bash' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -169,7 +169,7 @@ grep docklite ~/.bashrc
 
 **Manual load:**
 ```bash
-source /home/pavel/docklite/scripts/completion/docklite-completion.bash
+source ~/docklite/scripts/completion/docklite-completion.bash
 ```
 
 **Check registration:**
@@ -203,7 +203,7 @@ For system-wide access, add to PATH:
 
 ```bash
 # Add to ~/.bashrc
-export PATH="/home/pavel/docklite:$PATH"
+export PATH="~/docklite:$PATH"
 
 # Then use without ./
 docklite start

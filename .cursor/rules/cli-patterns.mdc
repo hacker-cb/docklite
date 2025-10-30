@@ -15,11 +15,11 @@ tags: ["bash", "cli"]
 hostname=$(get_hostname)
 
 # Build URLs (NEVER hardcode!)
-$(get_access_url)                    # http://artem.sokolov.me
-$(get_access_url "/api")             # http://artem.sokolov.me/api
-$(get_access_url "/dashboard")       # http://artem.sokolov.me/dashboard
-$(get_access_url "" "8888")          # http://artem.sokolov.me:8888
-$(get_access_url "/path" "443" "https")  # https://artem.sokolov.me/path
+$(get_access_url)                    # http://example.com
+$(get_access_url "/api")             # http://example.com/api
+$(get_access_url "/dashboard")       # http://example.com/dashboard
+$(get_access_url "" "8888")          # http://example.com:8888
+$(get_access_url "/path" "443" "https")  # https://example.com/path
 ```
 
 ## Display URLs in Scripts

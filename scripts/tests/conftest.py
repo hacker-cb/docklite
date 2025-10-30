@@ -8,8 +8,9 @@ import subprocess
 
 @pytest.fixture
 def project_root():
-    """Get project root path."""
-    return Path("/home/pavel/docklite")
+    """Get project root path (auto-detected)."""
+    # Auto-detect from script location
+    return Path(__file__).parent.parent.parent.absolute()
 
 
 @pytest.fixture

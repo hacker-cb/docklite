@@ -9,13 +9,13 @@ alwaysApply: true
 
 ## Production URLs
 
-**Hostname:** `artem.sokolov.me` (configured in `.env`)
+**Hostname:** `example.com` (configured in `.env`)
 
-- **Frontend:** http://artem.sokolov.me
-- **Backend API:** http://artem.sokolov.me/api
-- **API Docs:** http://artem.sokolov.me/docs
-- **Traefik:** http://artem.sokolov.me/traefik/ (admin-only)
-- **Containers:** http://artem.sokolov.me/containers (admin-only)
+- **Frontend:** http://example.com
+- **Backend API:** http://example.com/api
+- **API Docs:** http://example.com/docs
+- **Traefik:** http://example.com/traefik/ (admin-only)
+- **Containers:** http://example.com/containers (admin-only)
 
 ## URL Conventions
 
@@ -51,7 +51,7 @@ Unified hostname detection across Python and Bash with same priority logic.
 **Valid hostnames:**
 - example.com
 - subdomain.example.com
-- artem.sokolov.me
+- your.domain.com
 
 **Invalid (skipped to next priority):**
 - localhost (too generic)
@@ -73,7 +73,7 @@ See: [.env](mdc:.env)
 ### Priority 2: System Hostname
 
 ```bash
-sudo hostnamectl set-hostname artem.sokolov.me
+sudo hostnamectl set-hostname your.domain.com
 # Auto-detected by hostname functions
 ```
 
@@ -96,16 +96,16 @@ hostname = get_server_hostname(fallback="localhost")
 
 # Build URLs
 frontend_url = get_access_url()
-# http://artem.sokolov.me
+# http://example.com
 
 api_url = get_access_url(path="/api")
-# http://artem.sokolov.me/api
+# http://example.com/api
 
 dashboard_url = get_access_url(path="/traefik", port=None)
-# http://artem.sokolov.me/traefik
+# http://example.com/traefik
 
 custom_port = get_access_url(path="", port=8888)
-# http://artem.sokolov.me:8888
+# http://example.com:8888
 ```
 
 **Location:** [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py)
@@ -116,9 +116,9 @@ custom_port = get_access_url(path="", port=8888)
 from cli.utils.hostname import get_hostname, get_access_url
 
 # Get URLs
-get_access_url()              # http://artem.sokolov.me
-get_access_url('/api')        # http://artem.sokolov.me/api
-get_access_url('/traefik')    # http://artem.sokolov.me/traefik
+get_access_url()              # http://example.com
+get_access_url('/api')        # http://example.com/api
+get_access_url('/traefik')    # http://example.com/traefik
 ```
 
 **Location:** [scripts/cli/utils/hostname.py](mdc:scripts/cli/utils/hostname.py)
@@ -133,11 +133,11 @@ source "$SCRIPT_DIR/lib/common.sh"
 hostname=$(get_hostname)
 
 # Build URLs
-frontend=$(get_access_url)                    # http://artem.sokolov.me
-api=$(get_access_url "/api")                  # http://artem.sokolov.me/api
-traefik=$(get_access_url "/traefik")          # http://artem.sokolov.me/traefik
-custom=$(get_access_url "" "8888")            # http://artem.sokolov.me:8888
-https=$(get_access_url "/secure" "" "https")  # https://artem.sokolov.me/secure
+frontend=$(get_access_url)                    # http://example.com
+api=$(get_access_url "/api")                  # http://example.com/api
+traefik=$(get_access_url "/traefik")          # http://example.com/traefik
+custom=$(get_access_url "" "8888")            # http://example.com:8888
+https=$(get_access_url "/secure" "" "https")  # https://example.com/secure
 ```
 
 **Location:** [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
@@ -154,10 +154,10 @@ https=$(get_access_url "/secure" "" "https")  # https://artem.sokolov.me/secure
 ### Start/Rebuild/Status Commands
 
 ```
-Frontend:  http://artem.sokolov.me
-Backend:   http://artem.sokolov.me/api
-API Docs:  http://artem.sokolov.me/docs
-Traefik:   http://artem.sokolov.me/traefik (admin only)
+Frontend:  http://example.com
+Backend:   http://example.com/api
+API Docs:  http://example.com/docs
+Traefik:   http://example.com/traefik (admin only)
 ```
 
 **Updated files:**
@@ -190,7 +190,7 @@ log_info "API: http://localhost:8000"       # Wrong!
 url = "http://localhost/dashboard"  # Wrong!
 
 # Hardcoded hostname
-base_url = "http://artem.sokolov.me"  # Wrong!
+base_url = "http://example.com"  # Wrong!
 ```
 
 ### ✅ DO instead

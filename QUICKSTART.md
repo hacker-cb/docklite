@@ -13,7 +13,7 @@ Fast setup guide for DockLite.
 ### 1. Setup System User
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 sudo ./docklite setup-user
 ```
 

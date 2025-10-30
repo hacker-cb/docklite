@@ -11,7 +11,7 @@
 ### Способ 1: Через скрипт (рекомендуется)
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 ./run-tests.sh
 ```
 
@@ -23,13 +23,13 @@ cd /home/pavel/docklite
 
 **Backend тесты:**
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 docker-compose run --rm backend pytest -v
 ```
 
 **Frontend тесты:**
 ```bash
-cd /home/pavel/docklite/frontend
+cd ~/docklite/frontend
 npm install
 npm test
 ```
@@ -66,7 +66,7 @@ docker-compose run --rm backend pytest --cov=app --cov-report=html
 
 ### Предварительно: установить зависимости
 ```bash
-cd /home/pavel/docklite/frontend
+cd ~/docklite/frontend
 npm install
 ```
 
@@ -106,7 +106,7 @@ npm test -- forms.spec.js
 ### Проверка синтаксиса Python
 
 ```bash
-cd /home/pavel/docklite/backend
+cd ~/docklite/backend
 
 # Проверить все Python файлы
 find app -name "*.py" -exec python3 -m py_compile {} \;
@@ -116,7 +116,7 @@ find tests -name "*.py" -exec python3 -m py_compile {} \;
 ### Проверка синтаксиса JavaScript
 
 ```bash
-cd /home/pavel/docklite/frontend
+cd ~/docklite/frontend
 
 # Если есть Node.js
 npx eslint src/ --ext .js,.vue
@@ -137,7 +137,7 @@ newgrp docker
 **Проблема**: "Image not found"
 ```bash
 # Собрать образ
-cd /home/pavel/docklite
+cd ~/docklite
 docker-compose build backend
 ```
 
@@ -302,7 +302,7 @@ git pull
 
 ```bash
 # Все тесты (одной командой)
-cd /home/pavel/docklite && ./run-tests.sh
+cd ~/docklite && ./run-tests.sh
 
 # Только backend
 docker-compose run --rm backend pytest

@@ -77,7 +77,7 @@ cd docklite
 DockLite использует **multi-tenant** архитектуру, где каждый проект принадлежит пользователю и изолирован по системному пользователю Linux:
 
 ```
-/home/pavel/docklite/           # Система DockLite
+~/docklite/                     # Система DockLite
 ├── backend/                    # FastAPI backend
 ├── frontend/                   # Vue.js 3 + PrimeVue frontend
 ├── nginx/                      # Nginx конфигурация
@@ -150,14 +150,14 @@ docker compose version
 1. **Клонировать репозиторий** (или убедиться, что файлы уже на сервере):
 
 ```bash
-cd /home/pavel
+cd ~
 # Если репозиторий существует, то git clone не нужен
 ```
 
 2. **Настроить переменные окружения**:
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 cp .env.example .env
 # Отредактируйте .env файл и установите SECRET_KEY
 ```
@@ -165,7 +165,7 @@ cp .env.example .env
 3. **Создать системного пользователя для деплоя**:
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 sudo ./docklite setup-user
 ```
 
@@ -194,10 +194,10 @@ sudo ./docklite setup-ssh
 После запуска системы, веб-интерфейс будет доступен:
 
 **Используя системный hostname:**
-- **Frontend**: http://artem.sokolov.me (или ваш hostname)
-- **Backend API**: http://artem.sokolov.me/api
-- **API Docs**: http://artem.sokolov.me/docs
-- **Traefik Dashboard**: http://artem.sokolov.me/traefik/ (admin-only)
+- **Frontend**: http://example.com (или ваш hostname)
+- **Backend API**: http://example.com/api
+- **API Docs**: http://example.com/docs
+- **Traefik Dashboard**: http://example.com/traefik/ (admin-only)
 
 **Локальный доступ:**
 - **Frontend**: http://localhost
@@ -299,7 +299,7 @@ ssh docklite@server "cd /home/docklite/projects/5 && docker-compose ps"
 **Первоначальная настройка сервера**:
 
 ```bash
-cd /home/pavel/docklite
+cd ~/docklite
 sudo ./setup-docklite-user.sh
 ```
 
@@ -385,7 +385,7 @@ uvicorn app.main:app --reload
 ### Frontend
 
 ```bash
-cd /home/pavel/docklite/frontend
+cd ~/docklite/frontend
 
 # Установить зависимости
 npm install
@@ -400,7 +400,7 @@ npm run build
 ### Миграции БД
 
 ```bash
-cd /home/pavel/docklite/backend
+cd ~/docklite/backend
 
 # Создать новую миграцию
 alembic revision --autogenerate -m "description"
