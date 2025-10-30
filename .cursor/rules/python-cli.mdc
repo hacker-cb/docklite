@@ -10,7 +10,7 @@ globs: scripts/**/*.py,backend/app/cli_helpers/*.py
 **MANDATORY BEFORE ANY WORK:**
 
 ```bash
-./docklite setup-dev
+./docklite dev setup-dev
 ```
 
 This creates `.venv/` and installs all dependencies. Skip this and CLI will fail.
@@ -34,7 +34,7 @@ This creates `.venv/` and installs all dependencies. Skip this and CLI will fail
 scripts/
 ├── docklite                    # Entry point (Python executable)
 ├── cli/
-│   ├── main.py                # Typer app with all commands
+│   ├── main.py                # Typer app with 4 groups + 6 root commands
 │   ├── config.py              # get_hostname(), get_access_url(), paths
 │   ├── utils/
 │   │   ├── console.py         # Rich logging (log_info, log_success, etc)
@@ -42,14 +42,15 @@ scripts/
 │   │   ├── system.py          # User management, file operations
 │   │   └── validation.py      # check_docker, check_docker_compose
 │   └── commands/
-│       ├── development.py     # start, stop, test, logs
-│       ├── deployment.py      # setup-user, setup-ssh, init-db
-│       └── maintenance.py     # backup, status, list-users, reset-password
+│       ├── development.py     # dev: setup-dev, rebuild, test-*, logs (also root: start/stop/restart/test)
+│       ├── deployment.py      # deploy: setup-user, setup-ssh, init-db
+│       ├── user.py            # user: add, list, reset-password
+│       └── maintenance.py     # maint: backup, restore, clean (also root: status)
 └── tests/                      # 60 pytest tests
 
 backend/app/cli_helpers/
-├── list_users.py              # Database user queries
-└── reset_password.py          # Password reset operations
+├── list_users.py              # Database user queries (used by user.py)
+└── reset_password.py          # Password reset operations (used by user.py)
 ```
 
 ## Key Technologies
@@ -63,14 +64,14 @@ backend/app/cli_helpers/
 
 **Location:** `.venv/` in project root  
 **Auto-activation:** `./docklite` wrapper automatically uses `.venv/bin/python`  
-**Setup:** `./docklite setup-dev` creates and configures venv
+**Setup:** `./docklite dev setup-dev` creates and configures venv
 
 ### Key Features
 
 ✅ **No manual activation** - wrapper handles it automatically  
 ✅ **Isolated dependencies** - no system Python pollution  
 ✅ **Cross-platform** - works on macOS, Linux, Windows  
-✅ **One-command setup** - `./docklite setup-dev`
+✅ **One-command setup** - `./docklite dev setup-dev`
 
 ### Dependencies (in venv)
 
@@ -104,34 +105,49 @@ if not in_venv and venv_exists:
 
 Users just run `./docklite <command>` - venv activation is transparent!
 
-## Commands (19 total)
+## Commands (20 total)
 
-**Setup (1):**
-- `setup-dev` - Setup development environment (creates venv, installs deps, creates .env)
+DockLite uses **hybrid command structure** for optimal usability:
 
-**Development (8):**
+### Root Level (6 commands)
+Essential daily-use commands for quick access:
+
 - `start [--build] [--follow]` - Start services
 - `stop [--volumes]` - Stop services
-- `restart [--build]` - Restart (no logs)
-- `rebuild [--no-cache] [--follow]` - Rebuild images
+- `restart [--build]` - Restart services
 - `logs [service]` - Show logs
-- `test [--verbose] [--quiet]` - All tests
-- `test-backend` - Backend tests
-- `test-frontend` - Frontend tests
+- `status [--verbose]` - System status
+- `test [--verbose] [--quiet]` - Run all tests
 
-**Deployment (3):**
-- `setup-user [--user] [--dir]` - Create system user
-- `setup-ssh [--user]` - Configure SSH
-- `init-db [--reset]` - Initialize database
+### Development Group (`dev`) - 5 commands
+Development and testing:
 
-**Maintenance (7):**
-- `add-user <username> [--password] [--admin] [--email]` - Add new user
-- `backup [--output]` - Backup to tar.gz
-- `restore <file>` - Restore from backup
-- `clean [--all|--images|--volumes|--logs]` - Cleanup
-- `status [--verbose]` - System status with Rich table
-- `list-users [--verbose]` - List users (Rich table in verbose)
-- `reset-password <username> [--password]` - Reset password
+- `dev setup-dev` - First-time environment setup (creates venv, installs deps, .env)
+- `dev rebuild [--no-cache] [--follow]` - Rebuild Docker images
+- `dev test-backend [args]` - Backend tests only (pytest args supported)
+- `dev test-frontend [--watch] [--ui] [--coverage]` - Frontend tests (Vitest)
+- `dev test-e2e [--ui] [--debug] [--headed]` - E2E tests (Playwright)
+
+### Deployment Group (`deploy`) - 3 commands
+Production setup (Linux only):
+
+- `deploy setup-user [--user] [--dir]` - Create Linux system user
+- `deploy setup-ssh [--user]` - Configure SSH access
+- `deploy init-db [--reset]` - Initialize/reset database
+
+### User Management Group (`user`) - 3 commands
+User administration:
+
+- `user add <username> [--password] [--admin] [--email]` - Add new user
+- `user list [--verbose]` - List all users (Rich table in verbose)
+- `user reset-password <username> [--password]` - Reset user password
+
+### Maintenance Group (`maint`) - 3 commands
+System maintenance:
+
+- `maint backup [--output]` - Backup database and config
+- `maint restore <file> [--no-confirm]` - Restore from backup
+- `maint clean [--all|--images|--volumes|--logs]` - Clean Docker resources
 
 ## Code Patterns
 
@@ -336,7 +352,7 @@ See [backend/app/cli_helpers/list_users.py](mdc:backend/app/cli_helpers/list_use
 **First Time Setup:**
 ```bash
 # One command - creates venv and installs everything
-./docklite setup-dev
+./docklite dev setup-dev
 ```
 
 **What it does:**

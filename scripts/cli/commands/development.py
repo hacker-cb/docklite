@@ -28,7 +28,11 @@ from ..utils.docker import (
 )
 from ..utils.validation import check_docker, check_docker_compose
 
-app = typer.Typer(help="Development commands")
+app = typer.Typer(
+    help="Development commands",
+    no_args_is_help=True,
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
 
 
 @app.command(name="setup-dev")
@@ -166,7 +170,6 @@ def setup_dev():
     console.print()
 
 
-@app.command()
 def start(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before starting"),
     follow: bool = typer.Option(False, "--follow", "-f", help="Follow logs after starting"),
@@ -219,7 +222,6 @@ def start(
         docker_compose_cmd("logs", "-f", cwd=PROJECT_ROOT)
 
 
-@app.command()
 def stop(
     volumes: bool = typer.Option(False, "--volumes", "-v", help="Remove volumes as well")
 ) -> None:
@@ -242,7 +244,6 @@ def stop(
     log_success("DockLite stopped")
 
 
-@app.command()
 def restart(
     build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before restarting")
 ) -> None:
@@ -306,7 +307,6 @@ def rebuild(
         docker_compose_cmd("logs", "-f", cwd=PROJECT_ROOT)
 
 
-@app.command()
 def logs(
     service: Optional[str] = typer.Argument(None, help="Service name (backend, frontend, traefik)")
 ) -> None:
@@ -318,7 +318,6 @@ def logs(
     docker_compose_cmd(*args, cwd=PROJECT_ROOT)
 
 
-@app.command()
 def test(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Minimal output"),

@@ -4,45 +4,31 @@ import typer
 from typing import Optional
 
 from . import __version__
-from .commands import development, deployment, maintenance
+from .commands import development, deployment, maintenance, user
 
-# Create main Typer app
+# Create main Typer app with -h support
 app = typer.Typer(
     name="docklite",
     help="DockLite - Multi-tenant Docker management system",
     add_completion=True,
     no_args_is_help=True,
-    rich_markup_mode="rich"
+    rich_markup_mode="rich",
+    context_settings={"help_option_names": ["-h", "--help"]}
 )
 
 # Add command groups
-app.add_typer(development.app, name="dev", help="Development commands (start, stop, test, etc.)")
-app.add_typer(deployment.app, name="deploy", help="Deployment commands (setup-user, setup-ssh, init-db)")
-app.add_typer(maintenance.app, name="maint", help="Maintenance commands (backup, restore, status, etc.)")
+app.add_typer(development.app, name="dev", help="Development commands (5)")
+app.add_typer(deployment.app, name="deploy", help="Deployment commands (3)")
+app.add_typer(user.app, name="user", help="User management commands (3)")
+app.add_typer(maintenance.app, name="maint", help="Maintenance commands (3)")
 
-# Register individual commands at root level for convenience
-app.command(name="setup-dev")(development.setup_dev)
+# Register essential commands at root level for convenience
 app.command(name="start")(development.start)
 app.command(name="stop")(development.stop)
 app.command(name="restart")(development.restart)
-app.command(name="rebuild")(development.rebuild)
 app.command(name="logs")(development.logs)
 app.command(name="test")(development.test)
-app.command(name="test-backend")(development.test_backend)
-app.command(name="test-frontend")(development.test_frontend)
-app.command(name="test-e2e")(development.test_e2e)
-
-app.command(name="setup-user")(deployment.setup_user)
-app.command(name="setup-ssh")(deployment.setup_ssh)
-app.command(name="init-db")(deployment.init_db)
-
-app.command(name="add-user")(maintenance.add_user)
-app.command(name="backup")(maintenance.backup)
-app.command(name="restore")(maintenance.restore)
-app.command(name="clean")(maintenance.clean)
 app.command(name="status")(maintenance.status)
-app.command(name="reset-password")(maintenance.reset_password)
-app.command(name="list-users")(maintenance.list_users)
 
 
 @app.command()
@@ -57,17 +43,23 @@ def main_callback():
     """
     DockLite CLI - Multi-tenant Docker management system.
     
-    Commands:
-      Development: start, stop, restart, rebuild, logs, test
-      Deployment:  setup-user, setup-ssh, init-db
-      Maintenance: backup, restore, clean, status, reset-password, list-users
+    Daily Commands:
+      start, stop, restart    # System lifecycle
+      logs, status            # Monitoring
+      test                    # Run all tests
+    
+    Command Groups:
+      dev                     # Development (setup-dev, rebuild, test-*)
+      deploy                  # Deployment (setup-user, setup-ssh, init-db)
+      user                    # User management (add, list, reset-password)
+      maint                   # Maintenance (backup, restore, clean)
     
     Examples:
-      docklite start              # Start services
-      docklite status             # Show status
-      docklite test               # Run all tests
-      docklite backup             # Backup database
-      docklite list-users         # List all users
+      docklite start                    # Start services
+      docklite status -v                # Check status
+      docklite dev rebuild              # Rebuild images
+      docklite user add admin           # Add user
+      docklite deploy setup-user        # Production setup
     """
     pass
 

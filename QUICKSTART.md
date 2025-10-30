@@ -14,7 +14,7 @@ Fast setup guide for DockLite.
 
 ```bash
 cd ~/docklite
-sudo ./docklite setup-user
+sudo ./docklite deploy setup-user
 ```
 
 Creates `docklite` Linux user for deployment.
@@ -22,7 +22,7 @@ Creates `docklite` Linux user for deployment.
 ### 2. Configure SSH
 
 ```bash
-sudo ./docklite setup-ssh
+sudo ./docklite deploy setup-ssh
 ```
 
 Sets up SSH keys for localhost deployment.
@@ -81,11 +81,13 @@ Click "Create Admin Account"
 ## Useful Commands
 
 ```bash
-./docklite status           # Check system status
-./docklite logs             # View logs
-./docklite test             # Run tests
-./docklite backup           # Create backup
-./docklite --help           # Show all commands
+./docklite status                # Check system status
+./docklite logs                  # View logs
+./docklite test                  # Run tests
+./docklite maint backup          # Create backup
+./docklite --help                # Show all commands
+./docklite user list             # List users
+./docklite user add newuser      # Add new user
 ```
 
 ---
@@ -93,7 +95,7 @@ Click "Create Admin Account"
 ## Forgot Password?
 
 ```bash
-./docklite reset-password admin     # Reset admin password
+./docklite user reset-password admin     # Reset admin password
 ```
 
 ---
@@ -117,18 +119,18 @@ sudo usermod -aG docker $USER
 
 ### Can't connect to SSH
 ```bash
-sudo ./docklite setup-ssh  # Re-run SSH setup
-ssh docklite@localhost     # Test connection
+sudo ./docklite deploy setup-ssh  # Re-run SSH setup
+ssh docklite@localhost            # Test connection
 ```
 
 ### Forgot password
 ```bash
-./docklite reset-password admin  # Reset password
+./docklite user reset-password admin  # Reset password
 ```
 
 ### Database issues
 ```bash
-./docklite init-db --reset  # Reset database (WARNING: deletes data!)
+./docklite deploy init-db --reset  # Reset database (WARNING: deletes data!)
 ```
 
 ---

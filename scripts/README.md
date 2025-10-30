@@ -6,16 +6,33 @@ Production-grade scripts for managing DockLite system.
 
 ```bash
 # First time setup (creates venv, installs dependencies)
-./docklite setup-dev
+./docklite dev setup-dev
 
-# From project root
+# Daily commands (root level)
 ./docklite start          # Start system
+./docklite stop           # Stop system
 ./docklite status         # Check status
+./docklite logs           # View logs
 ./docklite test           # Run tests
-./docklite --help         # Show all commands
+
+# Show all commands
+./docklite --help         # Root commands + groups
+./docklite dev --help     # Development commands
+./docklite user --help    # User management
 ```
 
 **Note:** CLI automatically uses `.venv/` virtual environment - no need to activate manually!
+
+## Command Structure
+
+DockLite uses **hybrid command structure** for optimal usability:
+- **6 Root Commands** - Daily-use commands for quick access
+- **4 Command Groups** - Specialized commands organized by function
+
+```
+./docklite <command>              # Root commands (start, stop, logs, etc.)
+./docklite <group> <subcommand>   # Grouped commands (dev, deploy, user, maint)
+```
 
 ## Structure
 
@@ -44,7 +61,9 @@ scripts/
 
 ## Commands
 
-### Development
+### Root Level Commands (6)
+
+Essential daily-use commands available at root level:
 
 #### `start` - Start Services
 ```bash
@@ -62,13 +81,7 @@ scripts/
 #### `restart` - Restart Services
 ```bash
 ./docklite restart              # Stop then start
-```
-
-#### `rebuild` - Rebuild and Restart
-```bash
-./docklite rebuild              # Rebuild with cache
-./docklite rebuild --no-cache   # Full rebuild
-./docklite rebuild --follow     # Rebuild and show logs
+./docklite restart --build      # Rebuild before restart
 ```
 
 #### `logs` - Show Logs
@@ -76,116 +89,13 @@ scripts/
 ./docklite logs                 # Follow all logs
 ./docklite logs backend         # Backend only
 ./docklite logs frontend        # Frontend only
-```
-
-#### `test` - Run Tests
-```bash
-./docklite test                 # All tests
-./docklite test --verbose       # Verbose output
-./docklite test --quiet         # Minimal output
-```
-
-#### `test-backend` - Backend Tests
-```bash
-./docklite test-backend         # All backend tests
-./docklite test-backend -v      # Verbose
-./docklite test-backend -k auth # Auth tests only
-./docklite test-backend --cov   # With coverage
-```
-
-#### `test-frontend` - Frontend Tests
-```bash
-./docklite test-frontend        # All frontend tests
-./docklite test-frontend --watch    # Watch mode
-./docklite test-frontend --ui       # Interactive UI
-./docklite test-frontend --coverage # Coverage report
-```
-
-#### `test-e2e` - E2E Tests
-```bash
-./docklite test-e2e             # Run all E2E tests (Playwright)
-./docklite test-e2e --ui        # Interactive UI mode
-./docklite test-e2e --debug     # Debug mode (step through tests)
-./docklite test-e2e --report    # Show test report
-./docklite test-e2e --headed    # Show browser while testing
-```
-
-**Prerequisites:**
-- Playwright installed: `cd frontend && npm install @playwright/test && npx playwright install chromium`
-- Test users created: `cursor` (admin) and `testuser` (user)
-
----
-
-### Deployment
-
-#### `setup-user` - Create System User
-```bash
-sudo ./docklite setup-user      # Create 'docklite' user
-
-# Custom user
-DEPLOY_USER=myuser sudo ./docklite setup-user
-```
-
-Creates Linux user for project deployment with:
-- Home directory `/home/{user}`
-- Projects directory `/home/{user}/projects`
-- SSH configuration
-- Docker group membership
-
-#### `setup-ssh` - Configure SSH
-```bash
-sudo ./docklite setup-ssh       # Setup SSH for localhost
-```
-
-Configures:
-- SSH keys for current user
-- Adds key to docklite user's authorized_keys
-- Unlocks docklite account
-- Tests SSH connection
-
-#### `init-db` - Initialize Database
-```bash
-./docklite init-db              # Run migrations
-./docklite init-db --reset      # Reset database (WARNING: deletes all data!)
-```
-
----
-
-### Maintenance
-
-#### `backup` - Backup System
-```bash
-./docklite backup               # Backup to ./backups
-./docklite backup -o /path/dir  # Custom output directory
-```
-
-Backs up:
-- SQLite database
-- Configuration files (.env, docker-compose.yml)
-- SSH keys
-- Creates timestamped tar.gz archive
-
-#### `restore` - Restore from Backup
-```bash
-./docklite restore backups/docklite_backup_20250129.tar.gz
-./docklite restore backup.tar.gz --no-confirm
-```
-
-**WARNING:** This replaces current data! Creates safety backup before restore.
-
-#### `clean` - Clean Resources
-```bash
-./docklite clean                # Interactive menu
-./docklite clean --all          # Clean everything
-./docklite clean --images       # Unused images only
-./docklite clean --volumes      # Unused volumes only
-./docklite clean --logs         # Log files only
+./docklite logs traefik         # Traefik only
 ```
 
 #### `status` - System Status
 ```bash
 ./docklite status               # Basic status
-./docklite status --verbose     # Detailed info
+./docklite status --verbose     # Detailed info (disk, db, projects)
 ```
 
 Shows:
@@ -196,16 +106,183 @@ Shows:
 - Database info (verbose)
 - Projects count (verbose)
 
-#### `reset-password` - Reset User Password
+#### `test` - Run All Tests
 ```bash
-./docklite reset-password admin            # Interactive password entry
-./docklite reset-password john             # Reset any user
-./docklite reset-password admin -p newpass # Set specific password
+./docklite test                 # All tests (backend + frontend)
+./docklite test --verbose       # Verbose output
+./docklite test --quiet         # Minimal output
+```
+
+---
+
+### Development Group (`dev`) - 5 Commands
+
+Development and testing commands:
+
+#### `dev setup-dev` - First-Time Setup
+```bash
+./docklite dev setup-dev        # Create venv, install deps, setup .env
+```
+
+What it does:
+- Creates `.venv/` virtual environment
+- Installs CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- Creates `.env` from `.env.example`
+- Checks Docker
+- Makes CLI executable
+
+#### `dev rebuild` - Rebuild Images
+```bash
+./docklite dev rebuild              # Rebuild with cache
+./docklite dev rebuild --no-cache   # Full rebuild
+./docklite dev rebuild --follow     # Rebuild and show logs
+```
+
+#### `dev test-backend` - Backend Tests
+```bash
+./docklite dev test-backend             # All backend tests
+./docklite dev test-backend -v          # Verbose
+./docklite dev test-backend -k auth     # Auth tests only
+./docklite dev test-backend --cov       # With coverage
+```
+
+#### `dev test-frontend` - Frontend Tests
+```bash
+./docklite dev test-frontend            # All frontend tests
+./docklite dev test-frontend --watch    # Watch mode
+./docklite dev test-frontend --ui       # Interactive UI
+./docklite dev test-frontend --coverage # Coverage report
+```
+
+#### `dev test-e2e` - E2E Tests (Playwright)
+```bash
+./docklite dev test-e2e             # Run all E2E tests
+./docklite dev test-e2e --ui        # Interactive UI mode
+./docklite dev test-e2e --debug     # Debug mode (step through)
+./docklite dev test-e2e --report    # Show test report
+./docklite dev test-e2e --headed    # Show browser while testing
+```
+
+**Prerequisites:**
+- Playwright: `cd frontend && npm install @playwright/test && npx playwright install chromium`
+- Test users: `cursor` (admin) and `testuser` (user)
+
+---
+
+### Deployment Group (`deploy`) - 3 Commands
+
+Production deployment commands (Linux only):
+
+#### `deploy setup-user` - Create System User
+```bash
+sudo ./docklite deploy setup-user      # Create 'docklite' user
+
+# Custom user
+DEPLOY_USER=myuser sudo ./docklite deploy setup-user
+```
+
+Creates Linux user for project deployment:
+- Home directory `/home/{user}`
+- Projects directory `/home/{user}/projects`
+- SSH configuration
+- Docker group membership
+
+#### `deploy setup-ssh` - Configure SSH
+```bash
+sudo ./docklite deploy setup-ssh       # Setup SSH for localhost
+```
+
+Configures:
+- SSH keys for current user
+- Adds key to docklite user's authorized_keys
+- Unlocks docklite account
+- Tests SSH connection
+
+#### `deploy init-db` - Initialize Database
+```bash
+./docklite deploy init-db              # Run migrations
+./docklite deploy init-db --reset      # Reset database (WARNING: deletes all data!)
+```
+
+---
+
+### User Management Group (`user`) - 3 Commands
+
+User administration commands:
+
+#### `user add` - Add New User
+```bash
+./docklite user add admin -p "Pass123" --admin    # Add admin user
+./docklite user add username                      # Add user (interactive password)
+./docklite user add john -p "Pass" --email j@ex.com  # With email
+```
+
+Options:
+- `-p, --password` - Password (prompted if not provided)
+- `-a, --admin` - Create as admin user
+- `-e, --email` - Email address
+- `-s, --system-user` - Linux system user for projects (default: docklite)
+
+**Security:** Password must be at least 8 characters
+
+#### `user list` - List Users
+```bash
+./docklite user list                   # Simple list
+./docklite user list --verbose         # Detailed table with IDs, emails, etc.
+```
+
+Shows:
+- Username and role (admin/user)
+- Status (active/inactive)
+- System user assignment
+- Email (verbose mode)
+- User ID (verbose mode)
+
+#### `user reset-password` - Reset Password
+```bash
+./docklite user reset-password admin            # Interactive password entry
+./docklite user reset-password john             # Reset any user
+./docklite user reset-password admin -p newpass # Set specific password
 ```
 
 **Use case:** Forgot password, locked out of admin account
 
 **Security:** Password must be at least 6 characters
+
+---
+
+### Maintenance Group (`maint`) - 3 Commands
+
+System maintenance commands:
+
+#### `maint backup` - Backup System
+```bash
+./docklite maint backup               # Backup to ./backups
+./docklite maint backup -o /path/dir  # Custom output directory
+```
+
+Backs up:
+- SQLite database
+- Configuration files (.env, docker-compose.yml)
+- SSH keys
+- Creates timestamped tar.gz archive
+
+#### `maint restore` - Restore from Backup
+```bash
+./docklite maint restore backups/docklite_backup_20250129.tar.gz
+./docklite maint restore backup.tar.gz --no-confirm
+```
+
+**WARNING:** Replaces current data! Creates safety backup before restore.
+
+#### `maint clean` - Clean Resources
+```bash
+./docklite maint clean                # Interactive menu
+./docklite maint clean --all          # Clean everything
+./docklite maint clean --images       # Unused images only
+./docklite maint clean --volumes      # Unused volumes only
+./docklite maint clean --logs         # Log files only
+```
 
 ---
 
@@ -278,28 +355,46 @@ get_project_root               # Get project root path
 ./docklite stop
 ```
 
-### Deployment Setup
+### First-Time Setup
+```bash
+# Setup development environment
+./docklite dev setup-dev
+
+# Start system
+./docklite start
+
+# Create admin user
+./docklite user add admin -p "YourPassword" --admin
+
+# Check status
+./docklite status -v
+```
+
+### Deployment Setup (Production)
 ```bash
 # 1. Create system user
-sudo ./docklite setup-user
+sudo ./docklite deploy setup-user
 
 # 2. Setup SSH
-sudo ./docklite setup-ssh
+sudo ./docklite deploy setup-ssh
 
 # 3. Initialize database
-./docklite init-db
+./docklite deploy init-db
 
 # 4. Start system
 ./docklite start
+
+# 5. Create admin
+./docklite user add admin -p "SecurePass" --admin
 ```
 
 ### Backup & Restore
 ```bash
 # Create backup before major changes
-./docklite backup
+./docklite maint backup
 
 # If something goes wrong, restore
-./docklite restore backups/docklite_backup_TIMESTAMP.tar.gz
+./docklite maint restore backups/docklite_backup_TIMESTAMP.tar.gz
 ```
 
 ### Maintenance
@@ -308,10 +403,15 @@ sudo ./docklite setup-ssh
 ./docklite status --verbose
 
 # Clean up disk space
-./docklite clean --all
+./docklite maint clean --all
 
 # Create regular backups
-./docklite backup -o /backups/docklite/
+./docklite maint backup -o /backups/docklite/
+
+# Manage users
+./docklite user list --verbose
+./docklite user add newuser
+./docklite user reset-password username
 ```
 
 ---

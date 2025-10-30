@@ -31,7 +31,11 @@ from ..utils.system import (
 )
 from ..utils.validation import check_docker
 
-app = typer.Typer(help="Deployment commands")
+app = typer.Typer(
+    help="Deployment commands",
+    no_args_is_help=True,
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
 
 
 @app.command(name="setup-user")

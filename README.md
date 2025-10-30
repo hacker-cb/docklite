@@ -16,7 +16,7 @@ git clone https://github.com/hacker-cb/docklite.git
 cd docklite
 
 # Настройте окружение разработки (автоматически)
-./docklite setup-dev
+./docklite dev setup-dev
 
 # ИЛИ вручную:
 # cp .env.example .env
@@ -27,14 +27,14 @@ cd docklite
 ./docklite start
 
 # Создайте первого админа
-./docklite add-user admin -p "YourPassword" --admin
+./docklite user add admin -p "YourPassword" --admin
 ```
 
 Откройте в браузере: `http://your-server-hostname`
 
 ## ⚙️ Первоначальная настройка
 
-Команда `./docklite setup-dev` автоматически:
+Команда `./docklite dev setup-dev` автоматически:
 - ✅ Проверяет Python 3.8+
 - ✅ **Создает виртуальное окружение (.venv/)** 
 - ✅ Устанавливает зависимости CLI в venv (typer, rich, python-dotenv, PyYAML)
@@ -70,7 +70,7 @@ cd docklite
 ### Интерфейс
 - **Веб-интерфейс** - современный UI на Vue.js 3 + PrimeVue
 - **REST API** - полное API для всех операций
-- **CLI** - профессиональный CLI с 18 командами и bash completion
+- **CLI** - профессиональный CLI с 20 командами (6 root + 4 группы) и bash completion
 
 ## Архитектура
 
@@ -166,13 +166,13 @@ cp .env.example .env
 
 ```bash
 cd ~/docklite
-sudo ./docklite setup-user
+sudo ./docklite deploy setup-user
 ```
 
 4. **Настроить SSH (для localhost)**:
 
 ```bash
-sudo ./docklite setup-ssh
+sudo ./docklite deploy setup-ssh
 ```
 
 5. **Запустить систему**:
@@ -414,36 +414,77 @@ alembic downgrade -1
 
 ## Управление
 
-### Quick Commands
+### Ежедневные команды (Root Level)
+
+Основные команды для работы с системой:
 
 ```bash
-# System management
-./docklite start            # Start DockLite
-./docklite stop             # Stop DockLite
-./docklite restart          # Restart system
-./docklite rebuild          # Rebuild and restart
-./docklite status           # Show status
-./docklite logs             # View all logs
-./docklite logs backend     # Backend logs only
+./docklite start            # Запустить систему
+./docklite stop             # Остановить систему
+./docklite restart          # Перезапустить систему
+./docklite logs             # Показать логи всех контейнеров
+./docklite logs backend     # Логи конкретного контейнера
+./docklite status           # Статус системы
+./docklite status -v        # Детальный статус
+./docklite test             # Запустить все тесты
 ```
 
-### Advanced Operations
+### Группы команд
+
+DockLite использует логическую группировку команд по функциям:
+
+**Development (`dev`)** - Разработка и тестирование:
+```bash
+./docklite dev setup-dev       # Первоначальная настройка окружения
+./docklite dev rebuild         # Пересобрать Docker образы
+./docklite dev test-backend    # Тесты бэкенда
+./docklite dev test-frontend   # Тесты фронтенда
+./docklite dev test-e2e        # E2E тесты (Playwright)
+```
+
+**Deployment (`deploy`)** - Деплой на production (Linux only):
+```bash
+./docklite deploy setup-user   # Создать системного пользователя
+./docklite deploy setup-ssh    # Настроить SSH доступ
+./docklite deploy init-db      # Инициализировать/сбросить БД
+```
+
+**User Management (`user`)** - Управление пользователями:
+```bash
+./docklite user add admin -p "Pass" --admin    # Добавить админа
+./docklite user add username                   # Добавить пользователя (пароль в интерактивном режиме)
+./docklite user list                           # Список пользователей
+./docklite user list --verbose                 # Детальная информация
+./docklite user reset-password username        # Сбросить пароль
+```
+
+**Maintenance (`maint`)** - Обслуживание системы:
+```bash
+./docklite maint backup                        # Создать резервную копию
+./docklite maint restore backups/file.tar.gz   # Восстановить из бэкапа
+./docklite maint clean --all                   # Очистить неиспользуемые ресурсы
+```
+
+### Примеры использования
 
 ```bash
-# Rebuild without cache
-./docklite rebuild --no-cache
+# Первый запуск
+./docklite dev setup-dev                       # Настроить окружение
+./docklite start                               # Запустить систему
+./docklite user add admin -p "pass" --admin    # Создать админа
 
-# Stop and remove volumes
-./docklite stop --volumes
+# Разработка
+./docklite dev rebuild --no-cache              # Полная пересборка
+./docklite logs -f                             # Следить за логами
+./docklite test                                # Прогнать тесты
 
-# Backup before updates
-./docklite backup
-
-# Clean unused resources
-./docklite clean --all
+# Обслуживание
+./docklite maint backup                        # Бэкап перед обновлением
+./docklite status -v                           # Проверить систему
+./docklite maint clean --images                # Очистить образы
 ```
 
-**Full documentation:** [scripts/README.md](mdc:scripts/README.md)
+**Полная документация:** [scripts/README.md](mdc:scripts/README.md)
 
 ## Тестирование
 

@@ -20,16 +20,16 @@ DockLite has comprehensive test coverage across multiple layers:
 ### Individual Test Suites
 
 ```bash
-./docklite test-backend       # Backend only (240 tests)
-./docklite test-frontend      # Frontend unit tests only (120+ tests)
-cd frontend && npm run test:e2e  # E2E tests (24 tests)
+./docklite dev test-backend       # Backend only (240 tests)
+./docklite dev test-frontend      # Frontend unit tests only (120+ tests)
+./docklite dev test-e2e           # E2E tests (24 tests)
 ```
 
 ## 📦 Backend Tests (240 tests)
 
 ### Run All Backend Tests
 ```bash
-./docklite test-backend
+./docklite dev test-backend
 # or
 docker compose exec backend pytest -v
 ```
@@ -78,7 +78,7 @@ npm install
 
 ### Run All Unit Tests
 ```bash
-./docklite test-frontend
+./docklite dev test-frontend
 # or
 cd frontend && npm test
 ```
@@ -410,13 +410,13 @@ git pull
 ./docklite test
 
 # Backend only (240 tests)
-./docklite test-backend
+./docklite dev test-backend
 
 # Frontend unit only (120+ tests)
-./docklite test-frontend
+./docklite dev test-frontend
 
 # E2E only (24 tests)
-cd frontend && npm run test:e2e
+./docklite dev test-e2e
 
 # Specific backend test category
 docker compose exec backend pytest -k traefik -v
@@ -445,9 +445,9 @@ cd frontend && npm run test:e2e:debug
 ## ✅ First Time Setup Checklist
 
 - [ ] DockLite is running: `./docklite start`
-- [ ] Backend tests pass: `./docklite test-backend`
+- [ ] Backend tests pass: `./docklite dev test-backend`
 - [ ] Frontend deps installed: `cd frontend && npm install`
-- [ ] Frontend tests pass: `./docklite test-frontend`
+- [ ] Frontend tests pass: `./docklite dev test-frontend`
 - [ ] Playwright installed: `cd frontend && npm install @playwright/test`
 - [ ] Playwright browsers: `cd frontend && npx playwright install chromium`
 - [ ] Test users created (cursor, testuser)
