@@ -2,9 +2,11 @@
 
 ![CI](https://github.com/hacker-cb/docklite/workflows/CI/badge.svg)
 ![Setup Dev](https://github.com/hacker-cb/docklite/actions/workflows/test-setup-dev.yml/badge.svg)
-![Tests](https://img.shields.io/badge/tests-380%2B%20(backend%2C%20frontend%2C%20e2e)-success)
-![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![E2E Tests](https://github.com/hacker-cb/docklite/actions/workflows/test-e2e.yml/badge.svg)
+![Type Check](https://github.com/hacker-cb/docklite/actions/workflows/type-check.yml/badge.svg)
+[![codecov](https://codecov.io/gh/hacker-cb/docklite/branch/main/graph/badge.svg)](https://codecov.io/gh/hacker-cb/docklite)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 DockLite - это система управления веб-сервером с возможностью деплоя множества проектов через docker-compose. Система предоставляет удобный веб-интерфейс, REST API и professional CLI.
 
