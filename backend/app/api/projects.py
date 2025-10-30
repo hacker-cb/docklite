@@ -30,7 +30,7 @@ async def create_project(
         project, owner_id=int(current_user.id)
     )
 
-    if error:
+    if error or not new_project:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
 
     return format_project_response(new_project)
@@ -86,11 +86,11 @@ async def update_project(
     updated_project, error = await service.update_project(
         project_id,
         project,
-        user_id=current_user.id,
+        user_id=int(current_user.id),
         is_admin=bool(current_user.is_admin),
     )
 
-    if error:
+    if error or not updated_project:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
 
     return format_project_response(updated_project)
@@ -105,7 +105,7 @@ async def delete_project(
     """Delete project (with ownership check)"""
     service = ProjectService(db)
     success, error = await service.delete_project(
-        project_id, user_id=current_user.id, is_admin=bool(current_user.is_admin)
+        project_id, user_id=int(current_user.id), is_admin=bool(current_user.is_admin)
     )
 
     if not success:
