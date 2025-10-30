@@ -102,22 +102,31 @@ jobs:
 
       - name: Verify test users
         run: |
-          echo "📋 Listing users..."
-          ./docklite user list
+          echo "📋 Verifying test users..."
           
-          # Verify users exist
-          users_output=$(./docklite user list)
-          if echo "$users_output" | grep -q "cursor"; then
-            echo "✅ Admin user 'cursor' exists"
+          # Test cursor user login
+          response=$(curl -s -X POST http://localhost/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"cursor","password":"CursorAI_Test2024!"}')
+          
+          if echo "$response" | grep -q "access_token"; then
+            echo "✅ Admin user 'cursor' can login"
           else
-            echo "❌ Admin user 'cursor' not found"
+            echo "❌ Admin user 'cursor' login failed"
+            echo "Response: $response"
             exit 1
           fi
           
-          if echo "$users_output" | grep -q "testuser"; then
-            echo "✅ Regular user 'testuser' exists"
+          # Test testuser login
+          response=$(curl -s -X POST http://localhost/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","password":"TestUser_2024!"}')
+          
+          if echo "$response" | grep -q "access_token"; then
+            echo "✅ Regular user 'testuser' can login"
           else
-            echo "❌ Regular user 'testuser' not found"
+            echo "❌ Regular user 'testuser' login failed"
+            echo "Response: $response"
             exit 1
           fi
 
