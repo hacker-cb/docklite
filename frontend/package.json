@@ -15,20 +15,19 @@
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
-    "vue": "^3.4.21",
-    "vue-router": "^4.2.5",
-    "primevue": "^3.50.0",
+    "axios": "^1.6.7",
     "primeicons": "^7.0.0",
-    "axios": "^1.6.7"
+    "primevue": "^3.50.0",
+    "vue": "^3.4.21",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.1.4",
-    "@vue/test-utils": "^2.4.4",
-    "vitest": "^1.2.2",
-    "happy-dom": "^13.3.8",
     "@vitest/coverage-v8": "^1.2.2",
-    "@playwright/test": "^1.41.2"
+    "@vue/test-utils": "^2.4.4",
+    "happy-dom": "^13.3.8",
+    "vite": "^5.1.4",
+    "vitest": "^1.2.2"
   }
 }
-
