@@ -102,7 +102,8 @@ class DockerService:
         except subprocess.CalledProcessError as e:
             return (
                 False,
-                e.stderr.strip() or f"Failed to start container '{container_id}'",
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to start container '{container_id}'",
             )
         except Exception as e:
             return False, f"Docker error: {str(e)}"
@@ -132,7 +133,8 @@ class DockerService:
         except subprocess.CalledProcessError as e:
             return (
                 False,
-                e.stderr.strip() or f"Failed to stop container '{container_id}'",
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to stop container '{container_id}'",
             )
         except Exception as e:
             return False, f"Docker error: {str(e)}"
@@ -162,7 +164,8 @@ class DockerService:
         except subprocess.CalledProcessError as e:
             return (
                 False,
-                e.stderr.strip() or f"Failed to restart container '{container_id}'",
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to restart container '{container_id}'",
             )
         except Exception as e:
             return False, f"Docker error: {str(e)}"
@@ -190,7 +193,8 @@ class DockerService:
         except subprocess.CalledProcessError as e:
             return (
                 False,
-                e.stderr.strip() or f"Failed to remove container '{container_id}'",
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to remove container '{container_id}'",
             )
         except Exception as e:
             return False, f"Docker error: {str(e)}"
@@ -220,7 +224,11 @@ class DockerService:
             )
             return result.stdout + result.stderr, None
         except subprocess.CalledProcessError as e:
-            return None, e.stderr.strip() or f"Failed to get logs for '{container_id}'"
+            return (
+                None,
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to get logs for '{container_id}'",
+            )
         except Exception as e:
             return None, f"Docker error: {str(e)}"
 
@@ -279,7 +287,11 @@ class DockerService:
 
             return None, "No stats available"
         except subprocess.CalledProcessError as e:
-            return None, e.stderr.strip() or f"Failed to get stats for '{container_id}'"
+            return (
+                None,
+                (e.stderr.strip() if e.stderr else None)
+                or f"Failed to get stats for '{container_id}'",
+            )
         except Exception as e:
             return None, f"Docker error: {str(e)}"
 
@@ -308,7 +320,7 @@ class DockerService:
         service = ""
         is_system = name.startswith("docklite-")
 
-        if "-" in name and not is_system:
+        if "_" in name and not is_system:
             parts = name.split("_")
             if len(parts) >= 2:
                 project = parts[0]

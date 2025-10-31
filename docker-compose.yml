@@ -28,7 +28,7 @@ services:
       - "traefik.http.routers.traefik-api.service=api@internal"
       - "traefik.http.routers.traefik-api.entrypoints=web"
       - "traefik.http.routers.traefik-api.middlewares=admin-auth"
-      - "traefik.http.routers.traefik-api.priority=250"
+      - "traefik.http.routers.traefik-api.priority=50"
       # ReplacePathRegex middleware - converts /traefik to /dashboard for Traefik's api@internal
       - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.regex=^/traefik(.*)"
       - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.replacement=/dashboard$$1"
@@ -48,9 +48,9 @@ services:
       - "8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.docklite-backend.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`)"
+      - "traefik.http.routers.docklite-backend.rule=Host(`${HOSTNAME:-localhost}`)"
       - "traefik.http.routers.docklite-backend.entrypoints=web"
-      - "traefik.http.routers.docklite-backend.priority=200"
+      - "traefik.http.routers.docklite-backend.priority=10"
       - "traefik.http.services.docklite-backend.loadbalancer.server.port=8000"
     volumes:
       - ./backend:/app
@@ -79,7 +79,7 @@ services:
       - "80"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.docklite-frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.docklite-frontend.rule=Host(`${HOSTNAME:-localhost}`) && PathPrefix(`/`)"
       - "traefik.http.routers.docklite-frontend.entrypoints=web"
       - "traefik.http.routers.docklite-frontend.priority=1"
       - "traefik.http.services.docklite-frontend.loadbalancer.server.port=80"

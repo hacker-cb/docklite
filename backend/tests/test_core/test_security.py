@@ -355,7 +355,7 @@ class TestSecurityEdgeCases:
         """Test that token without username is rejected."""
         # Create token with no 'sub' field
         from app.services.auth_service import AuthService
-        import jwt
+        from jose import jwt
         from app.core.config import settings
         
         # Manually create token without 'sub'
@@ -417,7 +417,7 @@ class TestSecurityEdgeCases:
     @pytest.mark.asyncio
     async def test_token_with_wrong_secret(self, db_session):
         """Test that token signed with wrong secret is rejected."""
-        import jwt
+        from jose import jwt
         from app.core.config import settings
         
         # Create token with wrong secret

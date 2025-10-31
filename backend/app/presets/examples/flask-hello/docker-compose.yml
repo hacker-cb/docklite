@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    image: python:3.11-slim
+    working_dir: /app
+    expose:
+      - "5000"
+    volumes:
+      - ./:/app
+    command: sh -c "pip install -r requirements.txt && python app.py"
+    restart: unless-stopped
+

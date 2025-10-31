@@ -80,13 +80,45 @@
     - Внутренний порт: 1337
     - Includes: strapi-data и db-data volumes
 
+### Examples (4)
+
+15. **Flask Hello World** 🔴
+    - Working Flask REST API (single service)
+    - Ready to deploy with working code
+    - Endpoints: `/`, `/health`
+    - Demonstrates: Basic API, internal port 5000
+    - Returns JSON: `{"message": "Hello World from Flask!", "framework": "Flask"}`
+    
+16. **FastAPI Hello World** ⚡
+    - Working FastAPI with auto-generated docs (single service)
+    - Ready to deploy with working code
+    - Endpoints: `/`, `/health`, `/docs`, `/openapi.json`
+    - Demonstrates: FastAPI, auto docs, OpenAPI schema
+    - Returns JSON: `{"message": "Hello World from FastAPI!", "framework": "FastAPI"}`
+    
+17. **Express Hello World** 🟢
+    - Working Express REST API (single service)
+    - Ready to deploy with working code
+    - Endpoints: `/`, `/health`, `/info`
+    - Demonstrates: Node.js, Express framework
+    - Returns JSON: `{"message": "Hello World from Express!", "framework": "Express"}`
+    
+18. **Full Stack Hello World** 🎯
+    - Multi-service: Nginx frontend + Flask backend
+    - Ready to deploy with working code
+    - Demonstrates: Internal service communication, API proxy routing
+    - Frontend: Static HTML served by Nginx
+    - Backend API: Flask REST API on port 8000
+    - Routing: `/` → Frontend, `/api/*` → Backend (via Nginx proxy)
+    - Shows real-world multi-service architecture
+
 ## Как использовать пресеты
 
 ### Через Web UI
 
 1. Нажмите "New Project"
 2. Выберите вкладку "From Preset"
-3. Выберите категорию (All, Web, Backend, Database, CMS)
+3. Выберите категорию (All, Web, Backend, Database, CMS, Examples)
 4. Кликните на нужный пресет
 5. Заполните Project Name и Domain
 6. Нажмите "Create"
@@ -347,7 +379,7 @@ docker volume rm postgres-data
 
 ---
 
-**Количество пресетов**: 14  
-**Категорий**: 4 (Web, Backend, Database, CMS)  
-**Версия**: 1.0
+**Количество пресетов**: 18  
+**Категорий**: 5 (Web, Backend, Database, CMS, Examples)  
+**Версия**: 1.1
 
