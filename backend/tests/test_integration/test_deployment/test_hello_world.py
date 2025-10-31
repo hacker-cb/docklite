@@ -466,8 +466,9 @@ async def test_fullstack_hello_world_deployment(
         assert result.returncode == 0
         
         # Give containers extra time to pull images and install dependencies
-        print(f"Waiting 15s for {domain} to install dependencies...")
-        time.sleep(15)
+        # Fullstack needs more time: 2 containers (frontend nginx + backend flask)
+        print(f"Waiting 25s for {domain} to install dependencies (fullstack: 2 containers)...")
+        time.sleep(25)
 
         # 4. Wait for backend health via API proxy (retry logic with generous timeouts)
         max_attempts = 30
