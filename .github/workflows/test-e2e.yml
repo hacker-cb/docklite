@@ -46,6 +46,12 @@ jobs:
       - name: Setup DockLite development environment
         run: ./docklite setup-dev
 
+      - name: Configure hostname for CI environment
+        run: |
+          echo "Setting HOSTNAME=localhost for CI environment"
+          sed -i 's/HOSTNAME=your-domain.com/HOSTNAME=localhost/' .env
+          echo "TRAEFIK_DASHBOARD_HOST=localhost" >> .env
+
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
@@ -57,21 +63,58 @@ jobs:
       - name: Start DockLite services
         run: |
           ./docklite start
-          echo "⏳ Waiting for services to be ready..."
-          sleep 15
+          echo "⏳ Waiting for Docker containers to start..."
+          sleep 10
 
-      - name: Wait for backend to be ready
+      - name: Wait for Traefik to be ready
         run: |
-          echo "🔍 Checking backend health..."
+          echo "🔍 Checking Traefik..."
           for i in {1..30}; do
-            if curl -f http://localhost/api/health 2>/dev/null; then
-              echo "✅ Backend is ready!"
+            if docker compose ps traefik | grep -q "Up"; then
+              echo "✅ Traefik container is up!"
+              # Give Traefik extra time to discover and register routes
+              echo "⏳ Waiting for Traefik to discover routes..."
+              sleep 10
+              exit 0
+            fi
+            echo "⏳ Waiting for Traefik... (attempt $i/30)"
+            sleep 2
+          done
+          echo "❌ Traefik did not start in time"
+          docker compose logs traefik
+          exit 1
+
+      - name: Wait for backend to be ready (direct check)
+        run: |
+          echo "🔍 Checking backend health (direct on port 8000)..."
+          for i in {1..30}; do
+            if docker compose exec -T backend curl -f http://localhost:8000/api/health 2>/dev/null; then
+              echo "✅ Backend is responding directly!"
               exit 0
             fi
             echo "⏳ Waiting for backend... (attempt $i/30)"
             sleep 2
           done
           echo "❌ Backend did not start in time"
+          docker compose logs backend
+          exit 1
+
+      - name: Wait for backend via Traefik
+        run: |
+          echo "🔍 Checking backend through Traefik routing..."
+          for i in {1..30}; do
+            if curl -f http://localhost/api/health 2>/dev/null; then
+              echo "✅ Backend is accessible via Traefik!"
+              exit 0
+            fi
+            echo "⏳ Waiting for Traefik routing... (attempt $i/30)"
+            sleep 2
+          done
+          echo "❌ Traefik routing to backend did not work"
+          echo "::group::Traefik Routes"
+          docker compose exec -T traefik wget -qO- http://localhost:8080/api/http/routers || echo "Could not fetch routes"
+          echo "::endgroup::"
+          docker compose logs traefik
           docker compose logs backend
           exit 1
 
