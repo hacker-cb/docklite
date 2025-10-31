@@ -37,42 +37,30 @@ async def test_flask_hello_world_deployment(
 ):
     """Test Flask single-service deployment via Traefik"""
     from app.core.config import settings
-    import os
     
-    project_slug = "test-flask-hello"
     domain = "flask-test.localhost"
-    project_dir = Path(settings.PROJECTS_DIR) / project_slug
-    
-    print(f"DEBUG: settings.PROJECTS_DIR = {settings.PROJECTS_DIR}")
-    print(f"DEBUG: os.environ.get('PROJECTS_DIR') = {os.environ.get('PROJECTS_DIR')}")
-    print(f"DEBUG: project_dir = {project_dir}")
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
-        # Note: We don't copy files yet because API will write labeled docker-compose.yml
         response = await client.post(
             "/api/projects",
             json={
                 "name": "Test Flask Hello",
-                "slug": project_slug,
                 "domain": domain,
                 "compose_content": FLASK_HELLO.compose_content,
                 "env_vars": {},
             },
             headers=auth_headers,
         )
-        print(f"DEBUG: API response status = {response.status_code}")
-        print(f"DEBUG: API response body = {response.json()}")
         assert response.status_code == 201
         project_data = response.json()
         project_id = project_data["id"]
+        project_slug = project_data["slug"]  # Use slug from API response
+        
+        # Now we know the actual slug the API created
+        project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
-        # Ensure project directory exists and has docker-compose.yml
-        print(f"DEBUG: Checking if {project_dir} exists...")
-        print(f"DEBUG: Parent dir {project_dir.parent} exists: {project_dir.parent.exists()}")
-        if project_dir.parent.exists():
-            print(f"DEBUG: Contents of parent dir: {list(project_dir.parent.iterdir())}")
         assert project_dir.exists(), f"Project directory not created: {project_dir}"
         assert project_dir.is_dir(), f"Project path is not a directory: {project_dir}"
         assert (project_dir / "docker-compose.yml").exists(), "docker-compose.yml not created by API"
@@ -170,9 +158,7 @@ async def test_fastapi_hello_world_deployment(
     """Test FastAPI single-service deployment via Traefik"""
     from app.core.config import settings
     
-    project_slug = "test-fastapi-hello"
     domain = "fastapi-test.localhost"
-    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -180,7 +166,6 @@ async def test_fastapi_hello_world_deployment(
             "/api/projects",
             json={
                 "name": "Test FastAPI Hello",
-                "slug": project_slug,
                 "domain": domain,
                 "compose_content": FASTAPI_HELLO.compose_content,
                 "env_vars": {},
@@ -188,7 +173,10 @@ async def test_fastapi_hello_world_deployment(
             headers=auth_headers,
         )
         assert response.status_code == 201
-        project_id = response.json()["id"]
+        project_data = response.json()
+        project_id = project_data["id"]
+        project_slug = project_data["slug"]
+        project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
         assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
@@ -292,9 +280,7 @@ async def test_express_hello_world_deployment(
     """Test Express single-service deployment via Traefik"""
     from app.core.config import settings
     
-    project_slug = "test-express-hello"
     domain = "express-test.localhost"
-    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -302,7 +288,6 @@ async def test_express_hello_world_deployment(
             "/api/projects",
             json={
                 "name": "Test Express Hello",
-                "slug": project_slug,
                 "domain": domain,
                 "compose_content": EXPRESS_HELLO.compose_content,
                 "env_vars": {},
@@ -310,7 +295,10 @@ async def test_express_hello_world_deployment(
             headers=auth_headers,
         )
         assert response.status_code == 201
-        project_id = response.json()["id"]
+        project_data = response.json()
+        project_id = project_data["id"]
+        project_slug = project_data["slug"]
+        project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
         assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
@@ -411,9 +399,7 @@ async def test_fullstack_hello_world_deployment(
     """Test multi-service (frontend + backend) deployment via Traefik"""
     from app.core.config import settings
     
-    project_slug = "test-fullstack-hello"
     domain = "fullstack-test.localhost"
-    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -421,7 +407,6 @@ async def test_fullstack_hello_world_deployment(
             "/api/projects",
             json={
                 "name": "Test Full Stack Hello",
-                "slug": project_slug,
                 "domain": domain,
                 "compose_content": FULLSTACK_HELLO.compose_content,
                 "env_vars": {},
@@ -429,7 +414,10 @@ async def test_fullstack_hello_world_deployment(
             headers=auth_headers,
         )
         assert response.status_code == 201
-        project_id = response.json()["id"]
+        project_data = response.json()
+        project_id = project_data["id"]
+        project_slug = project_data["slug"]
+        project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
         assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
