@@ -46,6 +46,12 @@ jobs:
       - name: Setup DockLite development environment
         run: ./docklite setup-dev
 
+      - name: Configure hostname for CI environment
+        run: |
+          echo "Setting HOSTNAME=localhost for CI environment"
+          sed -i 's/HOSTNAME=your-domain.com/HOSTNAME=localhost/' .env
+          echo "TRAEFIK_DASHBOARD_HOST=localhost" >> .env
+
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
