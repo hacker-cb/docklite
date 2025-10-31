@@ -92,7 +92,7 @@ async def test_flask_hello_world_deployment(
         assert data["framework"] == "Flask"
 
         # 6. Verify health endpoint
-        health = httpx.get(f"http://{domain}/health", timeout=5.0)
+        health = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
         assert health.status_code == 200
         assert health.json()["status"] == "healthy"
 
@@ -178,7 +178,7 @@ async def test_fastapi_hello_world_deployment(
         assert data["framework"] == "FastAPI"
 
         # 6. Verify health
-        health = httpx.get(f"http://{domain}/health", timeout=5.0)
+        health = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
         assert health.status_code == 200
         assert health.json()["status"] == "healthy"
 
@@ -272,7 +272,7 @@ async def test_express_hello_world_deployment(
         assert data["framework"] == "Express"
 
         # 6. Verify health
-        health = httpx.get(f"http://{domain}/health", timeout=5.0)
+        health = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
         assert health.status_code == 200
         assert health.json()["status"] == "healthy"
 
@@ -347,7 +347,7 @@ async def test_fullstack_hello_world_deployment(
         max_attempts = 15
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get(f"http://{domain}/api/health", timeout=5.0)
+                health_response = httpx.get("http://localhost/api/health", headers={"Host": domain}, timeout=5.0)
                 if health_response.status_code == 200:
                     break
             except (httpx.RequestError, httpx.TimeoutException):
@@ -369,7 +369,7 @@ async def test_fullstack_hello_world_deployment(
         assert api_data["stack"] == "Flask + Nginx"
 
         # 7. Verify backend health
-        health = httpx.get(f"http://{domain}/api/health", timeout=5.0)
+        health = httpx.get("http://localhost/api/health", headers={"Host": domain}, timeout=5.0)
         assert health.status_code == 200
         assert health.json()["status"] == "healthy"
 
