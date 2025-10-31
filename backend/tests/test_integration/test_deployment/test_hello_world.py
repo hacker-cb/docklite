@@ -41,12 +41,8 @@ async def test_flask_hello_world_deployment(
     project_dir = Path(temp_projects_dir) / project_slug
 
     try:
-        # 1. Copy example files to project directory
-        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "flask-hello"
-        project_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(example_path, project_dir, dirs_exist_ok=True)
-
-        # 2. Create project via API
+        # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
+        # Note: We don't copy files yet because API will write labeled docker-compose.yml
         response = await client.post(
             "/api/projects",
             json={
@@ -61,6 +57,15 @@ async def test_flask_hello_world_deployment(
         assert response.status_code == 201
         project_data = response.json()
         project_id = project_data["id"]
+
+        # 2. Copy app files (docker-compose.yml already created by API with labels)
+        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "flask-hello"
+        for item in example_path.iterdir():
+            if item.name != "docker-compose.yml":  # Skip compose file - API already wrote it with labels
+                if item.is_file():
+                    shutil.copy2(item, project_dir)
+                elif item.is_dir():
+                    shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
         # 3. Deploy containers
         result = subprocess.run(
@@ -150,12 +155,7 @@ async def test_fastapi_hello_world_deployment(
     project_dir = Path(temp_projects_dir) / project_slug
 
     try:
-        # 1. Copy example files
-        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fastapi-hello"
-        project_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(example_path, project_dir, dirs_exist_ok=True)
-
-        # 2. Create project
+        # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
         response = await client.post(
             "/api/projects",
             json={
@@ -169,6 +169,15 @@ async def test_fastapi_hello_world_deployment(
         )
         assert response.status_code == 201
         project_id = response.json()["id"]
+
+        # 2. Copy app files (docker-compose.yml already created by API with labels)
+        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fastapi-hello"
+        for item in example_path.iterdir():
+            if item.name != "docker-compose.yml":
+                if item.is_file():
+                    shutil.copy2(item, project_dir)
+                elif item.is_dir():
+                    shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
         # 3. Deploy
         result = subprocess.run(
@@ -264,12 +273,7 @@ async def test_express_hello_world_deployment(
     project_dir = Path(temp_projects_dir) / project_slug
 
     try:
-        # 1. Copy example files
-        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "express-hello"
-        project_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(example_path, project_dir, dirs_exist_ok=True)
-
-        # 2. Create project
+        # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
         response = await client.post(
             "/api/projects",
             json={
@@ -283,6 +287,15 @@ async def test_express_hello_world_deployment(
         )
         assert response.status_code == 201
         project_id = response.json()["id"]
+
+        # 2. Copy app files (docker-compose.yml already created by API with labels)
+        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "express-hello"
+        for item in example_path.iterdir():
+            if item.name != "docker-compose.yml":
+                if item.is_file():
+                    shutil.copy2(item, project_dir)
+                elif item.is_dir():
+                    shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
         # 3. Deploy
         result = subprocess.run(
@@ -375,12 +388,7 @@ async def test_fullstack_hello_world_deployment(
     project_dir = Path(temp_projects_dir) / project_slug
 
     try:
-        # 1. Copy example files
-        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fullstack-hello"
-        project_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(example_path, project_dir, dirs_exist_ok=True)
-
-        # 2. Create project
+        # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
         response = await client.post(
             "/api/projects",
             json={
@@ -394,6 +402,15 @@ async def test_fullstack_hello_world_deployment(
         )
         assert response.status_code == 201
         project_id = response.json()["id"]
+
+        # 2. Copy app files (docker-compose.yml already created by API with labels)
+        example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fullstack-hello"
+        for item in example_path.iterdir():
+            if item.name != "docker-compose.yml":
+                if item.is_file():
+                    shutil.copy2(item, project_dir)
+                elif item.is_dir():
+                    shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
         # 3. Deploy
         result = subprocess.run(
