@@ -510,7 +510,25 @@ async def test_fullstack_hello_world_deployment(
 
         # 6. Verify backend API via proxy path
         api_response = httpx.get("http://localhost/api/message", headers={"Host": domain}, timeout=5.0)
-        assert api_response.status_code == 200
+        if api_response.status_code != 200:
+            print(f"ERROR: /api/message returned {api_response.status_code}")
+            print(f"Response text: {api_response.text}")
+            # Try direct backend access (without /api prefix to test nginx proxy)
+            try:
+                direct_test = httpx.get("http://localhost/message", headers={"Host": domain}, timeout=5.0)
+                print(f"Direct /message test: {direct_test.status_code}")
+            except Exception as e:
+                print(f"Direct /message failed: {e}")
+            # Get backend logs
+            logs_result = subprocess.run(
+                ["docker", "compose", "logs", "backend"],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            print(f"Backend logs:\n{logs_result.stdout}")
+        assert api_response.status_code == 200, f"/api/message returned {api_response.status_code}: {api_response.text}"
         api_data = api_response.json()
         assert api_data["message"] == "Hello from Backend API!"
         assert api_data["stack"] == "Flask + Nginx"
