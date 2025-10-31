@@ -115,17 +115,34 @@ jobs:
             -d '{"username":"cursor","password":"CursorAI_Test2024!"}' \
             | jq -r '.access_token')
           
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "❌ Failed to get authentication token!"
+            exit 1
+          fi
+          echo "✅ Got auth token"
+          
+          # Load preset compose content
+          COMPOSE_CONTENT=$(cat backend/app/presets/examples/fullstack-hello/docker-compose.yml | jq -Rs .)
+          
           RESPONSE=$(curl -s -X POST http://localhost/api/projects \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{
-              "name": "Full Stack Validation",
-              "domain": "fullstack-validate.local",
-              "preset_id": "fullstack-hello"
-            }')
+            -d "{
+              \"name\": \"Full Stack Validation\",
+              \"domain\": \"fullstack-validate.local\",
+              \"compose_content\": $COMPOSE_CONTENT
+            }")
           
+          echo "API Response: $RESPONSE"
           PROJECT_ID=$(echo $RESPONSE | jq -r '.id')
           PROJECT_SLUG=$(echo $RESPONSE | jq -r '.slug')
+          
+          if [ "$PROJECT_ID" = "null" ] || [ -z "$PROJECT_ID" ]; then
+            echo "❌ Failed to create project!"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+          
           echo "Created project: $PROJECT_SLUG (ID: $PROJECT_ID)"
           
           # Copy example files
