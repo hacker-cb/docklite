@@ -447,6 +447,11 @@ async def test_fullstack_hello_world_deployment(
         # 2. Copy app files (docker-compose.yml already created by API with labels)
         assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
         
+        # DEBUG: Print the generated docker-compose.yml with Traefik labels
+        compose_path = project_dir / "docker-compose.yml"
+        if compose_path.exists():
+            print(f"DEBUG: Generated docker-compose.yml:\n{compose_path.read_text()}")
+        
         example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fullstack-hello"
         for item in example_path.iterdir():
             if item.name != "docker-compose.yml":
