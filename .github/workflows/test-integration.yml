@@ -66,9 +66,9 @@ jobs:
         run: |
           docker compose exec -T backend python create_user.py cursor "CursorAI_Test2024!" --admin || echo "User may already exist"
 
-      - name: Install test dependencies on runner
+      - name: Install backend dependencies on runner
         run: |
-          pip install httpx pytest pytest-asyncio
+          pip install -r backend/requirements.txt
 
       - name: Run integration tests
         env:
