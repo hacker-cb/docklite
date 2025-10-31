@@ -11,9 +11,10 @@ echo "🔍 Validating Full Stack deployment: $DOMAIN"
 echo "Project slug: $PROJECT_SLUG"
 echo ""
 
-# Wait for services to be ready
+# Wait for services to be ready (backend needs time to install Flask)
 echo "⏳ Waiting for services to start..."
-sleep 5
+echo "   (Backend: installing Flask + dependencies...)"
+sleep 35
 
 # Test 1: Frontend (HTML)
 echo "1. Testing frontend (/)..."
