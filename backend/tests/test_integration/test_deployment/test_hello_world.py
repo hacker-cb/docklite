@@ -417,7 +417,6 @@ async def test_express_hello_world_deployment(
 
 
 @pytest.mark.integration
-@pytest.mark.skip(reason="Traefik routing conflict: /api paths route to DockLite backend instead of project. Needs investigation.")
 @pytest.mark.asyncio
 async def test_fullstack_hello_world_deployment(
     client: AsyncClient, auth_headers: dict
@@ -425,7 +424,7 @@ async def test_fullstack_hello_world_deployment(
     """Test multi-service (frontend + backend) deployment via Traefik"""
     from app.core.config import settings
     
-    domain = "fullstack-test.localhost"
+    domain = "fullstack-test.local"  # Changed from .localhost to .local
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -470,6 +469,26 @@ async def test_fullstack_hello_world_deployment(
         # Fullstack needs more time: 2 containers (frontend nginx + backend flask)
         print(f"Waiting 25s for {domain} to install dependencies (fullstack: 2 containers)...")
         time.sleep(25)
+        
+        # DEBUG: Check Traefik routers to see actual configuration
+        print("\n=== TRAEFIK ROUTERS DEBUG ===")
+        traefik_routers = subprocess.run(
+            ["curl", "-s", "http://localhost/api/http/routers"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if traefik_routers.returncode == 0:
+            import json
+            try:
+                routers_data = json.loads(traefik_routers.stdout)
+                print(f"Found {len(routers_data)} Traefik routers:")
+                for router in routers_data:
+                    if 'fullstack' in router.get('name', '').lower() or 'docklite' in router.get('name', '').lower():
+                        print(f"  - {router.get('name')}: rule={router.get('rule')}, priority={router.get('priority')}, service={router.get('service')}")
+            except:
+                print(f"Raw Traefik API response:\n{traefik_routers.stdout[:500]}")
+        print("=== END DEBUG ===\n")
 
         # 4. Wait for backend health via API proxy (retry logic with generous timeouts)
         max_attempts = 30
