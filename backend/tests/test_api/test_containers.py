@@ -252,8 +252,8 @@ class TestContainersAPI:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["cpu_percent"] == 25.5
-        assert data["memory_percent"] == 5.0
+        assert data["stats"]["cpu_percent"] == 25.5
+        assert data["stats"]["memory_percent"] == 5.0
     
     @patch('app.api.containers.DockerService')
     async def test_docker_service_error_handling(self, mock_service_class, client: AsyncClient, admin_token):

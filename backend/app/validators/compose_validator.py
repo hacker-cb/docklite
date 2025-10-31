@@ -37,7 +37,7 @@ def validate_docker_compose(compose_content: str) -> Tuple[bool, str]:
     if not compose_data["services"]:
         return False, "'services' section cannot be empty"
 
-    return True, ""
+    return True, None
 
 
 def is_valid_compose(compose_content: str, raise_exception: bool = False) -> bool:
