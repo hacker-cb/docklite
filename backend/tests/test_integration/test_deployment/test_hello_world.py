@@ -72,17 +72,39 @@ async def test_flask_hello_world_deployment(
         )
         assert result.returncode == 0, f"Docker compose up failed: {result.stderr}"
 
-        # 4. Wait for container health (retry logic)
-        max_attempts = 15
+        # 4. Wait for container health (retry logic with generous timeouts)
+        max_attempts = 30  # Increased for CI environment
+        wait_time = 3  # Seconds between retries
+        print(f"Waiting for {domain} to be ready...")
+        
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
+                health_response = httpx.get(
+                    "http://localhost/health", 
+                    headers={"Host": domain}, 
+                    timeout=10.0,
+                    follow_redirects=True
+                )
                 if health_response.status_code == 200:
+                    print(f"Health check passed on attempt {attempt + 1}")
+                    # Give Traefik and app a moment to fully stabilize
+                    time.sleep(2)
                     break
-            except (httpx.RequestError, httpx.TimeoutException):
+            except (httpx.RequestError, httpx.TimeoutException) as e:
                 if attempt == max_attempts - 1:
-                    raise
-                time.sleep(2)
+                    print(f"Health check failed after {max_attempts} attempts")
+                    # Try to get container logs for debugging
+                    logs_result = subprocess.run(
+                        ["docker", "compose", "logs"],
+                        cwd=project_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    print(f"Container logs:\n{logs_result.stdout}")
+                    raise AssertionError(f"Container not ready after {max_attempts * wait_time}s: {e}")
+                print(f"Attempt {attempt + 1}/{max_attempts}: {type(e).__name__}")
+                time.sleep(wait_time)
 
         # 5. Verify root endpoint
         response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
@@ -158,20 +180,40 @@ async def test_fastapi_hello_world_deployment(
         )
         assert result.returncode == 0
 
-        # 4. Wait for health
-        max_attempts = 15
+        # 4. Wait for health (retry logic with generous timeouts)
+        max_attempts = 30
+        wait_time = 3
+        print(f"Waiting for {domain} to be ready...")
+        
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
+                health_response = httpx.get(
+                    "http://localhost/health", 
+                    headers={"Host": domain}, 
+                    timeout=10.0,
+                    follow_redirects=True
+                )
                 if health_response.status_code == 200:
+                    print(f"Health check passed on attempt {attempt + 1}")
+                    time.sleep(2)
                     break
-            except (httpx.RequestError, httpx.TimeoutException):
+            except (httpx.RequestError, httpx.TimeoutException) as e:
                 if attempt == max_attempts - 1:
-                    raise
-                time.sleep(2)
+                    print(f"Health check failed after {max_attempts} attempts")
+                    logs_result = subprocess.run(
+                        ["docker", "compose", "logs"],
+                        cwd=project_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    print(f"Container logs:\n{logs_result.stdout}")
+                    raise AssertionError(f"Container not ready after {max_attempts * wait_time}s: {e}")
+                print(f"Attempt {attempt + 1}/{max_attempts}: {type(e).__name__}")
+                time.sleep(wait_time)
 
         # 5. Verify root endpoint
-        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=10.0)
         assert response_data.status_code == 200
         data = response_data.json()
         assert data["message"] == "Hello World from FastAPI!"
@@ -252,20 +294,40 @@ async def test_express_hello_world_deployment(
         )
         assert result.returncode == 0
 
-        # 4. Wait for health
-        max_attempts = 15
+        # 4. Wait for health (retry logic with generous timeouts)
+        max_attempts = 30
+        wait_time = 3
+        print(f"Waiting for {domain} to be ready...")
+        
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
+                health_response = httpx.get(
+                    "http://localhost/health", 
+                    headers={"Host": domain}, 
+                    timeout=10.0,
+                    follow_redirects=True
+                )
                 if health_response.status_code == 200:
+                    print(f"Health check passed on attempt {attempt + 1}")
+                    time.sleep(2)
                     break
-            except (httpx.RequestError, httpx.TimeoutException):
+            except (httpx.RequestError, httpx.TimeoutException) as e:
                 if attempt == max_attempts - 1:
-                    raise
-                time.sleep(2)
+                    print(f"Health check failed after {max_attempts} attempts")
+                    logs_result = subprocess.run(
+                        ["docker", "compose", "logs"],
+                        cwd=project_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    print(f"Container logs:\n{logs_result.stdout}")
+                    raise AssertionError(f"Container not ready after {max_attempts * wait_time}s: {e}")
+                print(f"Attempt {attempt + 1}/{max_attempts}: {type(e).__name__}")
+                time.sleep(wait_time)
 
         # 5. Verify root endpoint
-        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=10.0)
         assert response_data.status_code == 200
         data = response_data.json()
         assert data["message"] == "Hello World from Express!"
@@ -343,20 +405,40 @@ async def test_fullstack_hello_world_deployment(
         )
         assert result.returncode == 0
 
-        # 4. Wait for backend health via API proxy
-        max_attempts = 15
+        # 4. Wait for backend health via API proxy (retry logic with generous timeouts)
+        max_attempts = 30
+        wait_time = 3
+        print(f"Waiting for {domain} backend to be ready...")
+        
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get("http://localhost/api/health", headers={"Host": domain}, timeout=5.0)
+                health_response = httpx.get(
+                    "http://localhost/api/health", 
+                    headers={"Host": domain}, 
+                    timeout=10.0,
+                    follow_redirects=True
+                )
                 if health_response.status_code == 200:
+                    print(f"Backend health check passed on attempt {attempt + 1}")
+                    time.sleep(2)
                     break
-            except (httpx.RequestError, httpx.TimeoutException):
+            except (httpx.RequestError, httpx.TimeoutException) as e:
                 if attempt == max_attempts - 1:
-                    raise
-                time.sleep(2)
+                    print(f"Backend health check failed after {max_attempts} attempts")
+                    logs_result = subprocess.run(
+                        ["docker", "compose", "logs"],
+                        cwd=project_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    print(f"Container logs:\n{logs_result.stdout}")
+                    raise AssertionError(f"Backend not ready after {max_attempts * wait_time}s: {e}")
+                print(f"Attempt {attempt + 1}/{max_attempts}: {type(e).__name__}")
+                time.sleep(wait_time)
 
         # 5. Verify frontend HTML is served
-                frontend_response = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
+        frontend_response = httpx.get("http://localhost/", headers={"Host": domain}, timeout=10.0)
         assert frontend_response.status_code == 200
         assert "text/html" in frontend_response.headers.get("content-type", "")
         assert "Full Stack" in frontend_response.text
