@@ -104,6 +104,66 @@ jobs:
             -v \
             --tb=short \
             -m integration
+            
+      - name: Validate Full Stack preset (Docker network test)
+        run: |
+          echo "🚀 Deploying Full Stack example for validation..."
+          
+          # Create project via API
+          TOKEN=$(curl -s -X POST http://localhost/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"cursor","password":"CursorAI_Test2024!"}' \
+            | jq -r '.access_token')
+          
+          RESPONSE=$(curl -s -X POST http://localhost/api/projects \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "Full Stack Validation",
+              "domain": "fullstack-validate.local",
+              "preset_id": "fullstack-hello"
+            }')
+          
+          PROJECT_ID=$(echo $RESPONSE | jq -r '.id')
+          PROJECT_SLUG=$(echo $RESPONSE | jq -r '.slug')
+          echo "Created project: $PROJECT_SLUG (ID: $PROJECT_ID)"
+          
+          # Copy example files
+          EXAMPLE_DIR="backend/app/presets/examples/fullstack-hello"
+          PROJECT_DIR="/tmp/docklite-test-projects/$PROJECT_SLUG"
+          
+          cp -r $EXAMPLE_DIR/frontend $PROJECT_DIR/
+          cp -r $EXAMPLE_DIR/backend $PROJECT_DIR/
+          cp $EXAMPLE_DIR/nginx.conf $PROJECT_DIR/
+          
+          # Deploy
+          cd $PROJECT_DIR
+          docker compose up -d
+          
+          # Wait for containers
+          echo "⏳ Waiting 30s for containers to install dependencies..."
+          sleep 30
+          
+          # Run validation from inside Docker network
+          echo "🔍 Running validation script..."
+          WORKSPACE_DIR=$(pwd)
+          cd /home/runner/work/docklite/docklite
+          docker run --rm --network docklite-network \
+            -v $PWD/backend/tests/test_integration/test_deployment/validate_fullstack.sh:/validate.sh:ro \
+            alpine:latest \
+            sh -c "apk add --no-cache curl bash && bash /validate.sh fullstack-validate.local $PROJECT_SLUG"
+          
+          # Cleanup
+          cd $WORKSPACE_DIR
+          cd $PROJECT_DIR
+          docker compose down -v
+          cd ..
+          rm -rf $PROJECT_DIR
+          
+          curl -X DELETE "http://localhost/api/projects/$PROJECT_ID" \
+            -H "Authorization: Bearer $TOKEN" || true
+          
+          echo "✅ Full Stack validation complete!"
 
       - name: Show docker compose logs on failure
         if: failure()
