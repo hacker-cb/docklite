@@ -29,10 +29,12 @@ jobs:
         run: |
           mkdir -p /tmp/docklite-test-projects
           chmod 777 /tmp/docklite-test-projects
+          # Create .env file for Docker Compose
+          echo "PROJECTS_DIR=/tmp/docklite-test-projects" > .env
+          echo "SECRET_KEY=test-secret-key-for-ci" >> .env
+          echo "HOSTNAME=localhost" >> .env
 
       - name: Start DockLite
-        env:
-          PROJECTS_DIR: /tmp/docklite-test-projects
         run: docker compose up -d
 
       - name: Wait for backend
