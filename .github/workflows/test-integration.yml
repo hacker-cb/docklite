@@ -49,6 +49,8 @@ jobs:
         run: |
           echo "Checking backend container environment..."
           docker compose exec -T backend env | grep PROJECTS_DIR || echo "PROJECTS_DIR not found in backend!"
+          echo "Checking backend Settings value..."
+          docker compose exec -T backend python -c "from app.core.config import settings; print(f'Settings.PROJECTS_DIR={settings.PROJECTS_DIR}')"
 
       - name: Wait for backend
         run: |
