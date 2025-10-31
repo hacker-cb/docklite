@@ -105,30 +105,25 @@ jobs:
         run: |
           echo "🚀 Deploying Full Stack example for validation..."
           
-          # Check if setup needed (fresh DB) or login
-          SETUP_RESPONSE=$(curl -s http://localhost/api/auth/setup/required)
-          SETUP_NEEDED=$(echo $SETUP_RESPONSE | jq -r '.setup_required')
+          # Create first admin user via setup endpoint
+          echo "Creating admin user via setup endpoint..."
+          SETUP_RESULT=$(curl -s -X POST http://localhost/api/auth/setup \
+            -H "Content-Type: application/json" \
+            -d '{
+              "username":"fullstack-admin",
+              "password":"FullStack123!",
+              "email":"admin@fullstack.test"
+            }')
           
-          if [ "$SETUP_NEEDED" = "true" ]; then
-            echo "Creating initial admin user via setup..."
-            SETUP_RESULT=$(curl -s -X POST http://localhost/api/auth/setup \
-              -H "Content-Type: application/json" \
-              -d '{"username":"cursor","password":"CursorAI_Test2024!","email":"cursor@test.com"}')
-            TOKEN=$(echo $SETUP_RESULT | jq -r '.access_token')
-          else
-            echo "Logging in with existing user..."
-            LOGIN_RESULT=$(curl -s -X POST http://localhost/api/auth/login \
-              -H "Content-Type: application/json" \
-              -d '{"username":"cursor","password":"CursorAI_Test2024!"}')
-            TOKEN=$(echo $LOGIN_RESULT | jq -r '.access_token')
-          fi
+          echo "Setup response: $SETUP_RESULT"
+          TOKEN=$(echo $SETUP_RESULT | jq -r '.access_token')
           
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-            echo "❌ Failed to get authentication token!"
-            echo "Setup needed: $SETUP_NEEDED"
+            echo "❌ Failed to get authentication token from setup!"
+            echo "Response: $SETUP_RESULT"
             exit 1
           fi
-          echo "✅ Got auth token"
+          echo "✅ Got auth token from setup"
           
           # Load preset compose content
           COMPOSE_CONTENT=$(cat backend/app/presets/examples/fullstack-hello/docker-compose.yml | jq -Rs .)
