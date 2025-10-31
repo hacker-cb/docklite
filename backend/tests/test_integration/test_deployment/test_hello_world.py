@@ -215,6 +215,10 @@ async def test_fastapi_hello_world_deployment(
             timeout=60,
         )
         assert result.returncode == 0
+        
+        # Give containers extra time to pull images and install dependencies
+        print(f"Waiting 15s for {domain} to install dependencies...")
+        time.sleep(15)
 
         # 4. Wait for health (retry logic with generous timeouts)
         max_attempts = 30
@@ -337,6 +341,10 @@ async def test_express_hello_world_deployment(
             timeout=60,
         )
         assert result.returncode == 0
+        
+        # Give containers extra time to pull images and install dependencies
+        print(f"Waiting 15s for {domain} to install dependencies...")
+        time.sleep(15)
 
         # 4. Wait for health (retry logic with generous timeouts)
         max_attempts = 30
@@ -456,6 +464,10 @@ async def test_fullstack_hello_world_deployment(
             timeout=60,
         )
         assert result.returncode == 0
+        
+        # Give containers extra time to pull images and install dependencies
+        print(f"Waiting 15s for {domain} to install dependencies...")
+        time.sleep(15)
 
         # 4. Wait for backend health via API proxy (retry logic with generous timeouts)
         max_attempts = 30
