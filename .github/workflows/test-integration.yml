@@ -112,7 +112,7 @@ jobs:
             -d '{
               "username":"fullstack-admin",
               "password":"FullStack123!",
-              "email":"admin@fullstack.test"
+              "email":"admin@example.com"
             }')
           
           echo "Setup response: $SETUP_RESULT"
