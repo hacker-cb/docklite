@@ -33,12 +33,14 @@ from app.presets.examples import (
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_flask_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
+    client: AsyncClient, auth_headers: dict
 ):
     """Test Flask single-service deployment via Traefik"""
+    from app.core.config import settings
+    
     project_slug = "test-flask-hello"
     domain = "flask-test.localhost"
-    project_dir = Path(temp_projects_dir) / project_slug
+    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -152,12 +154,14 @@ async def test_flask_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_fastapi_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
+    client: AsyncClient, auth_headers: dict
 ):
     """Test FastAPI single-service deployment via Traefik"""
+    from app.core.config import settings
+    
     project_slug = "test-fastapi-hello"
     domain = "fastapi-test.localhost"
-    project_dir = Path(temp_projects_dir) / project_slug
+    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -272,12 +276,14 @@ async def test_fastapi_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_express_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
+    client: AsyncClient, auth_headers: dict
 ):
     """Test Express single-service deployment via Traefik"""
+    from app.core.config import settings
+    
     project_slug = "test-express-hello"
     domain = "express-test.localhost"
-    project_dir = Path(temp_projects_dir) / project_slug
+    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -389,12 +395,14 @@ async def test_express_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_fullstack_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
+    client: AsyncClient, auth_headers: dict
 ):
     """Test multi-service (frontend + backend) deployment via Traefik"""
+    from app.core.config import settings
+    
     project_slug = "test-fullstack-hello"
     domain = "fullstack-test.localhost"
-    project_dir = Path(temp_projects_dir) / project_slug
+    project_dir = Path(settings.PROJECTS_DIR) / project_slug
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
