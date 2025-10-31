@@ -11,6 +11,8 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - internal
 
   backend:
     image: python:3.11-slim
@@ -21,4 +23,10 @@ services:
       - ./backend:/app
     command: sh -c "pip install -r requirements.txt && python app.py"
     restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
 
