@@ -118,8 +118,21 @@ async def test_flask_hello_world_deployment(
                 time.sleep(wait_time)
 
         # 5. Verify root endpoint
-        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
-        assert response_data.status_code == 200
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=10.0)
+        if response_data.status_code != 200:
+            print(f"ERROR: Root endpoint returned {response_data.status_code}")
+            print(f"Response headers: {response_data.headers}")
+            print(f"Response body: {response_data.text[:500]}")
+            # Get container logs
+            logs_result = subprocess.run(
+                ["docker", "compose", "logs", "--tail=50"],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            print(f"Container logs:\n{logs_result.stdout}")
+        assert response_data.status_code == 200, f"Root endpoint returned {response_data.status_code}: {response_data.text[:200]}"
         data = response_data.json()
         assert data["message"] == "Hello World from Flask!"
         assert data["framework"] == "Flask"
