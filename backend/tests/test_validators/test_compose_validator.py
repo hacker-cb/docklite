@@ -25,12 +25,14 @@ services:
         """Test validation fails for empty content"""
         is_valid, error = validate_docker_compose("")
         assert is_valid is False
+        assert error is not None
         assert "cannot be empty" in error
     
     def test_whitespace_only(self):
         """Test validation fails for whitespace-only content"""
         is_valid, error = validate_docker_compose("   \n  \t  ")
         assert is_valid is False
+        assert error is not None
         assert "cannot be empty" in error
     
     def test_invalid_yaml(self):
@@ -43,6 +45,7 @@ services:
 """
         is_valid, error = validate_docker_compose(compose_content)
         assert is_valid is False
+        assert error is not None
         assert "Invalid YAML syntax" in error
     
     def test_non_dict_yaml(self):
@@ -50,6 +53,7 @@ services:
         compose_content = "- item1\n- item2"
         is_valid, error = validate_docker_compose(compose_content)
         assert is_valid is False
+        assert error is not None
         assert "must be a YAML object" in error
     
     def test_missing_services(self):
@@ -61,6 +65,7 @@ networks:
 """
         is_valid, error = validate_docker_compose(compose_content)
         assert is_valid is False
+        assert error is not None
         assert "must contain 'services' section" in error
     
     def test_services_not_dict(self):
@@ -72,6 +77,7 @@ services:
 """
         is_valid, error = validate_docker_compose(compose_content)
         assert is_valid is False
+        assert error is not None
         assert "'services' must be a dictionary" in error
     
     def test_empty_services(self):
@@ -82,6 +88,7 @@ services: {}
 """
         is_valid, error = validate_docker_compose(compose_content)
         assert is_valid is False
+        assert error is not None
         assert "'services' section cannot be empty" in error
 
 
