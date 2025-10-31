@@ -73,7 +73,9 @@ jobs:
       - name: Run integration tests
         env:
           DATABASE_URL: sqlite+aiosqlite:////tmp/docklite.db
+          PROJECTS_DIR: /tmp/docklite-test-projects
         run: |
+          mkdir -p /tmp/docklite-test-projects
           cd backend && pytest \
             tests/test_integration/test_deployment/ \
             -v \
