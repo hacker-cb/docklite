@@ -11,17 +11,6 @@ echo "🔍 Validating Full Stack deployment: $DOMAIN"
 echo "Project slug: $PROJECT_SLUG"
 echo ""
 
-# Wait for services to be ready (backend needs time to install Flask)
-echo "⏳ Waiting for services to start..."
-echo "   (Backend: installing Flask + dependencies...)"
-sleep 35
-
-# Debug: Check if containers are running
-echo ""
-echo "DEBUG: Container status:"
-docker ps --filter "name=${PROJECT_SLUG}" --format "table {{.Names}}\t{{.Status}}"
-echo ""
-
 # Test 1: Frontend (HTML)
 echo "1. Testing frontend (/)..."
 RESPONSE=$(curl -s -w "\n%{http_code}" "http://${PROJECT_SLUG}-frontend-1/" || echo "000")
@@ -36,21 +25,35 @@ else
     exit 1
 fi
 
-# Test 2: Backend direct (internal Docker network)
+# Test 2: Backend direct (internal Docker network) - with retry for dependencies installation
 echo "2. Testing backend directly (/message)..."
-RESPONSE=$(curl -s -w "\n%{http_code}" "http://${PROJECT_SLUG}-backend-1:8000/message" || echo "000")
-HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-BODY=$(echo "$RESPONSE" | head -n-1)
+echo "   (Backend may need time to install Flask + dependencies...)"
 
-if [ "$HTTP_CODE" = "200" ] && echo "$BODY" | grep -q "Hello from Backend"; then
-    echo "   ✅ Backend works (200, contains 'Hello from Backend')"
-else
-    echo "   ❌ Backend failed: HTTP $HTTP_CODE"
-    echo "   Response: $BODY"
-    echo ""
-    echo "DEBUG: Backend container logs (last 30 lines):"
-    docker logs "${PROJECT_SLUG}-backend-1" --tail 30 2>&1 || echo "Could not get logs"
-    echo ""
+MAX_ATTEMPTS=20
+WAIT_BETWEEN=3
+SUCCESS=false
+
+for attempt in $(seq 1 $MAX_ATTEMPTS); do
+    RESPONSE=$(curl -s -w "\n%{http_code}" "http://${PROJECT_SLUG}-backend-1:8000/message" 2>/dev/null || echo "000")
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+    BODY=$(echo "$RESPONSE" | head -n-1)
+    
+    if [ "$HTTP_CODE" = "200" ] && echo "$BODY" | grep -q "Hello from Backend"; then
+        echo "   ✅ Backend works (200, contains 'Hello from Backend') - attempt $attempt"
+        SUCCESS=true
+        break
+    fi
+    
+    if [ $attempt -lt $MAX_ATTEMPTS ]; then
+        echo "   Attempt $attempt/$MAX_ATTEMPTS: Backend not ready yet (HTTP $HTTP_CODE), waiting ${WAIT_BETWEEN}s..."
+        sleep $WAIT_BETWEEN
+    fi
+done
+
+if [ "$SUCCESS" = "false" ]; then
+    echo "   ❌ Backend failed after $MAX_ATTEMPTS attempts"
+    echo "   Last HTTP code: $HTTP_CODE"
+    echo "   Last response: $BODY"
     exit 1
 fi
 
