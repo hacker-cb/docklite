@@ -149,10 +149,11 @@ jobs:
           
           echo "Created project: $PROJECT_SLUG (ID: $PROJECT_ID)"
           
-          # Copy example files
+          # Copy example files (need sudo since backend container created dir as root)
           EXAMPLE_DIR="backend/app/presets/examples/fullstack-hello"
           PROJECT_DIR="/tmp/docklite-test-projects/$PROJECT_SLUG"
           
+          sudo chmod -R 777 $PROJECT_DIR  # Allow write access
           cp -r $EXAMPLE_DIR/frontend $PROJECT_DIR/
           cp -r $EXAMPLE_DIR/backend $PROJECT_DIR/
           cp $EXAMPLE_DIR/nginx.conf $PROJECT_DIR/
