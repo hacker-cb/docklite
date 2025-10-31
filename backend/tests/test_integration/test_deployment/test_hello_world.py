@@ -76,7 +76,7 @@ async def test_flask_hello_world_deployment(
         max_attempts = 15
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get(f"http://{domain}/health", timeout=5.0)
+                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
                 if health_response.status_code == 200:
                     break
             except (httpx.RequestError, httpx.TimeoutException):
@@ -85,7 +85,7 @@ async def test_flask_hello_world_deployment(
                 time.sleep(2)
 
         # 5. Verify root endpoint
-        response_data = httpx.get(f"http://{domain}/", timeout=5.0)
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
         assert response_data.status_code == 200
         data = response_data.json()
         assert data["message"] == "Hello World from Flask!"
@@ -162,7 +162,7 @@ async def test_fastapi_hello_world_deployment(
         max_attempts = 15
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get(f"http://{domain}/health", timeout=5.0)
+                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
                 if health_response.status_code == 200:
                     break
             except (httpx.RequestError, httpx.TimeoutException):
@@ -171,7 +171,7 @@ async def test_fastapi_hello_world_deployment(
                 time.sleep(2)
 
         # 5. Verify root endpoint
-        response_data = httpx.get(f"http://{domain}/", timeout=5.0)
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
         assert response_data.status_code == 200
         data = response_data.json()
         assert data["message"] == "Hello World from FastAPI!"
@@ -183,12 +183,12 @@ async def test_fastapi_hello_world_deployment(
         assert health.json()["status"] == "healthy"
 
         # 7. Verify OpenAPI docs (unique to FastAPI)
-        docs_response = httpx.get(f"http://{domain}/docs", timeout=5.0)
+        docs_response = httpx.get("http://localhost/docs", headers={"Host": domain}, timeout=5.0)
         assert docs_response.status_code == 200
         assert "swagger" in docs_response.text.lower()
 
         # 8. Verify OpenAPI JSON schema
-        openapi_response = httpx.get(f"http://{domain}/openapi.json", timeout=5.0)
+        openapi_response = httpx.get("http://localhost/openapi.json", headers={"Host": domain}, timeout=5.0)
         assert openapi_response.status_code == 200
         schema = openapi_response.json()
         assert "openapi" in schema
@@ -256,7 +256,7 @@ async def test_express_hello_world_deployment(
         max_attempts = 15
         for attempt in range(max_attempts):
             try:
-                health_response = httpx.get(f"http://{domain}/health", timeout=5.0)
+                health_response = httpx.get("http://localhost/health", headers={"Host": domain}, timeout=5.0)
                 if health_response.status_code == 200:
                     break
             except (httpx.RequestError, httpx.TimeoutException):
@@ -265,7 +265,7 @@ async def test_express_hello_world_deployment(
                 time.sleep(2)
 
         # 5. Verify root endpoint
-        response_data = httpx.get(f"http://{domain}/", timeout=5.0)
+        response_data = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
         assert response_data.status_code == 200
         data = response_data.json()
         assert data["message"] == "Hello World from Express!"
@@ -280,7 +280,7 @@ async def test_express_hello_world_deployment(
         assert "x-powered-by" in [k.lower() for k in health.headers.keys()]
 
         # 8. Verify runtime info
-        info_response = httpx.get(f"http://{domain}/info", timeout=5.0)
+        info_response = httpx.get("http://localhost/info", headers={"Host": domain}, timeout=5.0)
         assert info_response.status_code == 200
         info_data = info_response.json()
         assert "node" in info_data["runtime"].lower()
@@ -356,13 +356,13 @@ async def test_fullstack_hello_world_deployment(
                 time.sleep(2)
 
         # 5. Verify frontend HTML is served
-        frontend_response = httpx.get(f"http://{domain}/", timeout=5.0)
+                frontend_response = httpx.get("http://localhost/", headers={"Host": domain}, timeout=5.0)
         assert frontend_response.status_code == 200
         assert "text/html" in frontend_response.headers.get("content-type", "")
         assert "Full Stack" in frontend_response.text
 
         # 6. Verify backend API via proxy path
-        api_response = httpx.get(f"http://{domain}/api/message", timeout=5.0)
+        api_response = httpx.get("http://localhost/api/message", headers={"Host": domain}, timeout=5.0)
         assert api_response.status_code == 200
         api_data = api_response.json()
         assert api_data["message"] == "Hello from Backend API!"
