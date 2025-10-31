@@ -59,11 +59,16 @@ async def test_flask_hello_world_deployment(
         project_id = project_data["id"]
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
+        # Ensure project directory exists and has docker-compose.yml
+        assert project_dir.exists(), f"Project directory not created: {project_dir}"
+        assert project_dir.is_dir(), f"Project path is not a directory: {project_dir}"
+        assert (project_dir / "docker-compose.yml").exists(), "docker-compose.yml not created by API"
+        
         example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "flask-hello"
         for item in example_path.iterdir():
             if item.name != "docker-compose.yml":  # Skip compose file - API already wrote it with labels
                 if item.is_file():
-                    shutil.copy2(item, project_dir)
+                    shutil.copy2(item, project_dir / item.name)  # Copy TO project_dir/filename
                 elif item.is_dir():
                     shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
@@ -171,11 +176,13 @@ async def test_fastapi_hello_world_deployment(
         project_id = response.json()["id"]
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
+        assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
+        
         example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fastapi-hello"
         for item in example_path.iterdir():
             if item.name != "docker-compose.yml":
                 if item.is_file():
-                    shutil.copy2(item, project_dir)
+                    shutil.copy2(item, project_dir / item.name)
                 elif item.is_dir():
                     shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
@@ -289,11 +296,13 @@ async def test_express_hello_world_deployment(
         project_id = response.json()["id"]
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
+        assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
+        
         example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "express-hello"
         for item in example_path.iterdir():
             if item.name != "docker-compose.yml":
                 if item.is_file():
-                    shutil.copy2(item, project_dir)
+                    shutil.copy2(item, project_dir / item.name)
                 elif item.is_dir():
                     shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
@@ -404,11 +413,13 @@ async def test_fullstack_hello_world_deployment(
         project_id = response.json()["id"]
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
+        assert project_dir.exists() and project_dir.is_dir(), f"Project directory issue: {project_dir}"
+        
         example_path = Path(__file__).parent.parent.parent.parent / "app" / "presets" / "examples" / "fullstack-hello"
         for item in example_path.iterdir():
             if item.name != "docker-compose.yml":
                 if item.is_file():
-                    shutil.copy2(item, project_dir)
+                    shutil.copy2(item, project_dir / item.name)
                 elif item.is_dir():
                     shutil.copytree(item, project_dir / item.name, dirs_exist_ok=True)
 
