@@ -473,10 +473,10 @@ async def test_fullstack_hello_world_deployment(
         # DEBUG: Check Traefik routers to see actual configuration
         print("\n=== TRAEFIK ROUTERS DEBUG ===")
         traefik_routers = subprocess.run(
-            ["curl", "-s", "http://localhost/api/http/routers"],
+            ["docker", "exec", "docklite-traefik", "wget", "-q", "-O-", "http://localhost:8080/api/http/routers"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=10,
         )
         if traefik_routers.returncode == 0:
             import json
@@ -484,10 +484,18 @@ async def test_fullstack_hello_world_deployment(
                 routers_data = json.loads(traefik_routers.stdout)
                 print(f"Found {len(routers_data)} Traefik routers:")
                 for router in routers_data:
-                    if 'fullstack' in router.get('name', '').lower() or 'docklite' in router.get('name', '').lower():
-                        print(f"  - {router.get('name')}: rule={router.get('rule')}, priority={router.get('priority')}, service={router.get('service')}")
-            except:
-                print(f"Raw Traefik API response:\n{traefik_routers.stdout[:500]}")
+                    name = router.get('name', '')
+                    if 'fullstack' in name.lower() or 'docklite' in name.lower():
+                        print(f"  - {name}:")
+                        print(f"      rule: {router.get('rule')}")
+                        print(f"      priority: {router.get('priority')}")
+                        print(f"      service: {router.get('service')}")
+                        print(f"      status: {router.get('status')}")
+            except Exception as e:
+                print(f"Failed to parse: {e}")
+                print(f"Raw response (first 1000 chars):\n{traefik_routers.stdout[:1000]}")
+        else:
+            print(f"Failed to query Traefik API: {traefik_routers.stderr}")
         print("=== END DEBUG ===\n")
 
         # 4. Wait for backend health via API proxy (retry logic with generous timeouts)
