@@ -107,7 +107,7 @@ DockLite использует **multi-tenant** архитектуру, где к
 - **Database**: SQLite (с возможностью миграции на PostgreSQL)
 - **Reverse Proxy**: Traefik v3
 - **Deployment**: Docker, docker-compose
-- **Testing**: Pytest (244 tests), Vitest (120+ tests), Playwright (24 E2E tests), Integration (4 tests)
+- **Testing**: Pytest (243 unit + 3 integration tests), Vitest (120+ tests), Playwright (24 E2E tests)
 
 ## Установка
 
