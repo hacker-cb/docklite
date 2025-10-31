@@ -5,10 +5,7 @@ app = FastAPI(title="FastAPI Hello World")
 
 @app.get("/")
 def hello():
-    return {
-        "message": "Hello World from FastAPI!",
-        "framework": "FastAPI"
-    }
+    return {"message": "Hello World from FastAPI!", "framework": "FastAPI"}
 
 
 @app.get("/health")
