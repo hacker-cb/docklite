@@ -16,6 +16,12 @@ echo "⏳ Waiting for services to start..."
 echo "   (Backend: installing Flask + dependencies...)"
 sleep 35
 
+# Debug: Check if containers are running
+echo ""
+echo "DEBUG: Container status:"
+docker ps --filter "name=${PROJECT_SLUG}" --format "table {{.Names}}\t{{.Status}}"
+echo ""
+
 # Test 1: Frontend (HTML)
 echo "1. Testing frontend (/)..."
 RESPONSE=$(curl -s -w "\n%{http_code}" "http://${PROJECT_SLUG}-frontend-1/" || echo "000")
@@ -41,6 +47,10 @@ if [ "$HTTP_CODE" = "200" ] && echo "$BODY" | grep -q "Hello from Backend"; then
 else
     echo "   ❌ Backend failed: HTTP $HTTP_CODE"
     echo "   Response: $BODY"
+    echo ""
+    echo "DEBUG: Backend container logs (last 30 lines):"
+    docker logs "${PROJECT_SLUG}-backend-1" --tail 30 2>&1 || echo "Could not get logs"
+    echo ""
     exit 1
 fi
 
