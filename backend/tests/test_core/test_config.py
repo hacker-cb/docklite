@@ -209,13 +209,14 @@ class TestConfigEnvFile:
         """Test that .env file path is configured."""
         from app.core.config import Settings
         
-        # Check Config class has env_file
-        assert hasattr(Settings.Config, 'env_file')
-        assert Settings.Config.env_file is not None
+        # Check model_config has env_file (Pydantic v2)
+        assert hasattr(Settings, 'model_config')
+        assert Settings.model_config.get('env_file') is not None
 
     def test_case_sensitive_config(self):
         """Test that configuration is case-sensitive."""
         from app.core.config import Settings
         
-        assert Settings.Config.case_sensitive is True
+        # Check model_config for case_sensitive (Pydantic v2)
+        assert Settings.model_config.get('case_sensitive') is True
 
