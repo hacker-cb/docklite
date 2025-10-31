@@ -3,11 +3,11 @@ Docker Compose validation
 """
 
 import yaml
-from typing import Tuple
+from typing import Optional, Tuple
 from app.exceptions import InvalidComposeError
 
 
-def validate_docker_compose(compose_content: str) -> Tuple[bool, str]:
+def validate_docker_compose(compose_content: str) -> Tuple[bool, Optional[str]]:
     """
     Validate docker-compose.yml content
 
@@ -15,7 +15,7 @@ def validate_docker_compose(compose_content: str) -> Tuple[bool, str]:
         compose_content: Docker compose YAML content
 
     Returns:
-        Tuple of (is_valid, error_message)
+        Tuple of (is_valid, error_message or None)
     """
     if not compose_content or not compose_content.strip():
         return False, "Docker Compose content cannot be empty"
