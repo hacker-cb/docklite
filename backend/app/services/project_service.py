@@ -14,6 +14,7 @@ from app.utils.formatters import generate_slug_from_domain
 from app.constants.project_constants import ProjectStatus
 from app.constants.messages import ErrorMessages
 from app.services.traefik_service import TraefikService
+from app.core.config import settings
 
 
 class ProjectService:
@@ -97,9 +98,8 @@ class ProjectService:
         await self.db.commit()
         await self.db.refresh(new_project)
 
-        # Create project directory in owner's home
-        owner_home = f"/home/{owner.system_user}"
-        project_dir = Path(owner_home) / "projects" / slug
+        # Create project directory using configured PROJECTS_DIR
+        project_dir = Path(settings.PROJECTS_DIR) / slug
         project_dir.mkdir(parents=True, exist_ok=True)
 
         # Write docker-compose.yml with Traefik labels
@@ -120,10 +120,7 @@ class ProjectService:
 
     async def get_project_path(self, project: Project) -> Path:
         """Get project directory path"""
-        result = await self.db.execute(select(User).where(User.id == project.owner_id))
-        owner = result.scalar_one()
-        owner_home = f"/home/{owner.system_user}"
-        path: Path = Path(owner_home) / "projects" / project.slug
+        path: Path = Path(settings.PROJECTS_DIR) / project.slug
         return path
 
     async def get_project(
