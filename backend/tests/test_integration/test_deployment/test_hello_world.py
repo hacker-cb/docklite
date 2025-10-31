@@ -37,10 +37,15 @@ async def test_flask_hello_world_deployment(
 ):
     """Test Flask single-service deployment via Traefik"""
     from app.core.config import settings
+    import os
     
     project_slug = "test-flask-hello"
     domain = "flask-test.localhost"
     project_dir = Path(settings.PROJECTS_DIR) / project_slug
+    
+    print(f"DEBUG: settings.PROJECTS_DIR = {settings.PROJECTS_DIR}")
+    print(f"DEBUG: os.environ.get('PROJECTS_DIR') = {os.environ.get('PROJECTS_DIR')}")
+    print(f"DEBUG: project_dir = {project_dir}")
 
     try:
         # 1. Create project via API first (writes docker-compose.yml with Traefik labels)
@@ -56,12 +61,18 @@ async def test_flask_hello_world_deployment(
             },
             headers=auth_headers,
         )
+        print(f"DEBUG: API response status = {response.status_code}")
+        print(f"DEBUG: API response body = {response.json()}")
         assert response.status_code == 201
         project_data = response.json()
         project_id = project_data["id"]
 
         # 2. Copy app files (docker-compose.yml already created by API with labels)
         # Ensure project directory exists and has docker-compose.yml
+        print(f"DEBUG: Checking if {project_dir} exists...")
+        print(f"DEBUG: Parent dir {project_dir.parent} exists: {project_dir.parent.exists()}")
+        if project_dir.parent.exists():
+            print(f"DEBUG: Contents of parent dir: {list(project_dir.parent.iterdir())}")
         assert project_dir.exists(), f"Project directory not created: {project_dir}"
         assert project_dir.is_dir(), f"Project path is not a directory: {project_dir}"
         assert (project_dir / "docker-compose.yml").exists(), "docker-compose.yml not created by API"
