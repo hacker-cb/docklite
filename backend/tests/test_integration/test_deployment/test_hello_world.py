@@ -82,6 +82,10 @@ async def test_flask_hello_world_deployment(
             timeout=60,
         )
         assert result.returncode == 0, f"Docker compose up failed: {result.stderr}"
+        
+        # Give containers extra time to pull images and install dependencies
+        print(f"Waiting 15s for {domain} to install dependencies...")
+        time.sleep(15)
 
         # 4. Wait for container health (retry logic with generous timeouts)
         max_attempts = 30  # Increased for CI environment
