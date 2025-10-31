@@ -86,10 +86,6 @@ jobs:
             sleep 2
           done
 
-      - name: Create test user
-        run: |
-          docker compose exec -T backend python create_user.py cursor "CursorAI_Test2024!" --admin || echo "User may already exist"
-
       - name: Install backend dependencies on runner
         run: |
           pip install -r backend/requirements.txt
@@ -109,14 +105,27 @@ jobs:
         run: |
           echo "🚀 Deploying Full Stack example for validation..."
           
-          # Create project via API
-          TOKEN=$(curl -s -X POST http://localhost/api/auth/login \
-            -H "Content-Type: application/json" \
-            -d '{"username":"cursor","password":"CursorAI_Test2024!"}' \
-            | jq -r '.access_token')
+          # Check if setup needed (fresh DB) or login
+          SETUP_RESPONSE=$(curl -s http://localhost/api/auth/setup/required)
+          SETUP_NEEDED=$(echo $SETUP_RESPONSE | jq -r '.setup_required')
+          
+          if [ "$SETUP_NEEDED" = "true" ]; then
+            echo "Creating initial admin user via setup..."
+            SETUP_RESULT=$(curl -s -X POST http://localhost/api/auth/setup \
+              -H "Content-Type: application/json" \
+              -d '{"username":"cursor","password":"CursorAI_Test2024!","email":"cursor@test.com"}')
+            TOKEN=$(echo $SETUP_RESULT | jq -r '.access_token')
+          else
+            echo "Logging in with existing user..."
+            LOGIN_RESULT=$(curl -s -X POST http://localhost/api/auth/login \
+              -H "Content-Type: application/json" \
+              -d '{"username":"cursor","password":"CursorAI_Test2024!"}')
+            TOKEN=$(echo $LOGIN_RESULT | jq -r '.access_token')
+          fi
           
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
             echo "❌ Failed to get authentication token!"
+            echo "Setup needed: $SETUP_NEEDED"
             exit 1
           fi
           echo "✅ Got auth token"
