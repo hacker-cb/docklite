@@ -64,34 +64,7 @@ jobs:
 
       - name: Create test user
         run: |
-          docker compose exec -T backend python -c "
-          import asyncio
-          from app.core.database import get_db_session
-          from app.models.user import User
-          from app.services.auth_service import AuthService
-          
-          async def create_user():
-              async for db in get_db_session():
-                  # Check if user exists
-                  existing = await db.execute('SELECT * FROM users WHERE username = \"cursor\"')
-                  if existing.fetchone():
-                      print('User already exists')
-                      return
-                  
-                  # Create user
-                  auth_service = AuthService(db)
-                  user = User(
-                      username='cursor',
-                      is_admin=True
-                  )
-                  user.hashed_password = auth_service.get_password_hash('CursorAI_Test2024!')
-                  db.add(user)
-                  await db.commit()
-                  print('Test user created')
-                  break
-          
-          asyncio.run(create_user())
-          "
+          docker compose exec -T backend python create_user.py cursor "CursorAI_Test2024!" --admin || echo "User may already exist"
 
       - name: Run integration tests
         run: |
