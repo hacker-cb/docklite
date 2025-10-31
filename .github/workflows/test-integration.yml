@@ -66,9 +66,15 @@ jobs:
         run: |
           docker compose exec -T backend python create_user.py cursor "CursorAI_Test2024!" --admin || echo "User may already exist"
 
-      - name: Run integration tests
+      - name: Install test dependencies on runner
         run: |
-          docker compose exec -T backend pytest \
+          pip install httpx pytest pytest-asyncio
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: sqlite+aiosqlite:////tmp/docklite.db
+        run: |
+          cd backend && pytest \
             tests/test_integration/test_deployment/ \
             -v \
             --tb=short \
