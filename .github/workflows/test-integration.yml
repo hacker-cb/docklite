@@ -29,13 +29,26 @@ jobs:
         run: |
           mkdir -p /tmp/docklite-test-projects
           chmod 777 /tmp/docklite-test-projects
+          # Backup existing .env if present
+          if [ -f .env ]; then
+            mv .env .env.backup
+          fi
           # Create .env file for Docker Compose
           echo "PROJECTS_DIR=/tmp/docklite-test-projects" > .env
           echo "SECRET_KEY=test-secret-key-for-ci" >> .env
           echo "HOSTNAME=localhost" >> .env
+          echo "TRAEFIK_DASHBOARD_HOST=localhost" >> .env
+          # Verify .env file
+          echo "Contents of .env:"
+          cat .env
 
       - name: Start DockLite
         run: docker compose up -d
+        
+      - name: Verify backend environment
+        run: |
+          echo "Checking backend container environment..."
+          docker compose exec -T backend env | grep PROJECTS_DIR || echo "PROJECTS_DIR not found in backend!"
 
       - name: Wait for backend
         run: |
