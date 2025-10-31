@@ -33,12 +33,12 @@ from app.presets.examples import (
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_flask_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: Path
+    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
 ):
     """Test Flask single-service deployment via Traefik"""
     project_slug = "test-flask-hello"
     domain = "flask-test.localhost"
-    project_dir = temp_projects_dir / project_slug
+    project_dir = Path(temp_projects_dir) / project_slug
 
     try:
         # 1. Copy example files to project directory
@@ -120,12 +120,12 @@ async def test_flask_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_fastapi_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: Path
+    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
 ):
     """Test FastAPI single-service deployment via Traefik"""
     project_slug = "test-fastapi-hello"
     domain = "fastapi-test.localhost"
-    project_dir = temp_projects_dir / project_slug
+    project_dir = Path(temp_projects_dir) / project_slug
 
     try:
         # 1. Copy example files
@@ -214,12 +214,12 @@ async def test_fastapi_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_express_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: Path
+    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
 ):
     """Test Express single-service deployment via Traefik"""
     project_slug = "test-express-hello"
     domain = "express-test.localhost"
-    project_dir = temp_projects_dir / project_slug
+    project_dir = Path(temp_projects_dir) / project_slug
 
     try:
         # 1. Copy example files
@@ -305,12 +305,12 @@ async def test_express_hello_world_deployment(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_fullstack_hello_world_deployment(
-    client: AsyncClient, auth_headers: dict, temp_projects_dir: Path
+    client: AsyncClient, auth_headers: dict, temp_projects_dir: str
 ):
     """Test multi-service (frontend + backend) deployment via Traefik"""
     project_slug = "test-fullstack-hello"
     domain = "fullstack-test.localhost"
-    project_dir = temp_projects_dir / project_slug
+    project_dir = Path(temp_projects_dir) / project_slug
 
     try:
         # 1. Copy example files
