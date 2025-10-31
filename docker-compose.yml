@@ -48,7 +48,7 @@ services:
       - "8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.docklite-backend.rule=Host(`${HOSTNAME:-localhost}`)"
+      - "traefik.http.routers.docklite-backend.rule=Host(`${HOSTNAME:-localhost}`) && PathPrefix(`/api`, `/docs`, `/redoc`, `/openapi.json`)"
       - "traefik.http.routers.docklite-backend.entrypoints=web"
       - "traefik.http.routers.docklite-backend.priority=10"
       - "traefik.http.services.docklite-backend.loadbalancer.server.port=8000"
