@@ -33,6 +33,7 @@ class TraefikService:
             "traefik.enable=true",
             f"traefik.http.routers.{router_name}.rule=Host(`{domain}`)",
             f"traefik.http.routers.{router_name}.entrypoints=web",
+            f"traefik.http.routers.{router_name}.priority=100",  # Higher than DockLite (10)
             f"traefik.http.services.{router_name}.loadbalancer.server.port={internal_port}",
         ]
 
