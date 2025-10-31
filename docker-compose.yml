@@ -28,7 +28,7 @@ services:
       - "traefik.http.routers.traefik-api.service=api@internal"
       - "traefik.http.routers.traefik-api.entrypoints=web"
       - "traefik.http.routers.traefik-api.middlewares=admin-auth"
-      - "traefik.http.routers.traefik-api.priority=250"
+      - "traefik.http.routers.traefik-api.priority=50"
       # ReplacePathRegex middleware - converts /traefik to /dashboard for Traefik's api@internal
       - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.regex=^/traefik(.*)"
       - "traefik.http.middlewares.traefik-stripprefix.replacepathregex.replacement=/dashboard$$1"
