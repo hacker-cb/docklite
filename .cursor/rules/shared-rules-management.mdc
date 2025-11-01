@@ -5,6 +5,22 @@ alwaysApply: true
 
 Guidelines for managing project-specific cursor rules.
 
+## Rule Precedence
+
+**Local rules always override shared rules.**
+
+When both local and shared rules address the same topic:
+- **Prefer local rules** - project-specific needs take priority
+- **Shared rules provide defaults** - universal guidelines when no local rule exists
+- **No merging** - local rule completely replaces shared rule for that topic
+- **Explicit overrides** - teams can customize without modifying shared rules
+
+This allows:
+- Project-specific exceptions and customizations
+- Gradual adoption of shared guidelines
+- Team autonomy in decision-making
+- Experimentation without affecting shared standards
+
 ## Naming Convention
 
 Use `local-` prefix for project-specific rules to distinguish from `shared-` rules synced from the shared repository.

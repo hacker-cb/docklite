@@ -33,6 +33,32 @@ Never use system-wide installations for project dependencies.
 - Provide setup scripts when helpful
 - Test setup on fresh system regularly
 
+## AI-Assisted Environment Setup
+
+When AI assists with environment setup, always confirm with user first.
+
+**Confirmation required for:**
+- Installing environment managers or tools
+- Creating virtual environments or containers
+- Modifying system configuration
+- Installing dependencies
+- Writing configuration files
+- Executing setup scripts
+
+**Setup workflow:**
+1. Propose environment setup plan
+2. List all tools and steps required
+3. Ask user to confirm before proceeding
+4. Execute only after explicit approval
+5. Report what was done after completion
+
+**User control:**
+- User decides what gets installed
+- User confirms directory locations
+- User chooses between alternative tools
+- User approves configuration values
+- Never assume preferences
+
 ## Dependency Management
 
 Manage project dependencies explicitly and reproducibly.
