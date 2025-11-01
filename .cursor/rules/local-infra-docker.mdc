@@ -1,0 +1,263 @@
+---
+description: Docker containers management and commands
+globs: ["docker-compose.yml", "backend/Dockerfile", "frontend/Dockerfile", "backend/app/services/docker_service.py", "backend/app/api/containers.py", "frontend/src/views/ContainersView.vue"]
+tags: ["docker", "infrastructure", "containers"]
+---
+
+# Docker Commands & Container Management
+
+## DockLite CLI Commands
+
+**Recommended:** Use the DockLite CLI for all operations.
+
+### Start/Stop/Restart
+
+```bash
+# Start
+./docklite start
+
+# Stop
+./docklite stop
+
+# Restart
+./docklite restart
+
+# Rebuild
+./docklite rebuild
+
+# Status
+./docklite status
+```
+
+### Logs
+
+```bash
+# All logs
+./docklite logs
+
+# Specific service
+./docklite logs backend
+./docklite logs frontend
+```
+
+### Execute Commands
+
+```bash
+# Enter container
+docker exec -it docklite-backend sh
+
+# Run migrations
+./docklite init-db
+
+# Database shell
+docker exec -it docklite-backend sqlite3 /data/docklite.db
+```
+
+### Tests
+
+```bash
+# All tests
+./docklite test
+
+# Backend only
+./docklite test-backend
+
+# Frontend only
+./docklite test-frontend
+
+# With options
+./docklite test-backend -v              # Verbose
+./docklite test-backend -k test_auth    # Specific tests
+./docklite test-backend --cov           # With coverage
+```
+
+### Advanced
+
+```bash
+# Rebuild without cache
+./docklite rebuild --no-cache
+
+# Stop and remove volumes (WARNING: deletes data!)
+./docklite stop --volumes
+
+# Backup system
+./docklite backup
+
+# Clean unused resources
+./docklite clean --all
+```
+
+## Container Architecture
+
+- `docklite-backend` - FastAPI app (port 8000)
+- `docklite-frontend` - Vue.js SPA served by nginx (port 5173)
+- `docklite-traefik` - Traefik v3 reverse proxy (port 80/443)
+- Shared network: `docklite-network`
+- Volumes:
+  - `docklite-data` - SQLite database
+  - `/home/docklite/projects` - user projects (production)
+  - `/var/run/docker.sock` - Docker socket (for container management)
+
+## Database
+
+SQLite stored in Docker volume `docklite-data` at `/data/docklite.db`
+
+Access:
+```bash
+docker exec -it docklite-backend sqlite3 /data/docklite.db
+```
+
+## Container Management Module
+
+### Backend API
+
+**Location:** `backend/app/api/containers.py`
+**Service:** `backend/app/services/docker_service.py`
+
+#### Endpoints
+
+All endpoints require admin authentication:
+
+```
+GET    /api/containers              - List all containers (with ?all=true/false)
+GET    /api/containers/{id}         - Get container details
+POST   /api/containers/{id}/start   - Start container
+POST   /api/containers/{id}/stop    - Stop container
+POST   /api/containers/{id}/restart - Restart container
+DELETE /api/containers/{id}         - Remove container
+GET    /api/containers/{id}/logs    - Get logs (with ?tail=100)
+GET    /api/containers/{id}/stats   - Get resource usage stats
+```
+
+#### Docker Service Implementation
+
+Uses Docker CLI via subprocess (not docker-py) for better compatibility:
+
+```python
+from app.services.docker_service import DockerService
+
+service = DockerService()
+containers = service.list_all_containers(all=True)  # Returns list of dicts
+```
+
+**Important:** Docker CLI must be installed in backend container.
+
+### Frontend UI
+
+**Location:** `frontend/src/views/ContainersView.vue`
+**Route:** `/containers` (admin-only)
+
+#### Features
+
+**Filters:**
+- All - Show all containers
+- System (badge: SYSTEM) - DockLite infrastructure (traefik, backend, frontend)
+- Projects - User deployed project containers
+
+**Actions:**
+- 🟢 Start - Start stopped container
+- 🔴 Stop - Stop running container
+- 🔄 Restart - Restart container
+- 📜 Logs - View container logs (modal dialog with tail option)
+- 🗑️ Remove - Delete container (with confirmation)
+
+**Display:**
+- Container name, image, status
+- Created/Started timestamps
+- SYSTEM badge for infrastructure
+- Color-coded status indicators
+- Responsive table with PrimeVue DataTable
+
+### System Container Protection
+
+**Protected containers:** `docklite-backend`, `docklite-frontend`, `docklite-traefik`
+
+**BLOCKED operations:** Stop, Restart, Remove (would break DockLite)
+**ALLOWED operations:** Start (recovery), Logs, Stats (safe)
+
+Backend returns 403 Forbidden for blocked operations.
+Frontend disables Stop/Restart/Remove buttons with tooltips.
+
+See `SYSTEM_CONTAINERS_PROTECTION.md` for details.
+
+## Docker Requirements
+
+### Backend Container Setup
+
+Docker CLI must be installed in backend container:
+
+```dockerfile
+# Install Docker CLI (see backend/Dockerfile)
+RUN apt-get update && apt-get install -y docker-ce-cli
+```
+
+Docker socket must be mounted:
+
+```yaml
+# In docker-compose.yml
+services:
+  backend:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+## Security
+
+**Admin-only Access:**
+- All `/api/containers/*` endpoints check `is_admin` flag
+- Frontend route has `meta: { requiresAdmin: true }`
+- Navigation button only visible to admins
+
+**System Container Protection:**
+- System containers protected from destructive operations
+- Backend enforces protection rules
+- Frontend provides clear user feedback
+
+**Permissions:**
+- Backend container needs access to Docker socket
+- Container operations run with Docker daemon privileges
+
+## Best Practices
+
+### Prefer DockLite CLI
+
+**Always use `./docklite` commands when available:**
+
+```bash
+# GOOD - Use CLI
+./docklite start
+./docklite stop
+./docklite test
+
+# OK - Direct docker-compose (when needed)
+docker compose ...
+```
+
+### When to Use Direct Docker Commands
+
+Only use direct docker commands for:
+- Debugging specific containers
+- Advanced Docker operations not in CLI
+- Custom docker commands
+
+## Troubleshooting
+
+### "Failed to connect to Docker"
+
+Check Docker socket mount and permissions:
+
+```bash
+# Verify socket mounted
+docker exec docklite-backend ls -la /var/run/docker.sock
+
+# Test Docker CLI
+docker exec docklite-backend docker ps
+```
+
+### Container operations timeout
+
+Increase timeout in `docker_service.py`:
+
+```python
+subprocess.run([...], timeout=30)  # Default: 10s
+```

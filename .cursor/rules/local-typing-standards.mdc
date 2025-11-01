@@ -1,0 +1,340 @@
+---
+description: Python typing standards with modern syntax (Python 3.8+)
+globs: ["**/*.py"]
+tags: ["python", "typing"]
+---
+
+# Python Typing Standards
+
+## 🎯 Mandatory Requirements
+
+**ALL functions and methods MUST have type hints:**
+- ✅ Parameters with types
+- ✅ Return type annotations
+- ✅ For void functions use `-> None:`
+
+**NO EXCEPTIONS** - typing mandatory for all new code.
+
+## Modern Syntax (Python 3.8+ with annotations)
+
+### 1. Use `from __future__ import annotations`
+
+**ALWAYS** add at the beginning of files:
+
+```python
+from __future__ import annotations
+
+from typing import Optional, Literal
+```
+
+**Why:** Enables modern syntax in Python 3.8+
+
+### 2. Built-in Types (list, dict, tuple)
+
+**With `from __future__ import annotations` use lowercase:**
+
+```python
+from __future__ import annotations
+
+# ✅ CORRECT (modern syntax)
+def get_items() -> list[str]:
+    return ["item1", "item2"]
+
+def get_mapping() -> dict[str, int]:
+    return {"a": 1, "b": 2}
+
+def get_pair() -> tuple[str, int]:
+    return ("name", 42)
+
+# ❌ WRONG (outdated syntax)
+from typing import List, Dict, Tuple
+
+def get_items() -> List[str]:  # Use list[str]
+    ...
+```
+
+### 3. Optional and None
+
+**Use `Optional` for optional values:**
+
+```python
+from typing import Optional
+
+# ✅ CORRECT
+def find_user(user_id: int) -> Optional[User]:
+    return user or None
+
+def process(value: Optional[str] = None) -> str:
+    return value or "default"
+
+# ❌ WRONG
+def find_user(user_id: int) -> User | None:  # Use Optional
+    ...
+```
+
+### 4. Literal for Strict Values
+
+**Use `Literal` for limited set of values:**
+
+```python
+from typing import Literal
+
+# ✅ CORRECT - IDE and mypy check correctness
+Operation = Literal["start", "stop", "restart"]
+
+def control_container(operation: Operation) -> None:
+    ...  # Only "start", "stop", "restart" allowed
+
+# ❌ WRONG
+def control_container(operation: str) -> None:
+    ...  # Any string allowed
+```
+
+**Type definitions:** `backend/app/types.py`
+
+```python
+ContainerOperation = Literal["start", "stop", "restart", "remove"]
+ContainerState = Literal["running", "exited", "paused"]
+ProjectStatus = Literal["created", "deployed", "error"]
+```
+
+### 5. Async Functions and Generators
+
+```python
+from typing import AsyncGenerator, Generator
+
+# Async generator
+async def stream_data() -> AsyncGenerator[str, None]:
+    for item in data:
+        yield item
+
+# Regular generator
+def iter_items() -> Generator[int, None, None]:
+    for i in range(10):
+        yield i
+```
+
+## Standards by Area
+
+### Backend Services
+
+```python
+from __future__ import annotations
+
+from typing import Optional
+
+class ProjectService:
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
+    
+    async def create_project(
+        self, 
+        data: ProjectCreate, 
+        owner_id: int
+    ) -> tuple[Optional[Project], Optional[str]]:
+        """
+        Create project.
+        
+        Returns:
+            Tuple of (project, error_message)
+        """
+        ...
+```
+
+**Pattern:** Return `tuple[Optional[T], Optional[str]]` for operations with errors.
+
+### Backend API Endpoints
+
+```python
+from __future__ import annotations
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/users", response_model=list[UserResponse])
+async def get_users(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+) -> list[dict]:
+    """Get all users."""
+    ...
+    return users  # FastAPI validates response_model
+
+@router.post("/users", status_code=201)
+async def create_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    ...
+```
+
+**Rule:** FastAPI endpoints should have `response_model` AND return type hint.
+
+### CLI Utilities
+
+```python
+from __future__ import annotations
+
+from typing import Optional
+
+def log_info(message: str) -> None:
+    """Print info message."""
+    console.print(f"ℹ {message}", style="blue")
+
+def get_hostname() -> str:
+    """Get server hostname."""
+    return hostname or "localhost"
+
+def get_access_url(
+    path: str = "", 
+    port: Optional[str] = None
+) -> str:
+    """Build access URL."""
+    ...
+```
+
+**Rule:** All utility functions with types, even simple ones.
+
+### Test Fixtures
+
+```python
+from __future__ import annotations
+
+import pytest
+from typing import AsyncGenerator, Generator
+
+@pytest.fixture
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Create test database session."""
+    async with TestSessionLocal() as session:
+        yield session
+
+@pytest.fixture
+def sample_data() -> dict:
+    """Return sample test data."""
+    return {"key": "value"}
+
+@pytest.fixture
+def temp_dir() -> Generator[str, None, None]:
+    """Create temporary directory."""
+    temp = tempfile.mkdtemp()
+    yield temp
+    shutil.rmtree(temp)
+```
+
+**Rule:** Fixtures MUST have return type hints for IDE support.
+
+## mypy - Static Checking
+
+### Configuration
+
+**Backend:** `backend/mypy.ini`
+**CLI:** `scripts/mypy.ini`
+
+### Run Checks
+
+```bash
+# Backend
+cd backend
+mypy app tests
+
+# CLI
+cd scripts
+mypy cli
+```
+
+### Ignore Errors
+
+**Use comments only when necessary:**
+
+```python
+# For specific line
+result = some_untyped_lib()  # type: ignore
+
+# For specific error
+result = some_func()  # type: ignore[attr-defined]
+
+# For entire file (only for migrations/alembic)
+# mypy: ignore-errors
+```
+
+**DON'T ABUSE** `type: ignore` - try to fix types.
+
+## Checklist for New Files
+
+- [ ] Added `from __future__ import annotations` at beginning
+- [ ] All functions have type hints
+- [ ] Use `list/dict/tuple` instead of `List/Dict/Tuple`
+- [ ] `Optional` for optional values
+- [ ] `Literal` for fixed values where possible
+- [ ] Async generators typed as `AsyncGenerator[T, None]`
+- [ ] Void functions have `-> None:`
+- [ ] Docstrings describe parameters and return values
+- [ ] mypy check passes without errors
+
+## Common Mistakes
+
+### 1. Forgot from __future__
+
+```python
+# ❌ WRONG
+def get_items() -> list[str]:  # SyntaxError in Python 3.8!
+    ...
+
+# ✅ CORRECT
+from __future__ import annotations
+
+def get_items() -> list[str]:  # Works in Python 3.8+
+    ...
+```
+
+### 2. Using Old Syntax
+
+```python
+from typing import List, Dict  # Not needed with annotations!
+
+# ❌ WRONG
+def process(items: List[str]) -> Dict[str, int]:
+    ...
+
+# ✅ CORRECT
+def process(items: list[str]) -> dict[str, int]:
+    ...
+```
+
+### 3. Missing Return Type
+
+```python
+# ❌ WRONG
+def check_admin(user: User):  # No return type!
+    if not user.is_admin:
+        raise HTTPException(...)
+
+# ✅ CORRECT
+def check_admin(user: User) -> None:  # Explicitly None
+    if not user.is_admin:
+        raise HTTPException(...)
+```
+
+### 4. Wrong Literal Usage
+
+```python
+# ❌ WRONG - runtime value
+Operation = Literal["start"]  # Only for types!
+operation = Operation  # Error!
+
+# ✅ CORRECT - type alias
+Operation = Literal["start", "stop"]
+def do(op: Operation) -> None:  # Use as type
+    ...
+```
+
+## Status
+
+**✅ Type coverage:** High
+**✅ mypy configuration:** Configured
+**✅ CI/CD checks:** Enabled
+**✅ Documentation:** Current
+
+**REMEMBER:** Type hints make code self-documenting, prevent errors, and improve IDE support!

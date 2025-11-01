@@ -1,15 +1,15 @@
 ---
-description: Documentation structure and maintenance rules
-globs: ["*.md", "docs/**/*.md", ".cursor/rules/*.mdc"]
+description: DockLite documentation structure and maintenance rules
+globs: ["*.md", "docs/**/*.md"]
 tags: ["documentation"]
 alwaysApply: true
 ---
 
-# Documentation Guidelines
+# DockLite Documentation Guidelines
 
 ## Documentation Structure
 
-### Core Documentation (9 files in root)
+### Core Documentation (Root .md files)
 
 **User-facing documentation:**
 - `README.md` - Main documentation, quick start, features overview
@@ -22,19 +22,11 @@ alwaysApply: true
 - `PRESETS.md` - Docker-compose presets documentation
 - `SYSTEM_CONTAINERS_PROTECTION.md` - System containers protection guide
 
-### Cursor Rules (21 files in .cursor/rules/)
+### Cursor Rules (.cursor/rules/)
 
 **Development guidelines for AI:**
-- `00-project-overview.mdc` - Project structure and overview
-- `phases-roadmap.mdc` - Current status and future roadmap
-- `access-urls.mdc` - URL conventions and hostname system
-- Backend: `backend-api.mdc`, `backend-models.mdc`
-- Frontend: `frontend-vue.mdc`
-- Infrastructure: `traefik.mdc`, `traefik-dashboard.mdc`, `hostname-system.mdc`
-- Security: `dashboard-security.mdc`, `password-management.mdc`, `multi-tenancy.mdc`
-- CLI: `cli-patterns.mdc`, `python-cli.mdc`, `scripts-cli.mdc`, `user-management-cli.mdc`
-- Features: `containers-management.mdc`, `deployment.mdc`, `docker-commands.mdc`
-- Cross-platform: `macos-compatibility.mdc`, `testing.mdc`
+- Local rules (`local-*.mdc`) - DockLite-specific patterns
+- Shared rules (`shared-*.mdc`) - Universal development practices
 
 ## Documentation Rules
 
@@ -44,7 +36,7 @@ alwaysApply: true
 2. **Keep information in ONE place** - avoid duplication
 3. **Use cursor rules** for development patterns and conventions
 4. **Use README/guides** for user-facing documentation
-5. **Keep current status** in `phases-roadmap.mdc`
+5. **Keep current status** in `local-architecture.mdc`
 6. **Document important decisions** in relevant .mdc files
 7. **Update examples** when code patterns change
 
@@ -55,14 +47,14 @@ alwaysApply: true
    - `*_MIGRATION*.md` - no migration logs
    - `SESSION_SUMMARY.md` - no session summaries
    - `CHANGELOG.md` - use git history instead
-   - `STATUS.md`, `PROJECT_STATUS.md` - use roadmap instead
+   - `STATUS.md`, `PROJECT_STATUS.md` - use local-architecture.mdc
    - `FINAL_REPORT.md`, `WORK_COMPLETE.md` - no work reports
 
 2. **NEVER duplicate information** across files:
-   - Architecture should be in `ARCHITECTURE.md` only
-   - Hostname system is in cursor rules only
-   - Testing is in `HOW_TO_RUN_TESTS.md` only
-   - CLI patterns are in cursor rules only
+   - Architecture should be in `ARCHITECTURE.md` or `local-architecture.mdc`
+   - Hostname system is in `local-access-urls.mdc`
+   - Testing is in `HOW_TO_RUN_TESTS.md`
+   - CLI patterns are in `local-cli-*.mdc` files
 
 3. **NEVER create temporary/service files**:
    - `FILES_LIST.md` - redundant
@@ -97,30 +89,25 @@ alwaysApply: true
 ### Development Patterns → Cursor Rules (.mdc)
 
 **Backend patterns:**
-- API endpoint structure → `backend-api.mdc`
-- Model definitions → `backend-models.mdc`
-- Service patterns → relevant .mdc files
+- API endpoint structure → `local-backend-api.mdc`
+- Service patterns → `local-backend-*.mdc`
 
 **Frontend patterns:**
-- Component structure → `frontend-vue.mdc`
-- API calls → `frontend-vue.mdc`
+- Component structure → `local-frontend-vue.mdc`
+- API calls → `local-frontend-vue.mdc`
+
+**CLI patterns:**
+- Commands → `local-cli-*.mdc`
 
 **Infrastructure:**
-- Traefik labels → `traefik.mdc`
-- Hostname functions → `hostname-system.mdc`
-- Container management → `containers-management.mdc`
+- Docker → `local-infra-docker.mdc`
+- Deployment → `local-infra-deployment.mdc`
 
-**Security:**
-- Authentication → `dashboard-security.mdc`
-- Authorization → `multi-tenancy.mdc`
-- Password management → `password-management.mdc`
-
-### Project Status → phases-roadmap.mdc
+### Project Status → local-architecture.mdc
 
 **Current status:**
 - Completed features (brief list)
 - Production readiness status
-- Test coverage stats
 
 **Future plans:**
 - Next phase description
@@ -170,48 +157,15 @@ Every major milestone:
 
 ### Keep Fresh
 
-- Update test counts when adding tests
-- Update CLI commands list when adding commands
-- Update feature lists when shipping features
 - Update examples when patterns change
-
-## Examples
-
-### ✅ Good Documentation Practice
-
-```
-Feature: Added SSL support
-1. Updated code + tests
-2. Updated traefik.mdc with new labels pattern
-3. Updated TRAEFIK.md with SSL section
-4. Updated README.md with HTTPS URLs
-5. Updated phases-roadmap.mdc (moved SSL to "current")
-```
-
-### ❌ Bad Documentation Practice
-
-```
-Feature: Added SSL support
-1. Created SSL_IMPLEMENTATION_COMPLETE.md (❌ historical)
-2. Created SSL_QUICKSTART.md (❌ duplicate of TRAEFIK.md section)
-3. Created SSL_STATUS.md (❌ use roadmap)
-4. Left old HTTP examples in docs (❌ outdated)
-```
+- Remove obsolete information
+- Keep CLI commands list current
+- Update architecture diagrams if created
 
 ## Quick Reference
 
-**Adding user-facing feature?** → Update README.md + relevant guide  
-**Adding dev pattern?** → Update relevant .mdc rule  
-**Changed architecture?** → Update ARCHITECTURE.md  
-**Milestone complete?** → Update phases-roadmap.mdc only  
+**Adding user-facing feature?** → Update README.md + relevant guide
+**Adding dev pattern?** → Update relevant .mdc rule
+**Changed architecture?** → Update ARCHITECTURE.md or local-architecture.mdc
+**Milestone complete?** → Update local-architecture.mdc
 **Need to remember something?** → Update existing .mdc, don't create new file
-
-## File Count Guidelines
-
-**Target:** 9-12 root .md files maximum  
-**Target:** 20-25 cursor rules maximum  
-
-If exceeding these numbers, look for:
-- Duplicate information to consolidate
-- Historical files to delete
-- Subsystem docs to merge into main guides

@@ -1,6 +1,7 @@
 ---
 description: macOS compatibility patterns and cross-platform development
-globs: scripts/**/*.py,scripts/**/*.sh,backend/**/*.py
+globs: ["scripts/**/*.py", "scripts/**/*.sh", "backend/**/*.py"]
+tags: ["macos", "cross-platform", "development"]
 ---
 
 # macOS Compatibility
@@ -21,7 +22,7 @@ This is **REQUIRED** before starting development. Creates venv, installs depende
 
 ## Platform Support
 
-**Development:** ✅ macOS + Linux  
+**Development:** ✅ macOS + Linux
 **Production:** Linux only
 
 DockLite fully supports **development on macOS** with some platform-specific considerations.
@@ -87,12 +88,6 @@ get_project_root() {
 ```
 
 ### 2. Docker Group Detection
-
-**❌ BAD:**
-```python
-# Always use sg docker
-subprocess.run(["sg", "docker", "-c", "docker ps"])
-```
 
 **✅ GOOD:**
 ```python
@@ -217,23 +212,6 @@ setup_user() {
 - Checks Docker
 - Makes CLI executable
 
-**Manual Setup (if needed):**
-```bash
-# 1. Create virtual environment
-python3 -m venv .venv
-
-# 2. Install Python dependencies in venv
-.venv/bin/pip install -r scripts/requirements.txt
-
-# 3. Create .env file
-cp .env.example .env
-nano .env  # Edit HOSTNAME
-
-# 4. Make CLI executable
-chmod +x docklite
-chmod +x scripts/docklite.sh
-```
-
 ### Daily Development
 
 ```bash
@@ -253,62 +231,6 @@ docker compose down
 ```
 
 **Note:** `./docklite` wrapper automatically uses `.venv/bin/python` - no manual activation needed!
-
-## 🚀 Production Deployment (from macOS)
-
-**Deployment runs on Linux server, not locally:**
-
-```bash
-# 1. SSH to Linux server
-ssh user@production-server.com
-
-# 2. On server: clone/pull repo
-git pull origin main
-
-# 3. On server: run deployment commands
-./scripts/docklite setup-user
-./scripts/docklite setup-ssh
-./scripts/docklite init-db
-
-# 4. On server: start services
-./scripts/docklite start
-```
-
-**Or use rsync from macOS:**
-
-```bash
-# Sync files to server
-rsync -avz --exclude '.git' ./ user@server:/opt/docklite/
-
-# SSH and run deployment
-ssh user@server 'cd /opt/docklite && ./scripts/docklite rebuild'
-```
-
-## 🧪 Testing Strategy
-
-### Local Tests (macOS)
-
-**Development tests - run locally:**
-```bash
-# Backend unit tests
-cd backend && pytest
-
-# Frontend tests
-cd frontend && npm test
-
-# CLI tests
-cd scripts && pytest tests/
-```
-
-### Production Tests (Linux VM/Server)
-
-**Deployment tests - require Linux:**
-```bash
-# In Linux VM or server
-./scripts/docklite setup-user --user testuser
-./scripts/docklite setup-ssh --user testuser
-ssh testuser@localhost
-```
 
 ## 🎯 Best Practices
 
@@ -372,26 +294,6 @@ if command -v sg &> /dev/null; then
 fi
 ```
 
-## 📚 Examples
-
-### Cross-Platform Path Detection
-
-See implementations:
-- [scripts/cli/config.py](mdc:scripts/cli/config.py) - Python auto-detect
-- [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Bash auto-detect
-
-### Docker Group Handling
-
-See implementations:
-- [scripts/cli/utils/docker.py](mdc:scripts/cli/utils/docker.py) - Python docker utils
-- [scripts/lib/common.sh](mdc:scripts/lib/common.sh) - Bash docker helpers
-
-### Platform-Specific Deployment
-
-See implementations:
-- [scripts/cli/commands/deployment.py](mdc:scripts/cli/commands/deployment.py) - Linux-only commands
-- [scripts/deployment/](mdc:scripts/deployment/) - Bash deployment scripts
-
 ## 🆘 Common Issues
 
 ### Issue: ModuleNotFoundError: No module named 'typer'
@@ -445,5 +347,3 @@ See implementations:
 - ✅ Check command existence
 - ✅ Document Linux-only functions
 - ✅ Test on both platforms
-
-See [MACOS_COMPATIBILITY.md](mdc:MACOS_COMPATIBILITY.md) for detailed guide.

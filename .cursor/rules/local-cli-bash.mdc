@@ -1,0 +1,246 @@
+---
+description: Bash CLI patterns and hostname functions usage
+globs: ["scripts/**/*.sh", "scripts/lib/*.sh"]
+tags: ["bash", "cli", "shell"]
+---
+
+# Bash CLI Patterns
+
+## Hostname Functions (MANDATORY)
+
+**ALWAYS use these functions** in `scripts/lib/common.sh`:
+
+```bash
+# Get hostname (Priority: .env > system > localhost)
+hostname=$(get_hostname)
+
+# Build URLs (NEVER hardcode!)
+$(get_access_url)                    # http://example.com
+$(get_access_url "/api")             # http://example.com/api
+$(get_access_url "/traefik")         # http://example.com/traefik
+$(get_access_url "" "8888")          # http://example.com:8888
+$(get_access_url "/path" "443" "https")  # https://example.com/path
+```
+
+## Display URLs in Scripts
+
+✅ **CORRECT:**
+```bash
+log_info "Frontend: $(get_access_url)"
+log_info "Backend API: $(get_access_url "/api")"
+log_info "Traefik: $(get_access_url "/traefik") (admin only)"
+```
+
+❌ **WRONG (Never do this!):**
+```bash
+log_info "Frontend: http://localhost:5173"  # Hardcoded!
+log_info "Backend: http://localhost:8000"   # Wrong!
+```
+
+## Database Access in Scripts
+
+Use `AsyncSessionLocal` from `backend/app/core/database.py`:
+
+```python
+from app.core.database import AsyncSessionLocal
+
+async with AsyncSessionLocal() as session:
+    result = await session.execute(select(User))
+    users = result.all()
+```
+
+**NOT** `get_async_session()` (doesn't exist)
+
+## Script Template
+
+```bash
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$(dirname "$SCRIPT_DIR")/lib/common.sh"
+
+print_banner "Script Title"
+
+# Use hostname functions
+log_info "Access: $(get_access_url)"
+```
+
+## Common Functions
+
+**From `scripts/lib/common.sh`:**
+
+### Logging
+```bash
+log_info "Information message"
+log_success "Success message"
+log_error "Error message"
+log_warning "Warning message"
+```
+
+### Colors
+```bash
+echo "${COLOR_GREEN}Success!${COLOR_NC}"
+echo "${COLOR_RED}Error!${COLOR_NC}"
+echo "${COLOR_YELLOW}Warning${COLOR_NC}"
+echo "${COLOR_CYAN}Info${COLOR_NC}"
+```
+
+### Docker Compose
+```bash
+# Handles sg docker automatically
+docker_compose_cmd up -d
+docker_compose_cmd logs -f backend
+docker_compose_cmd exec backend pytest
+```
+
+### Path Detection
+```bash
+# Get project root (auto-detected)
+get_project_root() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "$(cd "$script_dir/../.." && pwd)"
+}
+
+PROJECT_ROOT=$(get_project_root)
+```
+
+## Rules
+
+✅ **ALWAYS:**
+- Use `get_access_url()` for URLs
+- Use `get_hostname()` for hostname
+- Use `docker_compose_cmd` for Docker Compose
+- Support --help flag
+- Source `lib/common.sh` for common functions
+
+❌ **NEVER:**
+- Hardcode localhost:5173 or localhost:8000
+- Hardcode any URLs
+- Use direct `docker-compose` command
+- Hardcode paths like `/home/user/...`
+
+## Cross-Platform Compatibility
+
+### Docker Group Detection
+
+```bash
+docker_compose_cmd() {
+    # Check if sg command exists (Linux only)
+    if command -v sg &> /dev/null && ! groups | grep -q docker; then
+        # Linux: Use sg if not in docker group
+        sg docker -c "docker-compose $*"
+    else
+        # macOS or in docker group: run directly
+        docker-compose "$@"
+    fi
+}
+```
+
+### Platform-Specific Commands
+
+```bash
+# Check if Linux-only command exists
+if command -v hostnamectl &> /dev/null; then
+    # Linux systemd
+    hostnamectl set-hostname "$hostname"
+else
+    # macOS or other
+    sudo hostname "$hostname"
+fi
+```
+
+### Auto-Detect Paths
+
+```bash
+# ❌ BAD - Hardcoded
+PROJECT_ROOT="/home/user/docklite"
+
+# ✅ GOOD - Auto-detect from script location
+get_project_root() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "$(cd "$script_dir/../.." && pwd)"
+}
+```
+
+## Testing
+
+**Bash tests:** `scripts/lib/test_hostname.sh`
+
+Run tests:
+```bash
+bash scripts/lib/test_hostname.sh
+```
+
+All tests should pass ✅
+
+## Best Practices
+
+### Error Handling
+
+```bash
+set -e  # Exit on error
+
+# Trap errors
+trap 'echo "Error on line $LINENO"' ERR
+
+# Check command success
+if ! some_command; then
+    log_error "Command failed"
+    exit 1
+fi
+```
+
+### User Input
+
+```bash
+# Confirmation prompt
+read -p "Are you sure? [y/N] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Do something
+fi
+
+# Password input (hidden)
+read -sp "Enter password: " password
+echo
+```
+
+### Argument Parsing
+
+```bash
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+```
+
+## Examples
+
+### Status Command
+
+See `scripts/maintenance/status.sh`:
+- ✅ Uses get_access_url()
+- ✅ Uses docker_compose_cmd
+- ✅ Colored output
+- ✅ Handles errors
+
+### List Users
+
+See `scripts/maintenance/list-users.sh`:
+- ✅ Calls backend helper via docker exec
+- ✅ Parses output
+- ✅ Table formatting
+- ✅ Simple and verbose modes

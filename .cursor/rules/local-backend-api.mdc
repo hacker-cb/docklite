@@ -1,0 +1,204 @@
+---
+description: Backend API patterns, models, and conventions
+globs: ["backend/app/api/**/*.py", "backend/app/models/**/*.py", "backend/app/services/**/*.py", "backend/app/constants/*.py", "backend/app/utils/*.py", "backend/app/validators/*.py"]
+tags: ["python", "fastapi", "backend", "sqlalchemy"]
+---
+
+# Backend API & Models Conventions
+
+## Architecture
+
+**Layered structure:**
+```
+API → Services → Models
+ ↓       ↓
+Utils  Constants
+ ↓       ↓
+Validators, Exceptions
+```
+
+## Constants (ALWAYS use!)
+
+```python
+from app.constants.project_constants import ProjectStatus
+from app.constants.messages import ErrorMessages, SuccessMessages
+
+project.status = ProjectStatus.CREATED  # NOT "created"
+raise HTTPException(detail=ErrorMessages.PROJECT_NOT_FOUND)
+```
+
+## Utils & Formatters
+
+```python
+from app.utils.formatters import format_project_response
+return format_project_response(project)  # NOT manual dict
+```
+
+## Validators
+
+```python
+from app.validators import validate_docker_compose
+is_valid, error = validate_docker_compose(content)
+```
+
+## Authentication
+
+All endpoints EXCEPT `/api/auth/*` and `/api/presets/*` require JWT authentication:
+
+```python
+from app.core.security import get_current_active_user
+from app.models.user import User
+
+@router.get("/protected")
+async def protected_endpoint(
+    current_user: User = Depends(get_current_active_user)
+):
+    # current_user is authenticated User object
+    pass
+```
+
+## Admin-Only Endpoints
+
+User management endpoints require admin check:
+
+```python
+def check_is_admin(current_user: User):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+@router.get("/admin-only")
+async def admin_endpoint(
+    current_user: User = Depends(get_current_active_user)
+):
+    check_is_admin(current_user)
+    # ... admin logic
+```
+
+## Response Serialization
+
+For Project model, use helper function to convert SQLAlchemy to dict:
+
+```python
+def project_to_response(project: Project) -> dict:
+    return {
+        "id": project.id,
+        "name": project.name,
+        "domain": project.domain,
+        "compose_content": project.compose_content,
+        "env_vars": json.loads(project.env_vars or "{}"),
+        "status": project.status,
+        "created_at": project.created_at,
+        "updated_at": project.updated_at
+    }
+```
+
+DO NOT modify SQLAlchemy objects directly - causes autoflush issues.
+
+## Error Handling
+
+Standard patterns:
+- 400 BAD_REQUEST - validation errors, business logic errors
+- 401 UNAUTHORIZED - missing/invalid token
+- 403 FORBIDDEN - not enough permissions
+- 404 NOT_FOUND - resource not found
+- 422 UNPROCESSABLE_ENTITY - Pydantic validation errors (automatic)
+
+## API Router Pattern
+
+All routers follow this pattern:
+- Import from `app.api` in `backend/app/main.py`
+- Use prefix: `/api`
+- Tag for OpenAPI docs
+- Async functions
+- Type hints with Pydantic schemas
+
+## SQLAlchemy Models
+
+Location: `backend/app/models/`
+
+### Project Model
+
+```python
+class Project(Base):
+    __tablename__ = "projects"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    domain = Column(String(255), unique=True, nullable=False, index=True)
+    slug = Column(String(255), unique=True, nullable=False, index=True)
+    port = Column(Integer, nullable=True)  # NOT USED - kept for compatibility
+    compose_content = Column(Text, nullable=False)
+    env_vars = Column(Text, nullable=True, default="{}")  # JSON string
+    status = Column(String(50), default="created")
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    owner = relationship("User", back_populates="projects")
+```
+
+**IMPORTANT:** Port field exists in DB but is NOT used. All projects use virtual hosts via Traefik.
+
+### User Model
+
+```python
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=False)
+    system_user = Column(String(255), nullable=False, default="docklite")
+    is_active = Column(Integer, default=1)  # SQLite uses 0/1 for boolean
+    is_admin = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    projects = relationship("Project", back_populates="owner")
+```
+
+## Services Pattern
+
+Services contain business logic. Use dependency injection:
+
+```python
+class ProjectService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+    
+    async def create_project(
+        self, project_data: ProjectCreate, owner_id: int
+    ) -> tuple[Optional[Project], Optional[str]]:
+        # Validate
+        # Create in DB
+        # Create files
+        return project, error
+```
+
+**Always:**
+- Return tuple: `(result, error)` or `(success, error)`
+- Use `await self.db.flush()` before file operations to get ID
+- Use `await self.db.commit()` to persist
+- Use `await self.db.refresh(obj)` after commit
+
+## Pydantic Schemas
+
+Location: `backend/app/models/schemas.py`
+
+- `ProjectBase` - base fields
+- `ProjectCreate` - for POST requests
+- `ProjectUpdate` - for PUT requests (all fields Optional)
+- `ProjectResponse` - for responses
+
+**Empty email handling:**
+UserBase has `model_validate` to convert empty string to None.
+
+## Database Migrations
+
+Use Alembic. All models must be imported in `backend/alembic/env.py`:
+
+```python
+from app.models.project import Project
+from app.models.user import User
+```

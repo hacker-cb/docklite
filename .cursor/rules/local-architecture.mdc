@@ -1,0 +1,169 @@
+---
+description: DockLite architecture, design decisions, and development roadmap
+tags: ["architecture", "roadmap"]
+alwaysApply: true
+---
+
+# DockLite Architecture & Roadmap
+
+## Current Status
+
+✅ **Production Ready**
+- Multi-tenant project management with user isolation
+- Docker containers management with system protection
+- Traefik v3 reverse proxy with auto service discovery
+- JWT authentication with role-based access control (admin/user)
+- Professional CLI with bash completion
+- Comprehensive test coverage
+
+## Core Architecture
+
+### Layered Backend Structure
+
+```
+API Layer (FastAPI)
+    ↓
+Service Layer (Business Logic)
+    ↓
+Model Layer (SQLAlchemy + Pydantic)
+    ↓
+Database (SQLite/PostgreSQL)
+```
+
+**Separation of Concerns:**
+- **API** - HTTP endpoints, request/response handling
+- **Services** - Business logic, orchestration
+- **Models** - Data structure, validation
+- **Utils** - Pure functions, formatters
+- **Constants** - Enums, messages (ALWAYS use constants)
+
+### Frontend Architecture
+
+**Vue 3 Composition API:**
+```
+src/
+├── components/     # Reusable UI components
+├── views/          # Route-level components
+├── composables/    # Reusable stateful logic (useProjects, useContainers)
+├── config/         # Constants & configuration
+├── utils/          # Pure utility functions
+├── router.js       # Vue Router
+└── api.js          # Axios client with interceptors
+```
+
+### CLI Architecture (Hybrid Approach)
+
+**Why Hybrid:**
+- ✅ CLI in `scripts/` - Independent, no backend dependencies
+- ✅ Helpers in `backend/app/cli_helpers/` - Direct database access
+- ✅ Best of both worlds - System commands + DB operations
+
+**Structure:**
+```
+scripts/cli/
+├── main.py         # Typer app entry point
+├── commands/       # Command groups (dev, deploy, user, maint)
+├── utils/          # Console, docker, system, validation
+└── config.py       # Paths, hostname detection
+
+backend/app/cli_helpers/
+├── list_users.py
+└── reset_password.py
+```
+
+## Design Patterns
+
+### Services Return Tuples
+
+All service methods return `(result, error)`:
+
+```python
+async def create_project(
+    self, data: ProjectCreate, owner_id: int
+) -> tuple[Optional[Project], Optional[str]]:
+    """Returns (project, error_message)."""
+    ...
+```
+
+### Use Constants Everywhere
+
+```python
+from app.constants.project_constants import ProjectStatus
+from app.constants.messages import ErrorMessages, SuccessMessages
+
+project.status = ProjectStatus.CREATED  # NOT "created"
+raise HTTPException(detail=ErrorMessages.PROJECT_NOT_FOUND)
+```
+
+### Response Serialization
+
+Use helper functions to convert SQLAlchemy to dict:
+
+```python
+from app.utils.formatters import format_project_response
+return format_project_response(project)  # NOT manual dict
+```
+
+### Hostname Detection (NEVER Hardcode URLs)
+
+**Python:**
+```python
+from app.utils.hostname import get_server_hostname, get_access_url
+
+hostname = get_server_hostname(fallback="localhost")
+url = get_access_url("/api")  # http://example.com/api
+```
+
+**Bash:**
+```bash
+source "$SCRIPT_DIR/lib/common.sh"
+log_info "Frontend: $(get_access_url)"
+log_info "API: $(get_access_url '/api')"
+```
+
+**Priority:** .env HOSTNAME > system hostname > fallback > "localhost"
+
+## Upcoming Features
+
+### Phase 5: SSL/HTTPS with Let's Encrypt (Next)
+- Let's Encrypt integration - automatic SSL certificates
+- Certificate resolver - Traefik built-in support
+- TLS configuration - HTTPS labels for projects
+- HTTP → HTTPS redirect - automatic
+- Auto-renewal - certificate management
+- Infrastructure ready: Traefik websecure entrypoint (443), domain routing working
+
+### Phase 6: Enhanced Features
+- Advanced env vars editor
+- Improved compose validation
+- Secrets management
+
+### Phase 7: Logs & Monitoring
+- View container logs in UI
+- WebSocket for real-time logs
+- Last N lines
+- Per-container filtering
+
+### Phase 8: MCP Server
+- Model Context Protocol server
+- AI agents can deploy/manage projects
+- MCP tools: create_project, start_project, get_logs, etc.
+- Stdio transport
+
+### Phase 9: Finalization
+- Error handling improvements
+- System logging
+- Production optimizations
+- Documentation polish
+
+## Future Ideas
+
+Consider for later phases:
+- Health checks
+- Audit logs
+- Project templates
+- Backup/restore improvements
+- Monitoring dashboard
+- Webhooks
+- Resource limits
+- Performance optimizations

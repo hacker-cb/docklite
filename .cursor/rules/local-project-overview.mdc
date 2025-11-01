@@ -1,0 +1,198 @@
+---
+description: DockLite project structure and architecture overview
+tags: ["architecture", "overview"]
+alwaysApply: true
+---
+
+# DockLite Project Overview
+
+DockLite - multi-tenant система управления веб-сервером для деплоя множества проектов через docker-compose с user isolation и role-based access control.
+
+## 🚨 CRITICAL: Development Environment Setup
+
+**REQUIRED FOR ALL NEW AGENTS/DEVELOPERS:**
+
+Before making ANY changes to the codebase, you MUST run:
+
+```bash
+./docklite setup-dev
+```
+
+**Why this is critical:**
+- ✅ Creates isolated `.venv/` virtual environment
+- ✅ Installs all CLI dependencies (typer, rich, python-dotenv, PyYAML)
+- ✅ Sets up `.env` configuration
+- ✅ Validates Docker is running
+- ✅ Ensures consistent development environment
+
+**DO NOT:**
+- ❌ Install packages globally (`pip3 install` without venv)
+- ❌ Skip this step and assume dependencies are installed
+- ❌ Use `--user` or `--break-system-packages` flags
+- ❌ Start working without proper environment
+
+**The `./docklite` CLI wrapper automatically uses `.venv/` - no manual activation needed!**
+
+If you encounter `ModuleNotFoundError` for typer/rich/etc, you skipped this step.
+
+## Project Structure
+
+```
+<PROJECT_ROOT>/                # DockLite system (paths auto-detected)
+├── backend/                   # FastAPI backend
+│   ├── app/
+│   │   ├── api/              # API endpoints (auth, users, projects, containers, presets, deployment)
+│   │   ├── core/             # Config, database, security
+│   │   ├── models/           # SQLAlchemy models & Pydantic schemas
+│   │   ├── services/         # Business logic (auth, project, docker, traefik)
+│   │   ├── constants/        # Enums, messages
+│   │   ├── exceptions/       # Custom exceptions
+│   │   ├── utils/            # Formatters, responses, logger, hostname
+│   │   ├── validators/       # Compose, domain validation
+│   │   └── presets/          # Docker-compose templates (Traefik-ready)
+│   ├── tests/                # Pytest tests
+│   ├── alembic/              # Database migrations
+│   └── Dockerfile
+├── frontend/                  # Vue.js 3 + PrimeVue frontend
+│   ├── src/
+│   │   ├── components/       # Dialogs (CreateProject, EnvVars, DeployInfo)
+│   │   ├── views/            # Router views (ProjectsView, UsersView)
+│   │   ├── composables/      # Reusable logic (useProjects, useContainers, usePresets)
+│   │   ├── config/           # Constants
+│   │   ├── utils/            # Formatters, toast
+│   │   ├── App.vue           # Main app with auth
+│   │   ├── Login.vue         # Login form
+│   │   ├── Setup.vue         # Initial setup form
+│   │   ├── router.js         # Vue Router config
+│   │   └── api.js            # Axios API client
+│   ├── tests/                # Vitest tests
+│   └── Dockerfile
+├── scripts/                   # CLI and automation
+│   ├── docklite.sh           # Main CLI wrapper
+│   ├── cli/                  # Python CLI (Typer + Rich)
+│   ├── lib/                  # Common functions (hostname, utilities)
+│   ├── development/          # Dev scripts
+│   ├── deployment/           # Setup scripts
+│   ├── maintenance/          # Maintenance scripts
+│   └── completion/           # Bash completion
+└── docker-compose.yml
+
+<PROJECTS_DIR>/                # User deployed projects (multi-tenant, configurable)
+    ├── {project-slug}/        # Slug-based path (e.g., example-com-a7b2)
+    │   ├── docker-compose.yml
+    │   └── .env
+```
+
+**Note:** Paths auto-detect based on script location. Works on macOS and Linux.
+
+## Tech Stack
+
+**Backend:**
+- FastAPI (async)
+- SQLAlchemy + Alembic (SQLite, migrateable to PostgreSQL)
+- JWT (python-jose) + bcrypt (passlib)
+- PyYAML for validation
+- Pytest for testing
+
+**Frontend:**
+- Vue.js 3 (Composition API)
+- Vue Router 4 (hash mode)
+- PrimeVue UI components
+- Axios for API calls
+- Vitest + Playwright for testing
+
+**CLI:**
+- Python (Typer + Rich) in virtual environment
+- Bash automation scripts
+- Comprehensive bash completion
+
+**Infrastructure:**
+- Docker + Docker Compose
+- Traefik v3 reverse proxy with domain routing
+- Multi-tenant with user isolation
+
+**Platform Support:**
+- ✅ Development: macOS + Linux
+- ✅ Production: Linux
+- 🐳 Docker Desktop (macOS) or Docker Engine (Linux)
+
+## Key Architecture Decisions
+
+### Multi-Tenancy
+- Each project belongs to a user (owner_id FK)
+- Projects stored in `/home/{system_user}/projects/{slug}/`
+- Slug-based paths (e.g., `example-com-a7b2`) instead of numeric IDs
+- System-level isolation via Linux users
+- Non-admin users see only their projects
+- Admin users see all projects
+
+### Deployment via SSH
+- Each DockLite user maps to a Linux system_user
+- Projects dir: `/home/{system_user}/projects/`
+- Users upload files via rsync/scp/SFTP
+- Docker operations execute as system_user
+
+### Authentication & Authorization
+- JWT authentication with bcrypt password hashing
+- Role-based access control (admin vs user)
+- Ownership checks on all operations
+- Setup screen for first admin creation
+- Password reset via CLI: `./docklite reset-password`
+
+## Current Status
+
+✅ **Production Ready**
+- Multi-tenant architecture
+- Container management with system protection
+- Traefik v3 reverse proxy with domain routing
+- Professional CLI with bash completion
+- Comprehensive test coverage
+
+## CLI Usage
+
+**Main CLI:** `./docklite <command>`
+
+### First Time Setup
+```bash
+# One command to setup development environment
+./docklite setup-dev          # Creates venv, installs deps, creates .env
+```
+
+### Essential Commands
+```bash
+./docklite start              # Start system (with Traefik)
+./docklite stop               # Stop system
+./docklite status             # Check status + URLs
+./docklite test               # Run all tests
+./docklite add-user <name>    # Add new user (interactive or with -p flag)
+./docklite list-users         # List all users
+./docklite reset-password     # Reset user password
+./docklite backup             # Backup system
+./docklite --help             # Show all commands
+```
+
+## Testing
+
+Always run tests after changes:
+```bash
+./docklite test               # All tests (backend + frontend + CLI)
+./docklite test-backend       # Backend only
+./docklite test-frontend      # Frontend only
+./docklite test-e2e           # E2E tests (requires Playwright)
+
+# Or via Docker Compose
+docker compose exec backend pytest -v
+docker compose exec frontend npm test
+cd frontend && npm run test:e2e       # E2E tests
+```
+
+## macOS Development
+
+DockLite fully supports development on macOS. See `local-infra-macos.mdc` for details.
+
+**Key differences:**
+- ✅ All development features work
+- ✅ Docker Desktop instead of Docker Engine
+- ✅ venv works seamlessly (no --break-system-packages needed!)
+- ⚠️ Deployment commands (setup-user, setup-ssh) are Linux-only
+- ✅ Use `./docklite setup-dev` for automatic setup

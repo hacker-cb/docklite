@@ -1,0 +1,183 @@
+---
+description: Deployment and SSH access patterns (Linux only)
+globs: ["backend/app/api/deployment.py", "backend/app/presets/**/*.py", "scripts/deployment/*.sh"]
+tags: ["deployment", "ssh", "linux"]
+---
+
+# Deployment Architecture
+
+## SSH Deployment User
+
+**User:** `docklite` (configurable via `DEPLOY_USER` env var)
+**Projects Directory:** `/home/docklite/projects/` (configurable via `PROJECTS_DIR`)
+
+Setup:
+```bash
+./docklite setup-user
+```
+
+## Project File Structure
+
+Each project has its own directory:
+
+```
+/home/docklite/projects/{project-slug}/
+├── docker-compose.yml    # Created by DockLite from preset/custom
+├── .env                  # Created from env_vars in DB
+└── [user files]          # Uploaded via SSH
+```
+
+## Deployment Flow
+
+1. User creates project in UI (gets project slug)
+2. Click "Deploy Info" button → get commands
+3. Upload files: `rsync -avz ./app/ docklite@server:/home/docklite/projects/{slug}/`
+4. Start containers: `ssh docklite@server "cd /home/docklite/projects/{slug} && docker-compose up -d"`
+
+## API Endpoints
+
+- `GET /api/deployment/{id}/info` - get deployment instructions (protected)
+- `GET /api/deployment/ssh-setup` - get SSH setup info
+
+Returns ready-to-use commands with correct paths and server hostname.
+
+## Docker Compose Templates (Presets)
+
+Location: `backend/app/presets/`
+
+14 presets in 4 categories:
+- **web:** Nginx, Apache, Nginx Proxy
+- **backend:** Node.js, FastAPI, Flask, Laravel
+- **database:** PostgreSQL, MySQL, MongoDB, Redis
+- **cms:** WordPress, Ghost, Strapi
+
+Each preset includes:
+- `compose_content` - docker-compose.yml template (Traefik-ready)
+- `default_env_vars` - pre-filled environment variables
+- Variable substitution: `${PORT}`, `${DB_PASSWORD}`, etc.
+- Uses `expose:` instead of `ports:` for Traefik routing
+
+## Important Notes
+
+- **Traefik routing:** Projects use domain-based routing via Traefik labels (auto-injected)
+- **No manual ports:** Traefik handles all routing, labels injected by TraefikService
+- Projects identified by slug (e.g., `example-com-a7b2`), not numeric ID
+- Docker socket mounted to backend: `/var/run/docker.sock`
+- Backend needs access to projects directory
+- All projects connect to shared `docklite-network`
+
+## Linux-Only Commands
+
+These commands require Linux and are NOT needed for development:
+
+- `./docklite setup-user` - Creates Linux system users
+- `./docklite setup-ssh` - Configures SSH for deployment
+- `./docklite init-db` - Database operations (can run in container)
+
+**Solution:** Run deployment commands on Linux production server, not locally on macOS.
+
+## System User Setup
+
+Each DockLite user maps to a Linux system user:
+
+```bash
+# Create system user
+sudo useradd -m -s /bin/bash username
+sudo usermod -aG docker username
+
+# Setup SSH key
+sudo -u username ssh-keygen -t ed25519 -N "" -f /home/username/.ssh/id_ed25519
+```
+
+**User Management:**
+- Created via `./docklite setup-user`
+- Projects stored in `/home/{username}/projects/`
+- SSH access for file upload
+- Docker group membership for container management
+
+## Multi-Tenancy
+
+Each project belongs to a user:
+- `owner_id` foreign key in projects table
+- `system_user` field in users table
+- File paths use owner's system_user
+- Permissions enforced by Linux filesystem
+
+See `local-backend-multi-tenancy.mdc` for details.
+
+## Production Deployment (from macOS)
+
+**Deployment runs on Linux server, not locally:**
+
+```bash
+# 1. SSH to Linux server
+ssh user@production-server.com
+
+# 2. On server: clone/pull repo
+git pull origin main
+
+# 3. On server: run deployment commands
+./docklite setup-user
+./docklite setup-ssh
+./docklite init-db
+
+# 4. On server: start services
+./docklite start
+```
+
+**Or use rsync from macOS:**
+
+```bash
+# Sync files to server
+rsync -avz --exclude '.git' ./ user@server:/opt/docklite/
+
+# SSH and run deployment
+ssh user@server 'cd /opt/docklite && ./docklite rebuild'
+```
+
+## Security Considerations
+
+1. **SSH Keys:**
+   - Use ed25519 keys (more secure)
+   - No passwords for SSH access
+   - Key-based authentication only
+
+2. **System Users:**
+   - Each user has isolated home directory
+   - Docker group membership required
+   - No sudo access needed for container operations
+
+3. **File Permissions:**
+   - Projects owned by system_user
+   - Docker socket accessible via group
+   - Proper permissions on .ssh directories
+
+## Troubleshooting
+
+### Permission denied on project directory
+
+```bash
+# Fix ownership
+sudo chown -R username:username /home/username/projects/{slug}
+```
+
+### Docker commands fail
+
+```bash
+# Check Docker group membership
+groups username
+
+# Add to docker group if missing
+sudo usermod -aG docker username
+```
+
+### SSH connection refused
+
+```bash
+# Check SSH service
+sudo systemctl status sshd
+
+# Check firewall
+sudo ufw status
+sudo ufw allow 22/tcp
+```

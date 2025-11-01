@@ -1,0 +1,192 @@
+---
+description: CLI testing patterns and requirements (pytest for scripts/)
+globs: ["scripts/tests/**/*.py", "scripts/conftest.py"]
+tags: ["python", "testing", "pytest", "cli"]
+---
+
+# CLI Testing (Pytest)
+
+Location: `scripts/tests/`
+
+## Structure
+
+```
+scripts/tests/
+├── conftest.py
+├── test_commands_development.py
+├── test_commands_maintenance.py
+├── test_commands_user.py
+├── test_config.py
+├── test_console.py
+├── test_docker.py
+└── test_system.py
+```
+
+## Running Tests
+
+```bash
+cd scripts
+python3 -m pytest tests/ -v          # Verbose
+python3 -m pytest tests/ -q          # Quiet
+python3 -m pytest tests/test_config.py -v  # Specific file
+
+# Or use CLI
+./docklite test-cli
+./docklite test-cli --verbose
+./docklite test-cli --coverage
+```
+
+## Test Structure
+
+### Testing Commands
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+from cli.commands.development import start
+
+def test_start_command():
+    """Test start command."""
+    with patch('cli.utils.docker.docker_compose_cmd') as mock_docker:
+        mock_docker.return_value = Mock(returncode=0)
+        
+        # Call command
+        result = start()
+        
+        # Verify
+        mock_docker.assert_called()
+```
+
+### Testing Config
+
+```python
+from cli.config import get_hostname, get_access_url
+
+def test_get_hostname():
+    """Test hostname detection."""
+    hostname = get_hostname()
+    
+    assert isinstance(hostname, str)
+    assert len(hostname) > 0
+```
+
+### Testing Utils
+
+```python
+from cli.utils.console import log_info
+from cli.utils.docker import is_container_running
+
+def test_log_info(capsys):
+    """Test log_info outputs correctly."""
+    log_info("Test message")
+    
+    captured = capsys.readouterr()
+    assert "Test message" in captured.out
+
+def test_is_container_running():
+    """Test container status check."""
+    with patch('subprocess.run') as mock_run:
+        mock_run.return_value = Mock(
+            stdout="docklite-backend\n",
+            returncode=0
+        )
+        
+        result = is_container_running("docklite-backend")
+        
+        assert result is True
+```
+
+## Mocking Patterns
+
+### Docker Commands
+
+```python
+@patch('subprocess.run')
+def test_docker_command(mock_run):
+    """Test Docker command execution."""
+    mock_run.return_value = Mock(
+        stdout="Output",
+        returncode=0
+    )
+    
+    result = docker_compose_cmd("ps")
+    
+    mock_run.assert_called()
+```
+
+### File Operations
+
+```python
+@patch('pathlib.Path.exists')
+@patch('pathlib.Path.mkdir')
+def test_file_operation(mock_mkdir, mock_exists):
+    """Test file operations."""
+    mock_exists.return_value = False
+    
+    # Your code
+    
+    mock_mkdir.assert_called()
+```
+
+### Environment Variables
+
+```python
+@patch.dict(os.environ, {"HOSTNAME": "test.com"})
+def test_env_override():
+    """Test environment variable override."""
+    hostname = get_hostname()
+    
+    assert hostname == "test.com"
+```
+
+## Best Practices
+
+### ✅ DO
+
+- Mock external dependencies (docker, subprocess, file I/O)
+- Test error paths
+- Use descriptive test names
+- Test hostname detection thoroughly
+- Test URL building with different parameters
+- Isolate tests (no shared state)
+
+### ❌ DON'T
+
+- Don't make real Docker calls
+- Don't modify real files
+- Don't skip error cases
+- Don't share state between tests
+- Don't hardcode paths
+
+## Coverage Targets
+
+- **Commands:** 80%+ coverage
+- **Utils:** 90%+ coverage
+- **Config:** 90%+ coverage
+- **Overall:** 80%+ coverage
+
+## Running with Coverage
+
+```bash
+cd scripts
+pytest tests/ --cov=cli --cov-report=html
+# Open htmlcov/index.html
+
+# Or use CLI
+./docklite test-cli --coverage
+```
+
+## CI/CD Integration
+
+Tests run in GitHub Actions workflow.
+
+## Troubleshooting
+
+**Issue:** ModuleNotFoundError
+**Solution:** Ensure `.venv/` is activated and dependencies installed
+
+**Issue:** Tests fail with import errors
+**Solution:** Run `./docklite setup-dev` first
+
+**Issue:** Mock not working
+**Solution:** Check import path in patch decorator

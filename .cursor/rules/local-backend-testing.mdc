@@ -1,15 +1,15 @@
 ---
-globs: backend/tests/**/*.py,frontend/tests/**/*.js
-description: Testing patterns and requirements
+description: Backend testing patterns, fixtures, and requirements (pytest)
+globs: ["backend/tests/**/*.py", "backend/conftest.py"]
+tags: ["python", "testing", "pytest"]
 ---
 
-# Testing Guidelines
-
-## Backend Tests (pytest)
+# Backend Testing (Pytest)
 
 Location: `backend/tests/`
 
-### Structure
+## Structure
+
 ```
 tests/
 ├── conftest.py                      # Fixtures
@@ -24,15 +24,15 @@ tests/
 │   ├── test_presets.py              # Presets
 │   └── test_protected.py            # Auth protection
 ├── test_services/                   # Service unit tests
-│   ├── test_auth_service.py         # Auth logic (27 tests)
-│   ├── test_docker_service.py       # Docker operations (22 tests)
-│   ├── test_traefik_service.py      # Traefik labels (18 tests)
+│   ├── test_auth_service.py         # Auth logic
+│   ├── test_docker_service.py       # Docker operations
+│   ├── test_traefik_service.py      # Traefik labels
 │   └── test_validation.py           # Validation logic
 ├── test_core/                       # Core module tests
-│   ├── test_security.py             # JWT & cookies (16 tests)
-│   └── test_config.py               # Settings & env vars (21 tests)
+│   ├── test_security.py             # JWT & cookies
+│   └── test_config.py               # Settings & env vars
 ├── test_utils/                      # Utility tests
-│   ├── test_hostname.py             # Hostname detection (20 tests)
+│   ├── test_hostname.py             # Hostname detection
 │   ├── test_formatters.py           # Formatters
 │   ├── test_responses.py            # Response utils
 │   └── test_logger.py               # Logger
@@ -41,9 +41,9 @@ tests/
     └── test_domain_validator.py     # Domain validation
 ```
 
-### Required Fixtures
+## Required Fixtures
 
-From [backend/tests/conftest.py](mdc:backend/tests/conftest.py):
+From `backend/tests/conftest.py`:
 
 - `client` - AsyncClient for API tests
 - `db_session` - Fresh DB session (in-memory SQLite)
@@ -52,9 +52,9 @@ From [backend/tests/conftest.py](mdc:backend/tests/conftest.py):
 - `sample_project_data` - Valid project data
 - `sample_compose_content` - Valid docker-compose.yml
 
-### Testing Patterns
+## Testing Patterns
 
-#### API Integration Tests
+### API Integration Tests
 
 ALL tests for protected endpoints must use `auth_token` fixture:
 
@@ -67,7 +67,7 @@ async def test_protected_endpoint(client: AsyncClient, auth_token):
     assert response.status_code == 200
 ```
 
-#### Service Unit Tests
+### Service Unit Tests
 
 Service tests should mock external dependencies (subprocess, file I/O, etc.):
 
@@ -104,7 +104,7 @@ def test_docker_operation(mock_run):
     )
 ```
 
-#### Core Module Tests
+### Core Module Tests
 
 Core module tests (security, config) should test with real implementations but isolated data:
 
@@ -129,7 +129,7 @@ async def test_jwt_validation(db_session):
     assert result_user.username == "testuser"
 ```
 
-#### Configuration Tests
+### Configuration Tests
 
 Configuration tests should test defaults and environment overrides:
 
@@ -144,68 +144,22 @@ def test_config_from_env():
     assert settings.API_PORT == 9000
 ```
 
-### Running Tests
+## Running Tests
 
 ```bash
 # All tests
-sg docker -c "docker-compose run --rm backend pytest -v"
+docker compose exec backend pytest -v
 
 # With coverage
-sg docker -c "docker-compose run --rm backend pytest --cov=app"
+docker compose exec backend pytest --cov=app
 
 # Specific file
-sg docker -c "docker-compose run --rm backend pytest tests/test_api/test_auth.py -v"
+docker compose exec backend pytest tests/test_api/test_auth.py -v
+
+# Or use CLI
+./docklite test-backend
+./docklite test-backend -k test_auth
 ```
-
-Expected: **299 tests passing**
-
-## Frontend Tests (Vitest)
-
-Location: `frontend/tests/`
-
-### Structure
-```
-tests/
-├── components/                # Component tests
-│   ├── CreateProjectDialog.spec.js
-│   ├── EnvVarsDialog.spec.js
-│   ├── DeployInfoDialog.spec.js
-│   ├── Login.spec.js
-│   └── Setup.spec.js
-├── views/                     # View tests
-│   ├── ProjectsView.spec.js
-│   └── UsersView.spec.js
-├── composables/               # Composable tests
-│   ├── useProjects.spec.js
-│   ├── useContainers.spec.js
-│   └── usePresets.spec.js
-├── utils/                     # Utility tests
-│   ├── formatters.spec.js
-│   └── toast.spec.js
-├── router.spec.js             # Router tests
-└── setup.js                   # Test setup
-```
-
-### Setup
-
-- Use happy-dom environment
-- Mock API calls with vi.mock
-- Test components, composables, utils, router
-- **Total: 120+ tests**
-
-### Running Tests
-
-**Locally (recommended for development):**
-```bash
-cd ~/docklite/frontend
-npm install
-npm test          # Run all tests
-npm test -- --run # Run once without watch
-npm run test:coverage # With coverage report
-```
-
-**Note:** Frontend Docker container is for production build only and doesn't include npm/vitest.
-To run tests, you need Node.js installed locally or use a dev Docker container.
 
 ## Test Coverage by Priority
 
@@ -221,8 +175,8 @@ To run tests, you need Node.js installed locally or use a dev Docker container.
 
 ### Service Layer Testing
 
-#### Docker Service Tests (test_services/test_docker_service.py)
-**22 tests covering:**
+#### Docker Service Tests
+**Key tests:**
 - Docker initialization and availability
 - List containers (all/running/empty/errors)
 - Get specific container by ID
@@ -244,15 +198,15 @@ def test_start_container(mock_run):
     assert error is None
 ```
 
-#### Traefik Service Tests (test_traefik_service.py)
-**18 tests covering:**
+#### Traefik Service Tests
+**Key tests:**
 - Label injection into compose files
 - Port detection (expose, ports, defaults)
 - Network configuration
 - Multiple services handling
 
-#### Auth Service Tests (test_auth_service.py)
-**27 tests covering:**
+#### Auth Service Tests
+**Key tests:**
 - Password hashing with bcrypt
 - JWT token creation and validation
 - User creation and authentication
@@ -260,14 +214,14 @@ def test_start_container(mock_run):
 
 ### Core Module Testing
 
-#### Security Tests (test_core/test_security.py)
-**16 tests covering:**
-- `get_current_user` - JWT from Bearer header (5 tests)
-- `get_current_user_with_cookie` - Traefik ForwardAuth (8 tests)
+#### Security Tests
+**Key tests:**
+- `get_current_user` - JWT from Bearer header
+- `get_current_user_with_cookie` - Traefik ForwardAuth
   - Token priority: Bearer > Cookie
   - Cookie fallback
   - Invalid/expired token handling
-- Security edge cases (5 tests)
+- Security edge cases
   - Expired tokens
   - Malformed JWT
   - Wrong secret key
@@ -290,8 +244,8 @@ async def test_bearer_takes_priority_over_cookie(db_session):
     assert result.username == "beareruser"  # Not cookieuser!
 ```
 
-#### Configuration Tests (test_core/test_config.py)
-**21 tests covering:**
+#### Configuration Tests
+**Key tests:**
 - Default configuration values
 - Environment variable overrides
 - Settings singleton pattern
@@ -306,9 +260,9 @@ def test_hostname_from_env():
     assert settings.HOSTNAME == "example.com"
 ```
 
-### Best Practices
+## Best Practices
 
-#### DO ✅
+### DO ✅
 - **Mock external dependencies** (subprocess, file I/O, network)
 - **Test edge cases** (empty data, invalid input, errors)
 - **Test security vulnerabilities** (expired tokens, wrong secrets)
@@ -317,7 +271,7 @@ def test_hostname_from_env():
 - **Isolate tests** (no shared state, use fixtures)
 - **Test system protection** (system containers can't be removed)
 
-#### DON'T ❌
+### DON'T ❌
 - **Don't make real Docker calls** - always mock subprocess
 - **Don't skip error cases** - test failures, timeouts, invalid input
 - **Don't test implementation details** - test behavior/contracts
@@ -325,9 +279,9 @@ def test_hostname_from_env():
 - **Don't hardcode test data** - use fixtures when possible
 - **Don't ignore async/await** - use proper async test patterns
 
-### Mocking Patterns
+## Mocking Patterns
 
-#### Subprocess Mocking (Docker, Git, etc.)
+### Subprocess Mocking (Docker, Git, etc.)
 ```python
 @patch('subprocess.run')
 def test_docker_command(mock_run):
@@ -346,7 +300,7 @@ def test_docker_command(mock_run):
     assert result["name"] == "container"
 ```
 
-#### Request Mocking (FastAPI dependencies)
+### Request Mocking (FastAPI dependencies)
 ```python
 async def test_cookie_auth(db_session):
     # Mock FastAPI Request
@@ -364,7 +318,7 @@ async def test_cookie_auth(db_session):
     assert user is not None
 ```
 
-#### Environment Variable Mocking
+### Environment Variable Mocking
 ```python
 @patch.dict(os.environ, {"API_PORT": "9000", "HOSTNAME": "test.com"})
 def test_config_override():
@@ -377,34 +331,11 @@ def test_config_override():
 
 **MANDATORY:** After ANY code changes (new features, refactoring, bug fixes), you MUST:
 
-1. **All tests:**
-   ```bash
-   ./docklite test
-   ```
-   Expected: 299 backend + 120+ frontend + 26 CLI tests passing (445+ total)
-
-2. **Backend only** (if only backend changed):
-   ```bash
-   ./docklite test-backend
-   ```
-   Expected: 299 tests passing
-
-3. **Frontend only** (if only frontend changed):
-   ```bash
-   ./docklite test-frontend
-   ```
-   Expected: 120+ tests passing
-
-4. **Fix any failing tests** before proceeding
+```bash
+./docklite test-backend
+```
 
 This ensures no regressions and maintains code quality.
-
-**Note:** You can also use direct docker-compose commands if needed:
-```bash
-docker compose exec backend pytest -v
-docker compose exec backend pytest tests/test_services/test_docker_service.py -v
-docker compose exec backend pytest tests/test_core/ -v
-```
 
 ## Test Organization
 
@@ -422,21 +353,10 @@ docker compose exec backend pytest tests/test_core/ -v
 - Test HTTP endpoints end-to-end
 - Verify component interactions
 
-### Coverage Targets
+## Coverage Targets
 
 - **Critical components:** 95%+ coverage
 - **Service layer:** 90%+ coverage
 - **API layer:** 90%+ coverage
 - **Utilities:** 85%+ coverage
 - **Overall project:** 95%+ coverage
-
-### Current Coverage (Updated Oct 30, 2025)
-
-| Component | Coverage | Tests |
-|-----------|----------|-------|
-| API endpoints | 95% | 90+ tests |
-| Services | 95% | 67 tests |
-| Core modules | 95% | 37 tests |
-| Utils | 90% | 30+ tests |
-| Validators | 90% | 10+ tests |
-| **Total Backend** | **95%** | **299 tests** |

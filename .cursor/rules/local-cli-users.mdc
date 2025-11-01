@@ -1,14 +1,12 @@
 ---
-description: User management via CLI (add-user, list-users, reset-password) and test user conventions
-globs: ["scripts/maintenance/add-user.sh", "scripts/maintenance/reset-password.sh", "scripts/maintenance/list-users.sh", "backend/app/cli_helpers/*.py"]
-tags: ["cli", "bash", "python"]
+description: User management CLI commands (add, list, reset-password)
+globs: ["scripts/maintenance/add-user.sh", "scripts/maintenance/list-users.sh", "scripts/maintenance/reset-password.sh", "backend/app/cli_helpers/*.py", "scripts/cli/commands/user.py"]
+tags: ["cli", "bash", "python", "user-management"]
 ---
 
 # User Management CLI Commands
 
 ## Add User Command
-
-**Location:** [scripts/maintenance/add-user.sh](mdc:scripts/maintenance/add-user.sh)
 
 **Usage:**
 ```bash
@@ -28,8 +26,6 @@ Examples:
 
 ## List Users
 
-**Location:** [scripts/maintenance/list-users.sh](mdc:scripts/maintenance/list-users.sh)
-
 ```bash
 ./docklite list-users           # Simple list
 ./docklite list-users --verbose # Detailed info
@@ -42,8 +38,6 @@ Shows all users with roles (admin/user) and status (active/inactive).
 ### Reset Password via CLI
 
 **Command:** `./docklite reset-password <username> [options]`
-
-**Script:** [scripts/maintenance/reset-password.sh](mdc:scripts/maintenance/reset-password.sh)
 
 ### Usage
 
@@ -69,36 +63,24 @@ Shows all users with roles (admin/user) and status (active/inactive).
 
 1. **Checks backend is running** - starts if needed
 2. **Executes Python script** inside backend container
-3. **Uses raw SQL** to avoid circular import issues with User/Project relationships
+3. **Uses raw SQL** to avoid circular import issues
 4. **Hashes password** with bcrypt via passlib
 5. **Updates database** directly
 6. **Shows user info** - confirms success
 
 ### Security
 
-✅ Password validated (min 6 characters)  
-✅ Bcrypt hashing (cost factor 12)  
-✅ No password in logs (when interactive)  
-✅ Direct database update (no API)  
-✅ Works even if locked out  
+✅ Password validated (min 6 characters)
+✅ Bcrypt hashing (cost factor 12)
+✅ No password in logs (when interactive)
+✅ Direct database update (no API)
+✅ Works even if locked out
 
 ### Password Requirements
 
-**Minimum:** 6 characters  
-**Hashing:** Bcrypt via passlib  
-**Storage:** password_hash in users table  
-
-### Password Change in UI
-
-Users can change their own password in Users page:
-1. Admin login required
-2. Navigate to Users
-3. Click user row
-4. Change Password button
-5. Enter new password
-
-**API:** `POST /api/users/{id}/password`  
-**Endpoint:** [backend/app/api/users.py](mdc:backend/app/api/users.py)
+**Minimum:** 6 characters
+**Hashing:** Bcrypt via passlib
+**Storage:** password_hash in users table
 
 ### Implementation
 
@@ -128,9 +110,11 @@ await db.execute(
 
 **Why raw SQL?** Avoids circular import between User and Project models when loading relationships.
 
+**Location:** `backend/app/cli_helpers/reset_password.py`
+
 #### Password Hashing Service
 
-**Location:** [backend/app/services/auth_service.py](mdc:backend/app/services/auth_service.py)
+**Location:** `backend/app/services/auth_service.py`
 
 ```python
 class AuthService:
@@ -143,16 +127,16 @@ class AuthService:
         return self.pwd_context.verify(plain, hashed)
 ```
 
-### Common Scenarios
+## Common Scenarios
 
-#### Forgot Admin Password
+### Forgot Admin Password
 
 ```bash
 ./docklite reset-password admin
 # Enter new password when prompted
 ```
 
-#### Locked Out
+### Locked Out
 
 ```bash
 # Even if can't login to UI, can reset via CLI
@@ -161,7 +145,7 @@ class AuthService:
 # Change to secure password via UI
 ```
 
-#### Reset Multiple Users
+### Reset Multiple Users
 
 ```bash
 ./docklite reset-password user1 -p pass1
@@ -169,7 +153,7 @@ class AuthService:
 ./docklite reset-password user3 -p pass3
 ```
 
-#### Check User Exists
+### Check User Exists
 
 Script shows user info after reset:
 ```
@@ -180,36 +164,24 @@ Admin: Yes
 Active: Yes
 ```
 
-### Password Policy
-
-**Current:**
-- Minimum: 6 characters
-- No complexity requirements
-- No expiration
-
-**Future enhancements:**
-- Password complexity rules
-- Password history
-- Expiration policy
-- 2FA support
-
-## CLI Integration
-
-All commands integrated in [scripts/docklite.sh](mdc:scripts/docklite.sh) and support bash completion in [scripts/completion/docklite-completion.bash](mdc:scripts/completion/docklite-completion.bash).
-
 ## Test User Convention
 
 For testing and AI assistant access:
 
-**Username:** `cursor`  
-**Password:** Use complex password (e.g., `CursorAI_Test2024!`)  
-**Role:** Admin  
-**Purpose:** Testing, browser automation, demonstrations  
+**Username:** `cursor`
+**Password:** Use complex password (e.g., `CursorAI_Test2024!`)
+**Role:** Admin
+**Purpose:** Testing, browser automation, demonstrations
 
 ### Creating Test User
 
 ```bash
-# Direct creation (inside backend container)
+./docklite add-user cursor -p "CursorAI_Test2024!" --admin
+```
+
+Or directly inside backend container:
+
+```bash
 docker compose exec -T backend python -c "
 import asyncio
 from app.core.database import AsyncSessionLocal
@@ -245,7 +217,7 @@ asyncio.run(create_user())
 
 **Endpoint:** `POST /api/users` (admin-only)
 
-**Schema:** [backend/app/models/schemas.py](mdc:backend/app/models/schemas.py)
+**Schema:** `backend/app/models/schemas.py`
 
 ```python
 class UserCreate(UserBase):
@@ -255,7 +227,7 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
 ```
 
-**Service:** [backend/app/services/auth_service.py](mdc:backend/app/services/auth_service.py)
+**Service:** `backend/app/services/auth_service.py`
 
 ```python
 async def create_user(self, user_data: UserCreate) -> Tuple[Optional[User], Optional[str]]:
@@ -331,12 +303,3 @@ When testing with browser automation:
 2. Use for login in automated tests
 3. Clean up after testing (optional): Remove via database or recreate
 4. Never commit test user credentials to version control
-
-## Related Files
-
-- [scripts/maintenance/add-user.sh](mdc:scripts/maintenance/add-user.sh) - Add user script
-- [scripts/maintenance/list-users.sh](mdc:scripts/maintenance/list-users.sh) - List users script
-- [scripts/maintenance/reset-password.sh](mdc:scripts/maintenance/reset-password.sh) - Reset password script
-- [backend/app/services/auth_service.py](mdc:backend/app/services/auth_service.py) - Password hashing
-- [backend/app/api/users.py](mdc:backend/app/api/users.py) - Password change API
-- [frontend/src/views/UsersView.vue](mdc:frontend/src/views/UsersView.vue) - UI for password change

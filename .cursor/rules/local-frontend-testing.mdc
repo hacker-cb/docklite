@@ -1,0 +1,340 @@
+---
+description: Frontend testing patterns and requirements (Vitest + Playwright)
+globs: ["frontend/tests/**/*.js", "frontend/tests/**/*.spec.js"]
+tags: ["javascript", "testing", "vitest", "playwright"]
+---
+
+# Frontend Testing (Vitest + Playwright)
+
+Location: `frontend/tests/`
+
+## Structure
+
+```
+tests/
+├── components/                # Component tests
+│   ├── CreateProjectDialog.spec.js
+│   ├── EnvVarsDialog.spec.js
+│   ├── DeployInfoDialog.spec.js
+│   ├── Login.spec.js
+│   └── Setup.spec.js
+├── views/                     # View tests
+│   ├── ProjectsView.spec.js
+│   └── UsersView.spec.js
+├── composables/               # Composable tests
+│   ├── useProjects.spec.js
+│   ├── useContainers.spec.js
+│   └── usePresets.spec.js
+├── utils/                     # Utility tests
+│   ├── formatters.spec.js
+│   └── toast.spec.js
+├── e2e/                       # E2E tests (Playwright)
+│   ├── auth.spec.js
+│   ├── projects.spec.js
+│   ├── users.spec.js
+│   └── containers.spec.js
+├── router.spec.js             # Router tests
+└── setup.js                   # Test setup
+```
+
+## Unit Tests (Vitest)
+
+### Setup
+
+- Use happy-dom environment
+- Mock API calls with vi.mock
+- Test components, composables, utils, router
+
+### Running Tests
+
+**Locally (recommended for development):**
+```bash
+cd frontend
+npm install
+npm test          # Run all tests
+npm test -- --run # Run once without watch
+npm run test:coverage # With coverage report
+npm run test:ui   # Interactive UI
+```
+
+**Note:** Frontend Docker container is for production build only and doesn't include npm/vitest.
+To run tests, you need Node.js installed locally.
+
+**Or use CLI:**
+```bash
+./docklite test-frontend
+./docklite test-frontend --watch
+./docklite test-frontend --coverage
+```
+
+### Component Testing Pattern
+
+```javascript
+import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi } from 'vitest'
+import MyComponent from '@/components/MyComponent.vue'
+
+describe('MyComponent', () => {
+  it('renders properly', () => {
+    const wrapper = mount(MyComponent, {
+      props: {
+        title: 'Test'
+      }
+    })
+    
+    expect(wrapper.text()).toContain('Test')
+  })
+  
+  it('emits event on button click', async () => {
+    const wrapper = mount(MyComponent)
+    
+    await wrapper.find('button').trigger('click')
+    
+    expect(wrapper.emitted()).toHaveProperty('submit')
+  })
+})
+```
+
+### Composables Testing Pattern
+
+```javascript
+import { describe, it, expect, vi } from 'vitest'
+import { useProjects } from '@/composables/useProjects'
+
+// Mock API
+vi.mock('@/api', () => ({
+  projectsApi: {
+    getAll: vi.fn()
+  }
+}))
+
+describe('useProjects', () => {
+  it('loads projects', async () => {
+    const { projects, loading, loadProjects } = useProjects()
+    
+    projectsApi.getAll.mockResolvedValue([
+      { id: 1, name: 'Test Project' }
+    ])
+    
+    await loadProjects()
+    
+    expect(loading.value).toBe(false)
+    expect(projects.value).toHaveLength(1)
+  })
+})
+```
+
+### Utils Testing Pattern
+
+```javascript
+import { describe, it, expect } from 'vitest'
+import { formatDate } from '@/utils/formatters'
+
+describe('formatters', () => {
+  it('formats date correctly', () => {
+    const date = new Date('2024-01-15T10:30:00Z')
+    const formatted = formatDate(date)
+    
+    expect(formatted).toContain('2024')
+    expect(formatted).toContain('01')
+    expect(formatted).toContain('15')
+  })
+})
+```
+
+## E2E Tests (Playwright)
+
+### Setup
+
+```bash
+cd frontend
+npm install
+npx playwright install  # Install browsers
+```
+
+### Running E2E Tests
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Interactive UI mode
+npm run test:e2e:ui
+
+# Debug mode
+npm run test:e2e:debug
+
+# Headed mode (see browser)
+npx playwright test --headed
+
+# Specific test
+npx playwright test auth.spec.js
+```
+
+**Or use CLI:**
+```bash
+./docklite test-e2e
+./docklite test-e2e --ui
+./docklite test-e2e --debug
+```
+
+### E2E Testing Pattern
+
+```javascript
+import { test, expect } from '@playwright/test'
+
+test.describe('Authentication', () => {
+  test('user can login', async ({ page }) => {
+    await page.goto('http://localhost/')
+    
+    // Fill login form
+    await page.fill('input[name="username"]', 'admin')
+    await page.fill('input[name="password"]', 'admin123')
+    
+    // Submit
+    await page.click('button[type="submit"]')
+    
+    // Check redirect
+    await expect(page).toHaveURL(/.*projects/)
+    await expect(page.locator('text=Projects')).toBeVisible()
+  })
+  
+  test('shows error on invalid credentials', async ({ page }) => {
+    await page.goto('http://localhost/')
+    
+    await page.fill('input[name="username"]', 'admin')
+    await page.fill('input[name="password"]', 'wrongpassword')
+    await page.click('button[type="submit"]')
+    
+    // Check error message
+    await expect(page.locator('text=Invalid')).toBeVisible()
+  })
+})
+```
+
+### E2E Test Organization
+
+**Test files:**
+- `auth.spec.js` - Login, logout, setup flow
+- `projects.spec.js` - Project CRUD operations
+- `users.spec.js` - User management (admin)
+- `containers.spec.js` - Container management (admin)
+- `traefik.spec.js` - Traefik dashboard access (admin)
+
+**Best practices:**
+- Use Page Object Model for complex pages
+- Setup test user in beforeEach
+- Clean up after tests
+- Use meaningful assertions
+- Test critical user journeys
+
+## Test Coverage Targets
+
+- **Components:** 80%+ coverage
+- **Composables:** 90%+ coverage
+- **Utils:** 90%+ coverage
+- **Overall:** 80%+ coverage
+
+## Mocking Patterns
+
+### API Mocking
+
+```javascript
+vi.mock('@/api', () => ({
+  projectsApi: {
+    getAll: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn()
+  }
+}))
+```
+
+### Router Mocking
+
+```javascript
+const mockRouter = {
+  push: vi.fn()
+}
+
+mount(MyComponent, {
+  global: {
+    mocks: {
+      $router: mockRouter
+    }
+  }
+})
+```
+
+### Toast Mocking
+
+```javascript
+const mockToast = {
+  add: vi.fn()
+}
+
+mount(MyComponent, {
+  global: {
+    mocks: {
+      $toast: mockToast
+    }
+  }
+})
+```
+
+## Best Practices
+
+### ✅ DO
+
+- Test user interactions, not implementation
+- Mock API calls
+- Test error handling
+- Use descriptive test names
+- Test edge cases
+- Clean up after tests
+- Use fixtures for common data
+
+### ❌ DON'T
+
+- Don't test library internals (Vue, PrimeVue)
+- Don't make real API calls in unit tests
+- Don't test implementation details
+- Don't share state between tests
+- Don't skip error cases
+- Don't forget to mock external dependencies
+
+## Running All Tests
+
+```bash
+# Unit + E2E
+./docklite test-frontend
+./docklite test-e2e
+
+# Or separately
+npm test                # Unit tests
+npm run test:e2e        # E2E tests
+```
+
+## CI/CD Integration
+
+GitHub Actions workflow: `.github/workflows/test-e2e.yml`
+
+- Runs E2E tests on every push
+- Uses Docker Compose to start services
+- Installs Playwright browsers
+- Runs tests in headless mode
+- Generates test report
+
+## Troubleshooting
+
+**Issue:** Tests fail with "Cannot find module"
+**Solution:** Run `npm install` in frontend directory
+
+**Issue:** E2E tests can't connect to server
+**Solution:** Ensure DockLite is running (`./docklite start`)
+
+**Issue:** Playwright browsers not installed
+**Solution:** Run `npx playwright install`
+
+**Issue:** Tests timeout
+**Solution:** Increase timeout in playwright.config.js or vitest.config.js

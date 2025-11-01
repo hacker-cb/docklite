@@ -1,6 +1,7 @@
 ---
-description: Python CLI architecture with Typer, Rich, and hybrid approach
-globs: scripts/**/*.py,backend/app/cli_helpers/*.py
+description: Python CLI architecture with Typer, Rich, venv, and hybrid approach
+globs: ["scripts/cli/**/*.py", "backend/app/cli_helpers/*.py", "docklite", "scripts/development/setup-dev.sh"]
+tags: ["python", "cli", "typer", "rich"]
 ---
 
 # Python CLI System
@@ -10,7 +11,7 @@ globs: scripts/**/*.py,backend/app/cli_helpers/*.py
 **MANDATORY BEFORE ANY WORK:**
 
 ```bash
-./docklite dev setup-dev
+./docklite setup-dev
 ```
 
 This creates `.venv/` and installs all dependencies. Skip this and CLI will fail.
@@ -19,13 +20,13 @@ This creates `.venv/` and installs all dependencies. Skip this and CLI will fail
 
 ## Architecture (Hybrid Approach)
 
-**CLI Location:** [scripts/cli/](mdc:scripts/cli/)  
-**DB Helpers:** [backend/app/cli_helpers/](mdc:backend/app/cli_helpers/)
+**CLI Location:** `scripts/cli/`
+**DB Helpers:** `backend/app/cli_helpers/`
 
 ### Why Hybrid?
 
-✅ **CLI in scripts/** - Independent, no backend dependencies  
-✅ **Helpers in backend/** - Direct database access, use SQLAlchemy models  
+✅ **CLI in scripts/** - Independent, no backend dependencies
+✅ **Helpers in backend/** - Direct database access, use SQLAlchemy models
 ✅ **Best of both worlds** - System commands + DB operations
 
 ## Structure
@@ -42,36 +43,36 @@ scripts/
 │   │   ├── system.py          # User management, file operations
 │   │   └── validation.py      # check_docker, check_docker_compose
 │   └── commands/
-│       ├── development.py     # dev: setup-dev, rebuild, test-*, logs (also root: start/stop/restart/test)
+│       ├── development.py     # dev: setup-dev, rebuild, test-*, logs
 │       ├── deployment.py      # deploy: setup-user, setup-ssh, init-db
 │       ├── user.py            # user: add, list, reset-password
-│       └── maintenance.py     # maint: backup, restore, clean (also root: status)
-└── tests/                      # 60 pytest tests
+│       └── maintenance.py     # maint: backup, restore, clean, status
+└── tests/                      # pytest tests
 
 backend/app/cli_helpers/
-├── list_users.py              # Database user queries (used by user.py)
-└── reset_password.py          # Password reset operations (used by user.py)
+├── list_users.py              # Database user queries
+└── reset_password.py          # Password reset operations
 ```
 
 ## Key Technologies
 
-**Framework:** [Typer](https://typer.tiangolo.com/) - Modern CLI with auto-completion  
-**UI:** [Rich](https://rich.readthedocs.io/) - Beautiful terminal output  
-**Environment:** Virtual environment (.venv/) - isolated dependencies  
-**Testing:** pytest with 60 tests
+**Framework:** Typer - Modern CLI with auto-completion
+**UI:** Rich - Beautiful terminal output
+**Environment:** Virtual environment (.venv/) - isolated dependencies
+**Testing:** pytest
 
 ## Virtual Environment (venv)
 
-**Location:** `.venv/` in project root  
-**Auto-activation:** `./docklite` wrapper automatically uses `.venv/bin/python`  
-**Setup:** `./docklite dev setup-dev` creates and configures venv
+**Location:** `.venv/` in project root
+**Auto-activation:** `./docklite` wrapper automatically uses `.venv/bin/python`
+**Setup:** `./docklite setup-dev` creates and configures venv
 
 ### Key Features
 
-✅ **No manual activation** - wrapper handles it automatically  
-✅ **Isolated dependencies** - no system Python pollution  
-✅ **Cross-platform** - works on macOS, Linux, Windows  
-✅ **One-command setup** - `./docklite dev setup-dev`
+✅ **No manual activation** - wrapper handles it automatically
+✅ **Isolated dependencies** - no system Python pollution
+✅ **Cross-platform** - works on macOS, Linux, Windows
+✅ **One-command setup** - `./docklite setup-dev`
 
 ### Dependencies (in venv)
 
@@ -101,17 +102,16 @@ if not in_venv and venv_exists:
     os.execv('.venv/bin/python', ['python'] + sys.argv)
 ```
 
-**Key innovation:** `setup-dev` is built into the wrapper and works without ANY pre-installed dependencies. This solves the "chicken-and-egg" problem in CI/CD.
+**Key innovation:** `setup-dev` is built into the wrapper and works without ANY pre-installed dependencies.
 
 Users just run `./docklite <command>` - venv activation is transparent!
 
-## Commands (21 total)
+## Commands
 
 DockLite uses **hybrid command structure** for optimal usability:
 
 ### Root Level (6 commands)
 Essential daily-use commands for quick access:
-
 - `start [--build] [--follow]` - Start services
 - `stop [--volumes]` - Stop services
 - `restart [--build]` - Restart services
@@ -120,35 +120,28 @@ Essential daily-use commands for quick access:
 - `test [--verbose] [--quiet]` - Run all tests
 
 ### Development Group (`dev`) - 6 commands
-Development and testing:
-
-- `dev setup-dev` - First-time environment setup (creates venv, installs deps, .env)
+- `dev setup-dev` - First-time environment setup
 - `dev rebuild [--no-cache] [--follow]` - Rebuild Docker images
-- `dev test-backend [args]` - Backend tests only (pytest args supported)
+- `dev test-backend [args]` - Backend tests (pytest args)
 - `dev test-frontend [--watch] [--ui] [--coverage]` - Frontend tests (Vitest)
 - `dev test-e2e [--ui] [--debug] [--headed]` - E2E tests (Playwright)
-- `dev test-cli [--verbose] [--coverage] [--file]` - CLI tests (pytest for scripts/tests/)
+- `dev test-cli [--verbose] [--coverage] [--file]` - CLI tests
 
 ### Deployment Group (`deploy`) - 3 commands
 Production setup (Linux only):
-
 - `deploy setup-user [--user] [--dir]` - Create Linux system user
 - `deploy setup-ssh [--user]` - Configure SSH access
 - `deploy init-db [--reset]` - Initialize/reset database
 
 ### User Management Group (`user`) - 3 commands
-User administration:
-
-- `user add <username> [--password] [--admin] [--email]` - Add new user
-- `user list [--verbose]` - List all users (Rich table in verbose)
-- `user reset-password <username> [--password]` - Reset user password
+- `user add <username> [--password] [--admin] [--email]` - Add user
+- `user list [--verbose]` - List users (Rich table)
+- `user reset-password <username> [--password]` - Reset password
 
 ### Maintenance Group (`maint`) - 3 commands
-System maintenance:
-
-- `maint backup [--output]` - Backup database and config
+- `maint backup [--output]` - Backup database
 - `maint restore <file> [--no-confirm]` - Restore from backup
-- `maint clean [--all|--images|--volumes|--logs]` - Clean Docker resources
+- `maint clean [--all|--images|--volumes|--logs]` - Clean Docker
 
 ## Code Patterns
 
@@ -217,11 +210,11 @@ if __name__ == "__main__":
 
 ## Console Utilities
 
-**From [scripts/cli/utils/console.py](mdc:scripts/cli/utils/console.py):**
+**From `scripts/cli/utils/console.py`:**
 
 ```python
 log_info("Information")      # ℹ Blue
-log_success("Success!")       # ✅ Green  
+log_success("Success!")       # ✅ Green
 log_error("Error!")          # ❌ Red
 log_warning("Warning")       # ⚠️ Yellow
 log_step("Step 1...")        # ▶ Cyan
@@ -239,7 +232,7 @@ with progress:
 
 ## Docker Operations
 
-**From [scripts/cli/utils/docker.py](mdc:scripts/cli/utils/docker.py):**
+**From `scripts/cli/utils/docker.py`:**
 
 ```python
 # Execute docker-compose
@@ -257,7 +250,7 @@ status = get_container_status()
 
 ## Configuration
 
-**From [scripts/cli/config.py](mdc:scripts/cli/config.py):**
+**From `scripts/cli/config.py`:**
 
 ```python
 from cli.config import (
@@ -272,35 +265,6 @@ from cli.config import (
 url = get_access_url("/api")  # http://example.com/api
 ```
 
-## Testing
-
-**Run tests:**
-```bash
-cd scripts
-python3 -m pytest tests/ -v          # Verbose
-python3 -m pytest tests/ -q          # Quiet
-python3 -m pytest tests/test_config.py -v  # Specific file
-```
-
-**Test structure:**
-```python
-# scripts/tests/test_my_feature.py
-import pytest
-from unittest.mock import Mock, patch
-
-def test_something():
-    """Test description."""
-    # Arrange
-    mock = Mock(return_value=True)
-    
-    # Act
-    with patch('module.function', mock):
-        result = function_to_test()
-    
-    # Assert
-    assert result == expected
-```
-
 ## Critical Rules
 
 ### ✅ DO
@@ -312,10 +276,9 @@ def test_something():
 - **Import all models** in helpers to avoid circular imports
 - **Disable SQL logging** in helpers (`logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)`)
 - **Use get_access_url()** for all URLs (never hardcode!)
-- **Write tests** for new commands (follow existing patterns)
+- **Write tests** for new commands
 - **Use type hints** everywhere
 - **Handle errors** gracefully with try/except
-- **Test venv activation** - ensure `./docklite` uses `.venv/bin/python`
 
 ### ❌ DON'T
 
@@ -323,37 +286,16 @@ def test_something():
 - **Never hardcode** URLs (localhost:8000, etc) - use `get_access_url()`
 - **Never pass long Python scripts** as command args - use backend helpers
 - **Never import only one model** - always `from app.models import user, project`
-- **Don't call functions directly** in restart/rebuild - use explicit logic
-- **Don't forget follow=False** when calling start() from other commands
 - **Don't use print()** - use Rich console functions
 - **Don't skip error handling**
 - **Don't use --user or --break-system-packages** - venv makes them unnecessary
-
-## Examples
-
-### Status Command (Perfect Example)
-
-See [scripts/cli/commands/maintenance.py](mdc:scripts/cli/commands/maintenance.py) `status()` function:
-- ✅ Rich table output
-- ✅ Colored status indicators
-- ✅ Uses get_access_url()
-- ✅ Handles all containers
-- ✅ Verbose mode
-
-### List Users (Backend Helper Example)
-
-See [backend/app/cli_helpers/list_users.py](mdc:backend/app/cli_helpers/list_users.py):
-- ✅ Imports all models
-- ✅ Disables SQL logging
-- ✅ Multiple output formats (simple/detailed/count)
-- ✅ CLI-friendly output format
 
 ## Installation
 
 **First Time Setup:**
 ```bash
 # One command - creates venv and installs everything
-./docklite dev setup-dev
+./docklite setup-dev
 ```
 
 **What it does:**
@@ -363,18 +305,6 @@ See [backend/app/cli_helpers/list_users.py](mdc:backend/app/cli_helpers/list_use
 - Checks Docker
 - Makes CLI executable
 
-**Manual Setup (if needed):**
-```bash
-# Create venv
-python3 -m venv .venv
-
-# Install dependencies
-.venv/bin/pip install -r scripts/requirements.txt
-
-# Create .env
-cp .env.example .env
-```
-
 **Usage:**
 ```bash
 # No activation needed - wrapper handles it!
@@ -383,24 +313,16 @@ cp .env.example .env
 ./docklite status
 ```
 
-## Migration Notes
-
-**Old:** Bash scripts (~2000 lines), system-wide pip installs  
-**New:** Python CLI (~900 lines) + venv + 2 helpers + 60 tests  
-**Improvement:** 55% less code, 100% tested, beautiful UX, isolated deps
-
-**Status:** ✅ Production ready, all 60 tests passing, venv-based
-
 ## Common Issues
 
-**Issue:** Long Python script fails in docker exec  
+**Issue:** Long Python script fails in docker exec
 **Solution:** Create helper in `backend/app/cli_helpers/`
 
-**Issue:** Circular import errors  
+**Issue:** Circular import errors
 **Solution:** Import ALL models: `from app.models import user, project`
 
-**Issue:** SQL logs cluttering output  
+**Issue:** SQL logs cluttering output
 **Solution:** `logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)`
 
-**Issue:** Command hangs on logs  
+**Issue:** Command hangs on logs
 **Solution:** Pass `follow=False` when calling `start()` from other commands

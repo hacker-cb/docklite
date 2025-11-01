@@ -1,6 +1,7 @@
 ---
-globs: frontend/src/**/*.vue,frontend/src/**/*.js
 description: Frontend Vue.js patterns and conventions
+globs: ["frontend/src/**/*.vue", "frontend/src/**/*.js"]
+tags: ["vue", "javascript", "frontend"]
 ---
 
 # Frontend Vue.js Conventions
@@ -49,7 +50,7 @@ const { projects, loading, loadProjects } = useProjects()
 
 ## Constants & Configuration
 
-Location: [frontend/src/config/constants.js](mdc:frontend/src/config/constants.js)
+Location: `frontend/src/config/constants.js`
 
 All magic values are extracted to constants:
 
@@ -62,7 +63,7 @@ showSuccess(toast, SUCCESS_MESSAGES.PROJECT_CREATED)
 
 ## Utils Pattern
 
-Location: [frontend/src/utils/](mdc:frontend/src/utils/)
+Location: `frontend/src/utils/`
 
 Pure utility functions for common operations:
 
@@ -78,7 +79,7 @@ showError(toast, error)
 
 ## Vue Router Structure
 
-Location: [frontend/src/router.js](mdc:frontend/src/router.js)
+Location: `frontend/src/router.js`
 
 - Uses `createWebHistory()` - Clean URLs like `/projects`, `/users`
 - Lazy loading views: `component: () => import('./views/ProjectsView.vue')`
@@ -86,7 +87,7 @@ Location: [frontend/src/router.js](mdc:frontend/src/router.js)
 
 ## API Client Pattern
 
-Location: [frontend/src/api.js](mdc:frontend/src/api.js)
+Location: `frontend/src/api.js`
 
 ### Axios Interceptors
 
@@ -118,11 +119,12 @@ api.interceptors.response.use(
 
 ### API Modules
 
-- `projectsApi` - CRUD проектов
-- `presetsApi` - готовые шаблоны
-- `deploymentApi` - deployment инструкции
+- `projectsApi` - CRUD projects
+- `presetsApi` - Ready templates
+- `deploymentApi` - Deployment instructions
 - `authApi` - login, logout, me, setup
 - `usersApi` - user management (admin only)
+- `containersApi` - container management (admin only)
 
 ## Form Patterns
 
@@ -180,10 +182,19 @@ catch (err) {
 1. Check if setup needed: `GET /api/auth/setup/check`
 2. If `setup_needed: true` → show Setup.vue
 3. If `setup_needed: false` → show Login.vue
-4. After login → save token to localStorage
+4. After login → save token to localStorage AND cookie
 5. Call `GET /api/auth/me` to get user info
 6. Save user to localStorage
 7. All API requests auto-include token via interceptor
+
+### Cookie Storage (for Traefik Dashboard)
+
+```javascript
+// Save JWT to cookie for dashboard access
+document.cookie = `token=${access_token}; path=/; max-age=2592000; SameSite=Lax`
+```
+
+Files: `frontend/src/Login.vue`, `frontend/src/Setup.vue`
 
 ## Component Communication
 
@@ -191,3 +202,37 @@ catch (err) {
 - Use PrimeVue ConfirmDialog for confirmations
 - Use Vue Router for navigation between views
 - Store auth state in App.vue, pass via router
+
+## PrimeVue Components
+
+DockLite uses PrimeVue for UI:
+- DataTable - for lists
+- Dialog - for modals
+- Button - for actions
+- InputText - for text inputs
+- Dropdown - for selects
+- Toast - for notifications
+- ConfirmDialog - for confirmations
+
+**Documentation:** https://primevue.org/
+
+## Best Practices
+
+### ✅ DO
+
+- Use Composition API (not Options API)
+- Extract reusable logic to composables
+- Use constants for magic values
+- Use utils for pure functions
+- Handle errors gracefully
+- Save token to both localStorage AND cookie
+- Use PrimeVue components consistently
+
+### ❌ DON'T
+
+- Don't use Options API
+- Don't hardcode values
+- Don't duplicate logic across components
+- Don't forget error handling
+- Don't store sensitive data in localStorage beyond tokens
+- Don't skip cookie storage (needed for Traefik Dashboard)

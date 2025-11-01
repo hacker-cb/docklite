@@ -1,7 +1,7 @@
 ---
-description: URL conventions, hostname detection system with priority logic (Python and Bash)
-globs: ["scripts/**/*.sh", "scripts/**/*.py", "backend/app/utils/hostname.py"]
-tags: ["python", "bash", "configuration"]
+description: URL conventions, hostname detection system with priority logic
+globs: ["scripts/**/*.sh", "scripts/**/*.py", "backend/app/utils/hostname.py", "backend/app/core/config.py"]
+tags: ["python", "bash", "configuration", "traefik"]
 alwaysApply: true
 ---
 
@@ -29,9 +29,9 @@ alwaysApply: true
 
 ### Internal vs External URLs
 
-- **External (user-facing):** `/traefik/` 
+- **External (user-facing):** `/traefik/`
 - **Internal (Traefik expects):** `/dashboard/`
-- **Conversion:** Done via `traefik-stripprefix` middleware in [docker-compose.yml](mdc:docker-compose.yml)
+- **Conversion:** Done via `traefik-stripprefix` middleware in docker-compose.yml
 
 ## Hostname Detection System
 
@@ -67,8 +67,6 @@ Unified hostname detection across Python and Bash with same priority logic.
 HOSTNAME=docklite.example.com
 TRAEFIK_DASHBOARD_HOST=docklite.example.com
 ```
-
-See: [.env](mdc:.env)
 
 ### Priority 2: System Hostname
 
@@ -108,7 +106,7 @@ custom_port = get_access_url(path="", port=8888)
 # http://example.com:8888
 ```
 
-**Location:** [backend/app/utils/hostname.py](mdc:backend/app/utils/hostname.py)
+**Location:** `backend/app/utils/hostname.py`
 
 ### Python CLI
 
@@ -121,7 +119,7 @@ get_access_url('/api')        # http://example.com/api
 get_access_url('/traefik')    # http://example.com/traefik
 ```
 
-**Location:** [scripts/cli/utils/hostname.py](mdc:scripts/cli/utils/hostname.py)
+**Location:** `scripts/cli/utils/hostname.py`
 
 ### Bash Scripts
 
@@ -140,7 +138,7 @@ custom=$(get_access_url "" "8888")            # http://example.com:8888
 https=$(get_access_url "/secure" "" "https")  # https://example.com/secure
 ```
 
-**Location:** [scripts/lib/common.sh](mdc:scripts/lib/common.sh)
+**Location:** `scripts/lib/common.sh`
 
 ### URL Features
 
@@ -159,13 +157,6 @@ Backend:   http://example.com/api
 API Docs:  http://example.com/docs
 Traefik:   http://example.com/traefik (admin only)
 ```
-
-**Updated files:**
-- [scripts/development/start.sh](mdc:scripts/development/start.sh)
-- [scripts/development/rebuild.sh](mdc:scripts/development/rebuild.sh)
-- [scripts/maintenance/status.sh](mdc:scripts/maintenance/status.sh)
-- [scripts/cli/commands/development.py](mdc:scripts/cli/commands/development.py)
-- [scripts/cli/commands/maintenance.py](mdc:scripts/cli/commands/maintenance.py)
 
 ## Best Practices
 
@@ -208,8 +199,8 @@ base_url = get_access_url()
 
 ## Testing
 
-**Python tests:** `backend/tests/test_utils/test_hostname.py` (20 tests)  
-**Bash tests:** `scripts/lib/test_hostname.sh` (6 tests)
+**Python tests:** `backend/tests/test_utils/test_hostname.py`
+**Bash tests:** `scripts/lib/test_hostname.sh`
 
 All priority levels tested and validated.
 

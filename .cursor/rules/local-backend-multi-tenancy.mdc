@@ -1,7 +1,7 @@
 ---
-description: Multi-tenancy architecture and ownership patterns
-globs: ["backend/app/models/user.py", "backend/app/models/project.py", "backend/app/services/project_service.py", "backend/app/api/projects.py"]
-tags: ["python", "backend", "security"]
+description: Multi-tenancy architecture, ownership patterns, and access control
+globs: ["backend/app/models/user.py", "backend/app/models/project.py", "backend/app/services/project_service.py", "backend/app/api/projects.py", "backend/app/api/containers.py"]
+tags: ["python", "backend", "security", "multi-tenancy"]
 ---
 
 # DockLite Multi-Tenancy
@@ -24,7 +24,7 @@ class User(Base):
     projects = relationship("Project", back_populates="owner")
 ```
 
-**Location:** [backend/app/models/user.py](mdc:backend/app/models/user.py)
+**Location:** `backend/app/models/user.py`
 
 ### Project Ownership
 
@@ -38,7 +38,7 @@ class Project(Base):
     owner = relationship("User", back_populates="projects")
 ```
 
-**Location:** [backend/app/models/project.py](mdc:backend/app/models/project.py)
+**Location:** `backend/app/models/project.py`
 
 ### Slug-based Paths
 
@@ -50,7 +50,7 @@ class Project(Base):
 
 **Path:** `/home/{owner.system_user}/projects/{slug}/`
 
-**Function:** [backend/app/utils/formatters.py](mdc:backend/app/utils/formatters.py) - `generate_slug_from_domain()`
+**Function:** `backend/app/utils/formatters.py` - `generate_slug_from_domain()`
 
 ## Access Control
 
@@ -71,7 +71,7 @@ async def get_project(self, project_id: int, user_id: int, is_admin: bool):
     return result.scalar_one_or_none()
 ```
 
-**Location:** [backend/app/services/project_service.py](mdc:backend/app/services/project_service.py)
+**Location:** `backend/app/services/project_service.py`
 
 ### API Patterns
 
@@ -91,7 +91,7 @@ async def get_projects(
     return {"projects": [format_project_response(p) for p in projects]}
 ```
 
-**Location:** [backend/app/api/projects.py](mdc:backend/app/api/projects.py)
+**Location:** `backend/app/api/projects.py`
 
 ### Container Management
 
@@ -109,7 +109,7 @@ async def start_containers(project_id: int, current_user: User, db: AsyncSession
     # ...
 ```
 
-**Location:** [backend/app/api/containers.py](mdc:backend/app/api/containers.py)
+**Location:** `backend/app/api/containers.py`
 
 ## System User Isolation
 
@@ -131,7 +131,7 @@ class DockerService:
 ssh {system_user}@{host} "cd /home/{system_user}/projects/{slug} && docker-compose up -d"
 ```
 
-**Location:** [backend/app/services/docker_service.py](mdc:backend/app/services/docker_service.py)
+**Location:** `backend/app/services/docker_service.py`
 
 ### File Paths
 
@@ -190,7 +190,7 @@ slug = generate_slug_from_domain(project.domain, new_project.id)
 <small>Linux user for SSH deployment (must exist on server)</small>
 ```
 
-**Location:** [frontend/src/views/UsersView.vue](mdc:frontend/src/views/UsersView.vue)
+**Location:** `frontend/src/views/UsersView.vue`
 
 **Note:** System user must exist in Linux:
 ```bash
@@ -235,27 +235,27 @@ domain      VARCHAR(255) UNIQUE
 status      VARCHAR(50) DEFAULT 'created'
 ```
 
-**Migration:** [backend/alembic/versions/003_add_multitenancy.py](mdc:backend/alembic/versions/003_add_multitenancy.py)
+**Migration:** `backend/alembic/versions/003_add_multitenancy.py`
 
 ## Rules
 
 ### ALWAYS
 
-✅ Check ownership before operations (unless admin)  
-✅ Use owner's system_user for SSH operations  
-✅ Generate slug from domain  
-✅ Filter projects by ownership (non-admin)  
-✅ Include owner_id when creating projects  
-✅ Validate system_user exists in Linux  
+✅ Check ownership before operations (unless admin)
+✅ Use owner's system_user for SSH operations
+✅ Generate slug from domain
+✅ Filter projects by ownership (non-admin)
+✅ Include owner_id when creating projects
+✅ Validate system_user exists in Linux
 
 ### NEVER
 
-❌ Use numeric IDs in file paths - use slugs  
-❌ Allow cross-user access (unless admin)  
-❌ Hardcode "docklite" - use owner.system_user  
-❌ Skip ownership validation  
-❌ Create projects without owner_id  
-❌ Forget to check is_admin flag  
+❌ Use numeric IDs in file paths - use slugs
+❌ Allow cross-user access (unless admin)
+❌ Hardcode "docklite" - use owner.system_user
+❌ Skip ownership validation
+❌ Create projects without owner_id
+❌ Forget to check is_admin flag
 
 ## Helper Functions
 
@@ -281,39 +281,7 @@ async def get_project_with_owner_check(
     return project, owner
 ```
 
-**Location:** [backend/app/api/containers.py](mdc:backend/app/api/containers.py)
-
-## Testing Multi-Tenancy
-
-### Test Ownership
-
-```python
-async def test_non_admin_cannot_access_other_projects():
-    # Create two users
-    user1 = await create_user("user1")
-    user2 = await create_user("user2")
-    
-    # User1 creates project
-    project = await create_project(owner_id=user1.id)
-    
-    # User2 tries to access - should fail
-    response = await client.get(f"/api/projects/{project.id}", headers=user2_auth)
-    assert response.status_code == 404  # Not found (filtered out)
-```
-
-### Test Admin Access
-
-```python
-async def test_admin_can_access_all_projects():
-    # Admin can see all projects regardless of owner
-    admin = await create_user("admin", is_admin=True)
-    user = await create_user("user")
-    
-    project = await create_project(owner_id=user.id)
-    
-    response = await client.get(f"/api/projects/{project.id}", headers=admin_auth)
-    assert response.status_code == 200  # Admin sees it
-```
+**Location:** `backend/app/api/containers.py`
 
 ## Common Issues
 
@@ -354,11 +322,3 @@ project_path.mkdir(parents=True, exist_ok=True)
 # Set ownership via SSH
 ssh_cmd = f"chown -R {owner.system_user}:{owner.system_user} {project_path}"
 ```
-
-## Future Enhancements
-
-- Resource quotas per user
-- Project sharing between users
-- Team/organization support
-- User groups
-- Custom system_user per project (not just per user)
