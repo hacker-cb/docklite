@@ -217,6 +217,38 @@ Use consistent, descriptive branch names.
 - Remove stale branches regularly
 - Archive important unmerged work
 
+## CI/CD Workflows
+
+**GitHub Actions workflows:**
+- Always include `workflow_dispatch` trigger in all workflows
+- Enables manual workflow execution
+- Required for autofix and debugging capabilities
+- Add alongside other triggers (push, pull_request, etc.)
+
+**Example workflow trigger configuration:**
+```yaml
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:  # Always include this
+```
+
+**Workflow best practices:**
+- Pin action versions (use commit SHA or tags)
+- Add timeout limits to prevent runaway jobs
+- Use secrets for credentials
+- Cache dependencies when possible
+- Fail fast on errors
+- Keep workflows focused and modular
+
+**Workflow testing:**
+- Test workflows in feature branches
+- Use workflow_dispatch for manual testing
+- Verify all paths and conditions
+- Test failure scenarios
+
 ## Collaboration
 
 **Team communication:**
